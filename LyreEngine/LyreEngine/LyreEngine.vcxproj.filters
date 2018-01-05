@@ -51,9 +51,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="download.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="icon.png">
       <Filter>Resource Files</Filter>
     </Image>

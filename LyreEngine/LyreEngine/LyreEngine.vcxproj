@@ -131,7 +131,6 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="download.png" />
     <Image Include="icon.png" />
   </ItemGroup>
   <ItemGroup>
