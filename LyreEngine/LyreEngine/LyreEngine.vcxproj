@@ -84,6 +84,8 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(DXSDK_DIR)include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>d3d11.lib;d3dx11d.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -120,12 +122,18 @@
     <ClCompile Include="LyreEngine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Planet.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="SpherifiedCube.cpp" />
+    <ClCompile Include="SpherifiedPlane.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SpherifiedCube.h" />
+    <ClInclude Include="SpherifiedPlane.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

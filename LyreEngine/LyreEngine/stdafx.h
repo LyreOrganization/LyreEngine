@@ -5,12 +5,14 @@
 #include <DirectXMath.h>
 #include <windows.h>
 #include <atlbase.h>
+#include <stdexcept>
 #include <memory>
-#include <vector>
 #include <fstream>
 #include <math.h>
-
-#include "resource.h"
+#include <vector>
+#include <array>
+#include <forward_list>
+#include <optional>
 
 
 #define ZeroStruct(structure) (ZeroMemory(&structure, sizeof(structure)))

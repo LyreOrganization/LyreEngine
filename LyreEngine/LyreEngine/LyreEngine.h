@@ -1,11 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
-
 class Planet;
 
-class LyreEngine {
-
+class LyreEngine
+{
 public:
 	struct ViewProjConstantBuffer
 	{

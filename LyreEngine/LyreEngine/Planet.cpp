@@ -1,6 +1,6 @@
-#include "Planet.h"
-
 #include "stdafx.h"
+
+#include "Planet.h"
 
 #include "LyreEngine.h"
 

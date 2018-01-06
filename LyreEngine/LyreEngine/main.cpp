@@ -1,7 +1,6 @@
 #include "stdafx.h"
-#include "LyreEngine.h"
 
-#include "resource.h"
+#include "LyreEngine.h"
 
 #pragma enable_d3d11_debug_symbols
 
