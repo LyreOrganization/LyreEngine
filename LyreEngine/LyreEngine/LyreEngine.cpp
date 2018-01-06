@@ -32,6 +32,40 @@ CComPtr<ID3D11Buffer>				LyreEngine::s_iViewProjConstantBuffer = nullptr;
 
 unique_ptr<Planet>					LyreEngine::s_pPlanet = nullptr;
 
+void LyreEngine::render()
+{
+	static DWORD s_previousTime = GetTickCount();
+	DWORD tpf = (GetTickCount() - s_previousTime);
+	s_previousTime = GetTickCount();
+
+	static float move = 0.;
+	move += tpf/1000.;
+	if (move > M_PI*2)
+		move -= M_PI * 2;
+
+	XMFLOAT3 eye(sin(move)*5., 6., cos(move)*5.);
+	XMFLOAT3 at(0., 0., 0.);
+	XMFLOAT3 up(0., 1., 0.);
+
+	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&at), XMLoadFloat3(&up));
+	XMMATRIX projection = XMMatrixPerspectiveFovLH(3 * XM_PIDIV2 / 4, WND_WIDTH / (FLOAT)WND_HEIGHT, 100.f, 0.1f);
+
+	float clearColor[4] = { 0.2f, 0.3f, 0.5f, 1.0f };
+	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
+	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	s_iContext->RSSetState(s_iRasterizerStateSolid);
+
+	ViewProjConstantBuffer vpcb;
+	XMStoreFloat4x4(&vpcb.view, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&vpcb.projection, XMMatrixTranspose(projection));
+	s_iContext->UpdateSubresource(s_iViewProjConstantBuffer, 0, nullptr, &vpcb, 0, 0);
+
+	s_pPlanet->render();
+
+	s_iSwapChain->Present(0, 0);
+}
+
 void LyreEngine::GetClientWH(UINT &width, UINT &height)
 {
 	RECT rc;
@@ -50,12 +84,12 @@ HRESULT LyreEngine::initWindow(HINSTANCE hInst, int nCmdShow, WNDPROC WndProc)
 		wcex.cbClsExtra = 0;
 		wcex.cbWndExtra = 0;
 		wcex.hInstance = hInst;
-		wcex.hIcon = LoadIcon(hInst, (LPCTSTR)ID_ICON);
+		wcex.hIcon = LoadIcon(hInst, (LPCTSTR)IDI_ICON);
 		wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wcex.lpszMenuName = nullptr;
 		wcex.lpszClassName = L"LyreEngine";
-		wcex.hIconSm = LoadIcon(wcex.hInstance, (LPCTSTR)ID_ICON);
+		wcex.hIconSm = LoadIcon(wcex.hInstance, (LPCTSTR)IDI_ICON);
 	}
 	if (!RegisterClassEx(&wcex))
 		return E_FAIL;
@@ -197,7 +231,7 @@ HRESULT LyreEngine::init()
 	{
 		ZeroStruct(rasterizerState);
 		rasterizerState.FillMode = D3D11_FILL_SOLID;
-		rasterizerState.CullMode = D3D11_CULL_NONE;
+		rasterizerState.CullMode = D3D11_CULL_BACK;
 		rasterizerState.FrontCounterClockwise = false;
 		rasterizerState.DepthBias = 0;
 		rasterizerState.SlopeScaledDepthBias = 0.0f;
@@ -277,33 +311,9 @@ ID3D11DeviceContext* LyreEngine::getContext()
 	return s_iContext;
 }
 
-void LyreEngine::render()
+ID3D11Buffer* LyreEngine::getViewProj()
 {
-	static DWORD s_previousTime = GetTickCount();
-	DWORD tpf = (GetTickCount() - s_previousTime);
-	s_previousTime = GetTickCount();
-
-	XMFLOAT3 eye(-5., 0., 0.);
-	XMFLOAT3 at(0., 0., 0.);
-	XMFLOAT3 up(0., 1., 0.);
-
-	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&at), XMLoadFloat3(&up));
-	XMMATRIX projection = XMMatrixPerspectiveFovLH(3 * XM_PIDIV2 / 4, WND_WIDTH / (FLOAT)WND_HEIGHT, 10.f, 0.01f);
-
-	float clearColor[4] = { 0.3f, 0.5f, 0.9f, 1.0f };
-	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
-	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-
-	s_iContext->RSSetState(s_iRasterizerStateSolid);
-
-	ViewProjConstantBuffer vpcb;
-	XMStoreFloat4x4(&vpcb.view, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&vpcb.projection, XMMatrixTranspose(projection));
-	s_iContext->UpdateSubresource(s_iViewProjConstantBuffer, 0, nullptr, &vpcb, 0, 0);
-
-	s_pPlanet->render();
-
-	s_iSwapChain->Present(0, 0);
+	return s_iViewProjConstantBuffer;
 }
 
 HRESULT LyreEngine::ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode)

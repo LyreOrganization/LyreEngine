@@ -46,6 +46,7 @@ public:
 	static HRESULT initWindow(HINSTANCE hInst, int nCmdShow, WNDPROC WndProc);
 	static ID3D11Device* getDevice();
 	static ID3D11DeviceContext* getContext();
+	static ID3D11Buffer* getViewProj();
 	static void GetClientWH(UINT & width, UINT & height);
 	static HRESULT ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode);
 	static void render();

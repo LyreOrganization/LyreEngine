@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+#include <math.h>
 
 #include "resource.h"
 
