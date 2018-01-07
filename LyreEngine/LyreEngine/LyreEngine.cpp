@@ -41,11 +41,11 @@ void LyreEngine::render()
 	s_previousTime = GetTickCount();
 
 	static float move = 0.;
-	move += tpf/1000.;
+	move += tpf/5000.;
 	if (move > M_PI*2)
 		move -= M_PI * 2;
 
-	XMFLOAT3 eye(sin(move)*5., 6., cos(move)*5.);
+	XMFLOAT3 eye(sin(move)*3., 1., cos(move)*3.);
 	XMFLOAT3 at(0., 0., 0.);
 	XMFLOAT3 up(0., 1., 0.);
 
@@ -56,7 +56,7 @@ void LyreEngine::render()
 	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
 	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	s_iContext->RSSetState(s_iRasterizerStateSolid);
+	s_iContext->RSSetState(s_iRasterizerStateWireframe);
 
 	ViewProjConstantBuffer vpcb;
 	XMStoreFloat4x4(&vpcb.view, XMMatrixTranspose(view));

@@ -13,27 +13,47 @@ SpherifiedCube::SpherifiedCube(float radius)
 
 void SpherifiedCube::buildCube()
 {
+	float cubeCoords = m_radius/sqrt(3.);
 	m_vertices.assign({
 		// front
-		{ { -1.0, -1.0,  1.0 } },
-		{ { 1.0, -1.0,  1.0 } },
-		{ { 1.0,  1.0,  1.0 } },
-		{ { -1.0,  1.0,  1.0 } },
+		{ { -cubeCoords, -cubeCoords,  cubeCoords } },
+		{ { cubeCoords, -cubeCoords,  cubeCoords } },
+		{ { cubeCoords,  cubeCoords,  cubeCoords } },
+		{ { -cubeCoords,  cubeCoords,  cubeCoords } },
 		// back
-		{ { -1.0, -1.0, -1.0 } },
-		{ { 1.0, -1.0, -1.0 } },
-		{ { 1.0,  1.0, -1.0 } },
-		{ { -1.0,  1.0, -1.0 } },
+		{ { -cubeCoords, -cubeCoords, -cubeCoords } },
+		{ { cubeCoords, -cubeCoords, -cubeCoords } },
+		{ { cubeCoords,  cubeCoords, -cubeCoords } },
+		{ { -cubeCoords,  cubeCoords, -cubeCoords } },
 	});
 
 	m_cube = {
-		make_unique<SpherifiedPlane>(this, DWORD4{ 0, 1, 2, 3 }), // front
-		make_unique<SpherifiedPlane>(this, DWORD4{ 1, 5, 6, 2 }), // top
-		make_unique<SpherifiedPlane>(this, DWORD4{ 7, 6, 5, 4 }), // back
-		make_unique<SpherifiedPlane>(this, DWORD4{ 4, 0, 3, 7 }), // bottom
-		make_unique<SpherifiedPlane>(this, DWORD4{ 4, 5, 1, 0 }), // left
-		make_unique<SpherifiedPlane>(this, DWORD4{ 3, 2, 6, 7 }) // right
+		make_unique<SpherifiedPlane>(this, DWORD4{ 2, 6, 7, 3 }),	// up
+		make_unique<SpherifiedPlane>(this, DWORD4{ 2, 1, 5, 6 }),	// right
+		make_unique<SpherifiedPlane>(this, DWORD4{ 2, 3, 0, 1 }),	// front
+
+		make_unique<SpherifiedPlane>(this, DWORD4{ 4, 5, 1, 0 }),	// down	
+		make_unique<SpherifiedPlane>(this, DWORD4{ 4, 7, 6, 5 }),	// back
+		make_unique<SpherifiedPlane>(this, DWORD4{ 4, 0, 3, 7 }),	// left
 	};
+
+	// neighbours
+	for (int i = 0; i < 3; i++)
+	{
+		m_cube[i]->m_neighbours[0] = m_cube[(i + 1) % 3].get();
+		m_cube[i]->m_neighbours[3] = m_cube[(i + 2) % 3].get();
+
+		m_cube[i + 3]->m_neighbours[0] = m_cube[(i + 1) % 3 + 3].get();
+		m_cube[i + 3]->m_neighbours[3] = m_cube[(i + 2) % 3 + 3].get();
+
+		m_cube[i]->m_neighbours[1] = m_cube[5 - (i + 1) % 3].get();
+		m_cube[5 - (i + 1) % 3]->m_neighbours[1] = m_cube[i].get();
+
+		m_cube[i]->m_neighbours[2] = m_cube[5 - i].get();
+		m_cube[5 - i]->m_neighbours[2] = m_cube[i].get();
+	}
+
+	divide(6);
 }
 
 void SpherifiedCube::divide(unsigned depth)
@@ -44,17 +64,36 @@ void SpherifiedCube::divide(unsigned depth)
 	}
 }
 
-/*
-void SpherifiedCube::rebuildVertexIndicesBuffer()
+DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2)
 {
-	m_indices.clear();
-	m_indices.reserve(m_planesCount * 3);
-	for (int i = 0; i < ICOS_PLANES; ++i)
-	{
-		buildTrianVIndsR(m_icosahedron[i].get());
-	}
+	DWORD newInd = m_vertices.size();
+	m_vertices.push_back(Vertex());
+	XMStoreFloat3(&(m_vertices[newInd].position), XMVector3Normalize({
+		(m_vertices[point1].position.x + m_vertices[point2].position.x) / 2.f,
+		(m_vertices[point1].position.y + m_vertices[point2].position.y) / 2.f,
+		(m_vertices[point1].position.z + m_vertices[point2].position.z) / 2.f,
+		0
+	}) * m_radius);
+	return newInd;
 }
 
+vector<DWORD> SpherifiedCube::getIndicesBuffer()
+{
+	vector<DWORD> indices;
+	for (const auto& plane : m_cube)
+	{
+		vector<DWORD> planeIndices = plane->getIndicesBuffer();
+		indices.insert(indices.end(), planeIndices.begin(), planeIndices.end());
+	}
+	return indices;
+}
+
+vector<SpherifiedCube::Vertex> SpherifiedCube::getVertices() const 
+{ 
+	return m_vertices; 
+}
+
+/*
 void SpherifiedCube::rebuildCPIndicesBuffer()
 {
 	m_indices.clear();
@@ -63,21 +102,6 @@ void SpherifiedCube::rebuildCPIndicesBuffer()
 	{
 		buildTrianCPIndsR(m_icosahedron[i].get());
 	}
-}
-
-SpherifiedPoint* SpherifiedCube::createHalf(SpherifiedPoint* point1, SpherifiedPoint* point2)
-{
-	DWORD newInd = m_pointsCount++;
-	m_vertices.push_back(LESimpleVertex());
-	XMStoreFloat3(&(m_vertices[newInd].pos), XMVector3Normalize(
-	{
-		(getVertexByTrianPoint(point1)->pos.x + getVertexByTrianPoint(point2)->pos.x) / 2,
-		(getVertexByTrianPoint(point1)->pos.y + getVertexByTrianPoint(point2)->pos.y) / 2,
-		(getVertexByTrianPoint(point1)->pos.z + getVertexByTrianPoint(point2)->pos.z) / 2,
-		0
-	}) * m_radius);
-	m_points.push_front(std::make_unique<SpherifiedPoint>(newInd));
-	return m_points.front().get();
 }
 
 const std::vector<LESimpleVertex>& SpherifiedCube::getVertices()

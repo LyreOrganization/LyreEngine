@@ -4,6 +4,9 @@
 
 #include "SpherifiedCube.h"
 
+using namespace std;
+using namespace DirectX;
+
 SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* parent)
 	: m_pSphere(sphere), m_points(points), m_pParent(parent)
 {}
@@ -16,112 +19,123 @@ void SpherifiedPlane::divide(int depth)
 	if (!m_divided)
 	{
 		//divide father's neighbour if it is not divided
-		if (m_neighbours[0] == nullptr) m_pParent->m_neighbours[0]->divide();
-		if (m_neighbours[1] == nullptr) m_pParent->m_neighbours[1]->divide();
-		if (m_neighbours[2] == nullptr) m_pParent->m_neighbours[2]->divide();
-		if (m_neighbours[3] == nullptr) m_pParent->m_neighbours[3]->divide();
-		
-		/*
+		for (int i = 0; i < 4; i++)
+			if (m_neighbours[i] == nullptr) m_pParent->m_neighbours[i]->divide();
+
 		//creating halfs if they don't exist
-		///halfs are indexed correctrly for inner (children[3]) opposite-directional triangle
-		if (m_halfs[0] == nullptr)
+		for (int i = 0; i < 4; i++)
 		{
-			m_halfs[0] = m_pSphere->createHalf(m_points[1], m_points[2]);
-			///setting neighbour's halfs even if they aren't divided
-			///neighbour with index "0" must be opposite-directional
-			m_neighbours[0]->setHalf(0, m_halfs[0]);
+			if (!m_halfs[i])
+			{
+				m_halfs[i] = m_pSphere->createHalf(m_points[i], m_points[nextIdx(i)]);
+				if (m_neighbours[i]->m_neighbours[oppositeIdx(i)] == this) // we are on same cube face
+					m_neighbours[i]->m_halfs[oppositeIdx(i)] = m_halfs[i].value();
+				else
+					m_neighbours[i]->m_halfs[i == 0 ? 3 : (i == 3 ? 0 : i)] = m_halfs[i].value();
+			}
 		}
-		if (m_halfs[1] == nullptr)
-		{
-			m_halfs[1] = m_pSphere->createHalf(m_points[2], m_points[0]);
-			if (m_neighbours[1]->m_direction == m_direction)
-				m_neighbours[1]->setHalf(2, m_halfs[1]);
-			else m_neighbours[1]->setHalf(1, m_halfs[1]);
-		}
-		if (m_halfs[2] == nullptr)
-		{
-			m_halfs[2] = m_pSphere->createHalf(m_points[0], m_points[1]);
-			if (m_neighbours[2]->m_direction == m_direction)
-				m_neighbours[2]->setHalf(1, m_halfs[2]);
-			else m_neighbours[2]->setHalf(2, m_halfs[2]);
-		}
+
+		//create middle point
+		DWORD middle = m_pSphere->createHalf(m_halfs[0].value(), m_halfs[2].value());
 
 		//creating children
-		m_children[0] = std::make_unique<SpherifiedPlane>(m_pSphere, m_points[0], m_halfs[2], m_halfs[1], m_direction, this);
-		m_children[1] = std::make_unique<SpherifiedPlane>(m_pSphere, m_halfs[2], m_points[1], m_halfs[0], m_direction, this);
-		m_children[2] = std::make_unique<SpherifiedPlane>(m_pSphere, m_halfs[1], m_halfs[0], m_points[2], m_direction, this);
-		///opposite-directional triangle
-		m_children[3] = std::make_unique<SpherifiedPlane>(m_pSphere, m_halfs[0], m_halfs[1], m_halfs[2], m_direction ^ true, this);
+		m_children[0] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4{
+			m_points[0],
+			m_halfs[0].value(),
+			middle,
+			m_halfs[3].value()
+		}, this);
+		m_children[1] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4{
+			m_halfs[0].value(),
+			m_points[1],
+			m_halfs[1].value(),
+			middle
+		}, this);
+		m_children[2] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4{
+			middle,
+			m_halfs[1].value(),
+			m_points[2],
+			m_halfs[2].value()
+		}, this);
+		m_children[3] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4{
+			m_halfs[3].value(),
+			middle,
+			m_halfs[2].value(),
+			m_points[3]
+		}, this);
 
-		//setting children's neighbours
-		///other children for inner child
-		m_children[3]->m_neighbours[0] = m_children[0].get();
-		m_children[3]->m_neighbours[1] = m_children[1].get();
-		m_children[3]->m_neighbours[2] = m_children[2].get();
-		///inner child for other children
-		m_children[0]->m_neighbours[0] = m_children[3].get();
-		m_children[1]->m_neighbours[1] = m_children[3].get();
-		m_children[2]->m_neighbours[2] = m_children[3].get();
-		///outer neighbours
-		if (m_neighbours[0]->m_divided)
+		//setting neighbours
+		for (int i = 0; i < 4; i++)
 		{
-			m_children[1]->m_neighbours[0] = m_neighbours[0]->m_children[2].get();
-			m_children[2]->m_neighbours[0] = m_neighbours[0]->m_children[1].get();
-			m_neighbours[0]->m_children[1]->m_neighbours[0] = m_children[2].get();
-			m_neighbours[0]->m_children[2]->m_neighbours[0] = m_children[1].get();
-		}
-		if (m_neighbours[1]->m_divided)
-		{
-			if (m_neighbours[1]->m_direction != m_direction)
+			// inner
+			m_children[i]->m_neighbours[nextIdx(i)] = m_children[nextIdx(i)].get();
+			m_children[i]->m_neighbours[oppositeIdx(i)] = m_children[previousIdx(i)].get();
+			// outer
+			if (m_neighbours[i]->m_divided)
 			{
-				m_children[0]->m_neighbours[1] = m_neighbours[1]->m_children[2].get();
-				m_children[2]->m_neighbours[1] = m_neighbours[1]->m_children[0].get();
-				m_neighbours[1]->m_children[0]->m_neighbours[1] = m_children[2].get();
-				m_neighbours[1]->m_children[2]->m_neighbours[1] = m_children[0].get();
+				if (m_neighbours[i]->m_neighbours[oppositeIdx(i)] == this) // we are on same cube face
+				{
+					m_children[i]->m_neighbours[i] = m_neighbours[i]->m_children[previousIdx(i)].get();
+					m_children[i]->m_neighbours[i]->m_neighbours[oppositeIdx(i)] = m_children[i].get();
+				}
+				else
+				{
+					const int adjIdx = i ? i % 3 + 1 : 0;
+					m_children[i]->m_neighbours[i] = m_neighbours[i]->m_children[adjIdx].get();
+					m_children[i]->m_neighbours[i]->m_neighbours[previousIdx(adjIdx)] = m_children[i].get();
+				}
 			}
-			else
+			if (m_neighbours[previousIdx(i)]->m_divided)
 			{
-				m_children[0]->m_neighbours[1] = m_neighbours[1]->m_children[0].get();
-				m_children[2]->m_neighbours[1] = m_neighbours[1]->m_children[1].get();
-				m_neighbours[1]->m_children[0]->m_neighbours[2] = m_children[0].get();
-				m_neighbours[1]->m_children[1]->m_neighbours[2] = m_children[2].get();
-			}
-		}
-		if (m_neighbours[2]->m_divided)
-		{
-			if (m_neighbours[2]->m_direction != m_direction)
-			{
-				m_children[0]->m_neighbours[2] = m_neighbours[2]->m_children[1].get();
-				m_children[1]->m_neighbours[2] = m_neighbours[2]->m_children[0].get();
-				m_neighbours[2]->m_children[0]->m_neighbours[2] = m_children[1].get();
-				m_neighbours[2]->m_children[1]->m_neighbours[2] = m_children[0].get();
-			}
-			else
-			{
-				m_children[0]->m_neighbours[2] = m_neighbours[2]->m_children[0].get();
-				m_children[1]->m_neighbours[2] = m_neighbours[2]->m_children[2].get();
-				m_neighbours[2]->m_children[0]->m_neighbours[1] = m_children[0].get();
-				m_neighbours[2]->m_children[2]->m_neighbours[1] = m_children[1].get();
+				if (m_neighbours[previousIdx(i)]->m_neighbours[nextIdx(i)] == this) // we are on same cube face
+				{
+					m_children[i]->m_neighbours[previousIdx(i)] = m_neighbours[previousIdx(i)]->m_children[nextIdx(i)].get();
+					m_children[i]->m_neighbours[previousIdx(i)]->m_neighbours[nextIdx(i)] = m_children[i].get();
+				}
+				else
+				{
+					const int adjIdx = i ? (i + 1) % 3 + 1 : 0;
+					m_children[i]->m_neighbours[previousIdx(i)] = m_neighbours[previousIdx(i)]->m_children[adjIdx].get();
+					m_children[i]->m_neighbours[previousIdx(i)]->m_neighbours[adjIdx] = m_children[i].get();
+				}
 			}
 		}
 
 		m_divided = true;
-		*/
 	}
 
 	for (int i = 0; i < 4; ++i)
 		m_children[i]->divide(depth-1);
 }
 
-/*
-void SpherifiedPlane::setHalf(int halfInd, SpherifiedPoint * half)
+vector<DWORD> SpherifiedPlane::getIndicesBuffer()
 {
-	if (m_divided) throw std::exception("No permission to change divided TrianPlane!");
-	m_halfs[halfInd] = half;
-	if (m_validHalf != INVALID_HALF) divide();
-	else m_validHalf = halfInd;
+	vector<DWORD> indices;
+	if (m_divided)
+	{
+		for (const auto& child : m_children)
+		{
+			vector<DWORD> childIndices = child->getIndicesBuffer();
+			indices.insert(indices.end(), childIndices.begin(), childIndices.end());
+		}
+	}
+	else
+	{
+		return {
+			m_points[0],
+			m_points[1],
+			m_points[2],
+			m_points[0],
+			m_points[2],
+			m_points[3],
+		};
+	}
+	return indices;
 }
 
+
+
+/*
 DWORD SpherifiedPlane::getTrianPointIndex(int pointInd)
 {
 	return m_points[pointInd]->m_index;

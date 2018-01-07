@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SpherifiedCube.h"
+
 class Planet
 {
 private:
@@ -11,7 +13,7 @@ private:
 
 	CComPtr<ID3D11Buffer>				m_iIndexBuffer = nullptr;
 
-	std::vector<DirectX::XMFLOAT3>		m_vertices;
+	std::vector<SpherifiedCube::Vertex> m_vertices;
 	std::vector<DWORD>					m_indices;
 
 public:
