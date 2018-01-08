@@ -2,10 +2,12 @@
 
 #include "SpherifiedCube.h"
 
-class Planet
+class Planet final
 {
 private:
 	CComPtr<ID3D11VertexShader>			m_iVS = nullptr;
+	CComPtr<ID3D11HullShader>			m_iHS = nullptr;
+	CComPtr<ID3D11DomainShader>			m_iDS = nullptr;
 	CComPtr<ID3D11PixelShader>			m_iPS = nullptr;
 
 	CComPtr<ID3D11InputLayout>			m_iVertexLayout = nullptr;

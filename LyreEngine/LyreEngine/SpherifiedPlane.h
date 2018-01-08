@@ -4,7 +4,7 @@ class SpherifiedCube;
 
 typedef std::array<DWORD, 4> DWORD4;
 
-class SpherifiedPlane
+class SpherifiedPlane final
 {
 public:
 	static constexpr DWORD nextIdx(DWORD index) { return ((index + 1) % 4); }		// next clockwise element index (of 4)
@@ -29,9 +29,4 @@ public:
 	SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* fatherPlane = nullptr);
 	void divide(int depth = 1);
 	std::vector<DWORD> getIndicesBuffer();
-	/*
-	int getTrianglesAmount();
-	DWORD getTrianPointIndex(int pointInd);
-	DWORD getHalfIndex(int halfInd);
-	*/
 };

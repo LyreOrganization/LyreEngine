@@ -1,7 +1,6 @@
 cbuffer VSConstantBuffer : register(b0)
 {
-	matrix view;
-	matrix projection;
+	matrix viewProj;
 }
 
 struct VS_INPUT
@@ -19,7 +18,6 @@ VS_OUTPUT VS(VS_INPUT input)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
 	output.color = (input.pos + 1.)/2.;
-	output.pos = mul(float4(input.pos, 1.f), view);
-	output.pos = mul(output.pos, projection);
+	output.pos = mul(float4(input.pos, 1.f), viewProj);
 	return output;
 }

@@ -15,9 +15,11 @@
 #include <optional>
 
 
-#define ZeroStruct(structure) (ZeroMemory(&structure, sizeof(structure)))
+#define ZeroStruct(structure)		(ZeroMemory(&structure, sizeof(structure)))
 #define VecElementSize(vec)			(vec.size() > 0 ? sizeof(vec[0]) : 0)
 #define VecBufferSize(vec)			(vec.size() > 0 ? vec.size()*sizeof(vec[0]) : 0)
+
+#define WindowsLetterIdx(letter)	(0x41 + letter - 'A')
 
 #define WND_WIDTH   1900
 #define WND_HEIGHT  1000

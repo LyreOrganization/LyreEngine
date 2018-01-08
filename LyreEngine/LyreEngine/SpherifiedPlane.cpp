@@ -121,6 +121,31 @@ vector<DWORD> SpherifiedPlane::getIndicesBuffer()
 	}
 	else
 	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (m_halfs[i])
+			{
+				if (m_halfs[nextIdx(i)])
+					return {
+					m_halfs[i].value(), m_points[nextIdx(i)], m_halfs[nextIdx(i)].value(),
+					m_halfs[nextIdx(i)].value(), m_points[oppositeIdx(i)],  m_points[previousIdx(i)],
+					m_points[previousIdx(i)], m_points[i], m_halfs[i].value(),
+					m_halfs[i].value(), m_halfs[nextIdx(i)].value(), m_points[previousIdx(i)]
+				};
+				if (m_halfs[oppositeIdx(i)])
+					return {
+					m_points[previousIdx(i)],  m_points[i], m_halfs[i].value(),
+					m_points[previousIdx(i)], m_halfs[i].value(), m_halfs[oppositeIdx(i)].value(),
+					m_halfs[oppositeIdx(i)].value(), m_halfs[i].value(), m_points[nextIdx(i)],
+					m_halfs[oppositeIdx(i)].value(), m_points[nextIdx(i)], m_points[oppositeIdx(i)],
+				};
+				return {
+					m_points[previousIdx(i)],  m_points[i], m_halfs[i].value(),
+					m_halfs[i].value(), m_points[nextIdx(i)], m_points[oppositeIdx(i)],
+					m_points[oppositeIdx(i)], m_points[previousIdx(i)], m_halfs[i].value()
+				};
+			}
+		}
 		return {
 			m_points[0],
 			m_points[1],

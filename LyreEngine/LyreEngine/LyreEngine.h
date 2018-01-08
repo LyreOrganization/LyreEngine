@@ -1,14 +1,14 @@
 #pragma once
 
 class Planet;
+class Camera;
 
-class LyreEngine
+class LyreEngine final
 {
 public:
 	struct ViewProjConstantBuffer
 	{
-		DirectX::XMFLOAT4X4 view;
-		DirectX::XMFLOAT4X4 projection;
+		DirectX::XMFLOAT4X4 viewProj;
 	};
 
 private:
@@ -37,6 +37,9 @@ private:
 
 	static std::unique_ptr<Planet>				s_pPlanet;
 
+	static std::unique_ptr<Camera>				s_pCamera;
+
+	static std::array<bool, 0x100>				s_keys;
 
 	static HRESULT init();
 
@@ -45,7 +48,11 @@ public:
 	static ID3D11Device* getDevice();
 	static ID3D11DeviceContext* getContext();
 	static ID3D11Buffer* getViewProj();
+	static Camera* getCamera();
 	static void GetClientWH(UINT & width, UINT & height);
 	static HRESULT ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode);
 	static void render();
+	static void pressButton(WPARAM button);
+	static void releaseButton(WPARAM button);
+	static void processControls();
 };

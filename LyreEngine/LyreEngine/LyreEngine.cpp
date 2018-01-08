@@ -5,6 +5,7 @@
 #include "resource.h"
 
 #include "Planet.h"
+#include "Camera.h"
 
 using namespace std;
 using namespace DirectX;
@@ -32,25 +33,16 @@ CComPtr<ID3D11RasterizerState>		LyreEngine::s_iRasterizerStateSolid = nullptr;
 
 CComPtr<ID3D11Buffer>				LyreEngine::s_iViewProjConstantBuffer = nullptr;
 
-unique_ptr<Planet>					LyreEngine::s_pPlanet = nullptr;
+unique_ptr<Planet>					LyreEngine::s_pPlanet;
+unique_ptr<Camera>					LyreEngine::s_pCamera;
+
+array<bool, 0x100>					LyreEngine::s_keys;
 
 void LyreEngine::render()
 {
 	static DWORD s_previousTime = GetTickCount();
 	DWORD tpf = (GetTickCount() - s_previousTime);
 	s_previousTime = GetTickCount();
-
-	static float move = 0.;
-	move += tpf/5000.;
-	if (move > M_PI*2)
-		move -= M_PI * 2;
-
-	XMFLOAT3 eye(sin(move)*3., 1., cos(move)*3.);
-	XMFLOAT3 at(0., 0., 0.);
-	XMFLOAT3 up(0., 1., 0.);
-
-	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&at), XMLoadFloat3(&up));
-	XMMATRIX projection = XMMatrixPerspectiveFovLH(3 * XM_PIDIV2 / 4, WND_WIDTH / (FLOAT)WND_HEIGHT, 100.f, 0.1f);
 
 	float clearColor[4] = { 0.2f, 0.3f, 0.5f, 1.0f };
 	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
@@ -59,13 +51,34 @@ void LyreEngine::render()
 	s_iContext->RSSetState(s_iRasterizerStateWireframe);
 
 	ViewProjConstantBuffer vpcb;
-	XMStoreFloat4x4(&vpcb.view, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&vpcb.projection, XMMatrixTranspose(projection));
+	vpcb.viewProj = s_pCamera->getViewProj(WND_WIDTH / (FLOAT)WND_HEIGHT);
 	s_iContext->UpdateSubresource(s_iViewProjConstantBuffer, 0, nullptr, &vpcb, 0, 0);
 
 	s_pPlanet->render();
 
 	s_iSwapChain->Present(0, 0);
+}
+
+void LyreEngine::pressButton(WPARAM button)
+{
+	s_keys[button] = true;
+}
+
+void LyreEngine::releaseButton(WPARAM button)
+{
+	s_keys[button] = false;
+}
+
+void LyreEngine::processControls()
+{
+	static DWORD s_previousTime = GetTickCount();
+	DWORD tpf = (GetTickCount() - s_previousTime);
+	s_previousTime = GetTickCount();
+
+	if (s_keys[WindowsLetterIdx('W')]) s_pCamera->moveForward(0.005f * tpf);
+	if (s_keys[WindowsLetterIdx('A')]) s_pCamera->moveLeft(0.005f * tpf);
+	if (s_keys[WindowsLetterIdx('S')]) s_pCamera->moveBackward(0.005f * tpf);
+	if (s_keys[WindowsLetterIdx('D')]) s_pCamera->moveRight(0.005f * tpf);
 }
 
 void LyreEngine::GetClientWH(UINT &width, UINT &height)
@@ -102,6 +115,8 @@ HRESULT LyreEngine::initWindow(HINSTANCE hInst, int nCmdShow, WNDPROC WndProc)
 		CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInst, nullptr);
 	if (!s_hWindow)
 		return E_FAIL;
+	ShowCursor(FALSE);
+	SetCursorPos(WND_WIDTH / 2, WND_HEIGHT / 2);
 	ShowWindow(s_hWindow, nCmdShow);
 
 	return S_OK;
@@ -118,7 +133,7 @@ HRESULT LyreEngine::init()
 	{
 		D3D_DRIVER_TYPE_HARDWARE,
 		D3D_DRIVER_TYPE_WARP,
-		D3D_DRIVER_TYPE_REFERENCE,
+		D3D_DRIVER_TYPE_REFERENCE
 	};
 	UINT numDriverTypes = ARRAYSIZE(driverTypes);
 	D3D_FEATURE_LEVEL featureLevels[] =
@@ -294,6 +309,12 @@ HRESULT LyreEngine::init()
 	if (FAILED(hr))
 		return hr;
 
+	//Camera
+	s_pCamera = make_unique<Camera>();
+
+	//Controlls
+	s_keys.fill(false);
+
 	return S_OK;
 }
 
@@ -316,6 +337,11 @@ ID3D11DeviceContext* LyreEngine::getContext()
 ID3D11Buffer* LyreEngine::getViewProj()
 {
 	return s_iViewProjConstantBuffer;
+}
+
+Camera * LyreEngine::getCamera()
+{
+	return s_pCamera.get();
 }
 
 HRESULT LyreEngine::ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode)

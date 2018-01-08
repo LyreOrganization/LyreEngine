@@ -14,6 +14,9 @@
     <Filter Include="Planet\Sphere">
       <UniqueIdentifier>{4ea8605a-7cb5-40ed-a289-86b8cc324741}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{a3b870a9-3c42-4385-b18d-8c72203b866e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -28,6 +31,9 @@
     <ClCompile Include="Planet.cpp">
       <Filter>Planet</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -41,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
