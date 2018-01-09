@@ -36,9 +36,22 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
-	if (FAILED(LyreEngine::initWindow(m_hInstance, nCmdShow, MsgProc)))
-		return 1;
-	LyreEngine::getDevice();
+	if (FAILED(LyreEngine::initWindow(m_hInstance, nCmdShow, MsgProc))) {
+		MessageBox(0, L"Window init failed!", 0, 0);
+		return EXIT_FAILURE;
+	}
+	try {
+		LyreEngine::getDevice();
+	}
+	catch (std::runtime_error e) {
+		wchar_t msg[100];
+		size_t msgLen;
+		//Convert c-style string to ebuchiy winapishnyy LPCWSTR
+		mbstowcs_s(&msgLen, msg, e.what(), strlen(e.what()));
+
+		MessageBox(0, msg, 0, 0);
+		return EXIT_FAILURE;
+	}
 
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -55,8 +68,8 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 			POINT cursor;
 			GetCursorPos(&cursor);
-			LyreEngine::getCamera()->tilt((height / 2.f - cursor.y) / 1000.f);
-			LyreEngine::getCamera()->pan((cursor.x - width / 2.f) / 1000.f);
+			LyreEngine::getCamera()->tilt((cursor.y - height / 2.f) / 1000.f);
+			LyreEngine::getCamera()->pan((width / 2.f - cursor.x) / 1000.f);
 			SetCursorPos(width / 2., height / 2.);
 
 			LyreEngine::processControls();

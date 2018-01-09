@@ -75,10 +75,10 @@ void LyreEngine::processControls()
 	DWORD tpf = (GetTickCount() - s_previousTime);
 	s_previousTime = GetTickCount();
 
-	if (s_keys[WindowsLetterIdx('W')]) s_pCamera->moveForward(0.005f * tpf);
-	if (s_keys[WindowsLetterIdx('A')]) s_pCamera->moveLeft(0.005f * tpf);
-	if (s_keys[WindowsLetterIdx('S')]) s_pCamera->moveBackward(0.005f * tpf);
-	if (s_keys[WindowsLetterIdx('D')]) s_pCamera->moveRight(0.005f * tpf);
+	if (s_keys[WindowsLetterIdx('W')]) s_pCamera->moveForward(0.001f * tpf);
+	if (s_keys[WindowsLetterIdx('A')]) s_pCamera->moveLeft(0.001f * tpf);
+	if (s_keys[WindowsLetterIdx('S')]) s_pCamera->moveBackward(0.001f * tpf);
+	if (s_keys[WindowsLetterIdx('D')]) s_pCamera->moveRight(0.001f * tpf);
 }
 
 void LyreEngine::GetClientWH(UINT &width, UINT &height)
@@ -321,15 +321,19 @@ HRESULT LyreEngine::init()
 ID3D11Device* LyreEngine::getDevice()
 {
 	if (s_iDevice == nullptr)
-		init();
+		if ( FAILED(init()) ) {
+			throw runtime_error("D3D11 init failed!");
+		}
 
 	return s_iDevice;
 }
 
 ID3D11DeviceContext* LyreEngine::getContext()
 {
-	if (s_iDevice == nullptr)
-		init();
+	if (s_iContext == nullptr)
+		if ( FAILED(init()) ) {
+			throw runtime_error("D3D11 init failed!");
+		}
 
 	return s_iContext;
 }
