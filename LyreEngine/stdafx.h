@@ -21,5 +21,8 @@
 
 #define WindowsLetterIdx(letter)	(0x41 + letter - 'A')
 
-#define WND_WIDTH   1900
-#define WND_HEIGHT  1000
+#define WND_POS_X -7
+#define WND_POS_Y 0
+
+#define WND_WIDTH   1280
+#define WND_HEIGHT  700

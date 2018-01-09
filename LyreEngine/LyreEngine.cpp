@@ -6,6 +6,7 @@
 
 #include "Planet.h"
 #include "Camera.h"
+#include "Keyboard.h"
 
 using namespace std;
 using namespace DirectX;
@@ -36,8 +37,6 @@ CComPtr<ID3D11Buffer>				LyreEngine::s_iViewProjConstantBuffer = nullptr;
 unique_ptr<Planet>					LyreEngine::s_pPlanet;
 unique_ptr<Camera>					LyreEngine::s_pCamera;
 
-array<bool, 0x100>					LyreEngine::s_keys;
-
 void LyreEngine::render()
 {
 	static DWORD s_previousTime = GetTickCount();
@@ -57,28 +56,6 @@ void LyreEngine::render()
 	s_pPlanet->render();
 
 	s_iSwapChain->Present(0, 0);
-}
-
-void LyreEngine::pressButton(WPARAM button)
-{
-	s_keys[button] = true;
-}
-
-void LyreEngine::releaseButton(WPARAM button)
-{
-	s_keys[button] = false;
-}
-
-void LyreEngine::processControls()
-{
-	static DWORD s_previousTime = GetTickCount();
-	DWORD tpf = (GetTickCount() - s_previousTime);
-	s_previousTime = GetTickCount();
-
-	if (s_keys[WindowsLetterIdx('W')]) s_pCamera->moveForward(0.001f * tpf);
-	if (s_keys[WindowsLetterIdx('A')]) s_pCamera->moveLeft(0.001f * tpf);
-	if (s_keys[WindowsLetterIdx('S')]) s_pCamera->moveBackward(0.001f * tpf);
-	if (s_keys[WindowsLetterIdx('D')]) s_pCamera->moveRight(0.001f * tpf);
 }
 
 void LyreEngine::GetClientWH(UINT &width, UINT &height)
@@ -111,8 +88,8 @@ HRESULT LyreEngine::initWindow(HINSTANCE hInst, int nCmdShow, WNDPROC WndProc)
 	s_hInstance = hInst;
 	RECT rc = { 0, 0, WND_WIDTH, WND_HEIGHT };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-	s_hWindow = CreateWindow(L"LyreEngine", L"LyreEngine", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
-		CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInst, nullptr);
+	s_hWindow = CreateWindow(L"LyreEngine", L"LyreEngine", WS_OVERLAPPEDWINDOW, WND_POS_X,
+		WND_POS_Y, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInst, nullptr);
 	if (!s_hWindow)
 		return E_FAIL;
 	ShowCursor(FALSE);
@@ -307,13 +284,23 @@ HRESULT LyreEngine::init()
 	s_pPlanet = make_unique<Planet>();
 	hr = s_pPlanet->init();
 	if (FAILED(hr))
-		return hr;
+		throw runtime_error("Planet init failed!");
 
 	//Camera
 	s_pCamera = make_unique<Camera>();
 
-	//Controlls
-	s_keys.fill(false);
+	Keyboard::on(Action::Camera_MoveForward, [](DWORD tpf) {
+		s_pCamera->moveForward(0.001f*tpf);
+	});
+	Keyboard::on(Action::Camera_MoveBackward, [](DWORD tpf) {
+		s_pCamera->moveBackward(0.001f*tpf);
+	});
+	Keyboard::on(Action::Camera_MoveRight, [](DWORD tpf) {
+		s_pCamera->moveRight(0.001f*tpf);
+	});
+	Keyboard::on(Action::Camera_MoveLeft, [](DWORD tpf) {
+		s_pCamera->moveLeft(0.001f*tpf);
+	});
 
 	return S_OK;
 }
@@ -352,6 +339,6 @@ HRESULT LyreEngine::ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &sha
 {
 	std::ifstream input(szFileName, std::ios::binary);
 	shaderBytecode = std::vector<char>(std::istreambuf_iterator<char>(input),
-		(std::istreambuf_iterator<char>())); //without the parentheses, the compiler treats it as a function declaration
+		std::istreambuf_iterator<char>());
 	return (shaderBytecode.size() == 0 ? E_FAIL : S_OK);
 }

@@ -2,6 +2,8 @@
 
 #include "SpherifiedCube.h"
 
+#define MAX_CBUFFERS_AMOUNT D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
+
 class Planet final
 {
 private:
@@ -17,6 +19,8 @@ private:
 
 	std::vector<SpherifiedCube::Vertex> m_vertices;
 	std::vector<DWORD>					m_indices;
+
+	std::array<ID3D11Buffer*, MAX_CBUFFERS_AMOUNT> m_cbuffers;
 
 public:
 	HRESULT init();

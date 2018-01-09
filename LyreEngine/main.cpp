@@ -2,11 +2,14 @@
 
 #include "LyreEngine.h"
 #include "Camera.h"
+#include "Keyboard.h"
 
 #pragma enable_d3d11_debug_symbols
 
 using namespace std;
 using namespace DirectX;
+
+void setupKeyboardLayout();
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -19,13 +22,13 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		ValidateRect(hWnd, nullptr);
 		return 0;
 	case WM_KEYDOWN:
-		if (wParam == VK_ESCAPE)
-			exit(0);
-		else
-			LyreEngine::pressButton(wParam);
+		//if (wParam == VK_ESCAPE)
+		//	exit(0);
+		//else
+			Keyboard::press(wParam);
 		break;
 	case WM_KEYUP:
-		LyreEngine::releaseButton(wParam);
+		Keyboard::release(wParam);
 		break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -53,6 +56,11 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 		return EXIT_FAILURE;
 	}
 
+	setupKeyboardLayout();
+	Keyboard::onTriggered(Action::Exit, []() {
+		exit(0);
+	});
+
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
 	{
@@ -72,9 +80,27 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			LyreEngine::getCamera()->pan((width / 2.f - cursor.x) / 1000.f);
 			SetCursorPos(width / 2., height / 2.);
 
-			LyreEngine::processControls();
+			Keyboard::process();
 			LyreEngine::render();
 		}
 	}
 	return (int)msg.wParam;
+}
+
+void setupKeyboardLayout() {
+	KeyLayout keys;
+
+	/*keys[VK_UP] = Action::Camera_MoveForward;
+	keys[VK_DOWN] = Action::Camera_MoveBackward;
+	keys[VK_RIGHT] = Action::Camera_MoveRight;
+	keys[VK_LEFT] = Action::Camera_MoveLeft;*/
+
+	keys[WindowsLetterIdx('W')] = Action::Camera_MoveForward;
+	keys[WindowsLetterIdx('A')] = Action::Camera_MoveLeft;
+	keys[WindowsLetterIdx('S')] = Action::Camera_MoveBackward;
+	keys[WindowsLetterIdx('D')] = Action::Camera_MoveRight;
+
+	keys[VK_ESCAPE] = Action::Exit;
+
+	Keyboard::setLayout(keys);
 }

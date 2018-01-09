@@ -53,7 +53,7 @@ void SpherifiedCube::buildCube()
 		m_cube[5 - i]->m_neighbours[2] = m_cube[i].get();
 	}
 
-	divide(5);
+	divide(2);
 }
 
 void SpherifiedCube::divide(unsigned depth)

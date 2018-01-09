@@ -24,16 +24,17 @@ HRESULT Planet::init()
 	hr = LyreEngine::ReadShaderFromFile(L"planet_vs.cso", shaderBytecode);
 	if (FAILED(hr))
 		return hr;
-	hr = LyreEngine::getDevice()->CreateVertexShader(shaderBytecode.data(), VecBufferSize(shaderBytecode), nullptr, &m_iVS);
+	hr = LyreEngine::getDevice()->CreateVertexShader(shaderBytecode.data(), shaderBytecode.size(), nullptr, &m_iVS);
 	if (FAILED(hr))
 		return hr;
 	///Vertex buffer format
 	std::vector<D3D11_INPUT_ELEMENT_DESC> layout
 	{
+	//  { SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, InputSlotClass, InstanceDataStepRate }
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 	hr = LyreEngine::getDevice()->CreateInputLayout(&layout[0], layout.size(), shaderBytecode.data(),
-		VecBufferSize(shaderBytecode), &m_iVertexLayout);
+		shaderBytecode.size(), &m_iVertexLayout);
 	if (FAILED(hr))
 		return hr;
 
@@ -41,7 +42,7 @@ HRESULT Planet::init()
 	hr = LyreEngine::ReadShaderFromFile(L"planet_ps.cso", shaderBytecode);
 	if (FAILED(hr))
 		return hr;
-	hr = LyreEngine::getDevice()->CreatePixelShader(shaderBytecode.data(), VecBufferSize(shaderBytecode), nullptr, &m_iPS);
+	hr = LyreEngine::getDevice()->CreatePixelShader(shaderBytecode.data(), shaderBytecode.size(), nullptr, &m_iPS);
 	if (FAILED(hr))
 		return hr;
 
@@ -78,17 +79,19 @@ HRESULT Planet::init()
 
 void Planet::render()
 {
-	vector<ID3D11Buffer*> cbuffers(16, 0);
 	ID3D11DeviceContext* pContext = LyreEngine::getContext();
 
-	pContext->VSSetShader(m_iVS, nullptr, 0);
+	m_cbuffers.fill(nullptr);
+
 	pContext->IASetInputLayout(m_iVertexLayout);
 	UINT stride = VecElementSize(m_vertices); UINT offset = 0;
 	pContext->IASetVertexBuffers(0, 1, &m_iVertexBuffer.p, &stride, &offset);
 	pContext->IASetIndexBuffer(m_iIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	cbuffers[0] = LyreEngine::getViewProj();
-	pContext->VSSetConstantBuffers(0, 16, cbuffers.data());
+
+	pContext->VSSetShader(m_iVS, nullptr, 0);
+	m_cbuffers[0] = LyreEngine::getViewProj();
+	pContext->VSSetConstantBuffers(0, m_cbuffers.size(), m_cbuffers.data());
 
 	pContext->PSSetShader(m_iPS, nullptr, 0);
 

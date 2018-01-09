@@ -17,6 +17,12 @@
     <Filter Include="Camera">
       <UniqueIdentifier>{a3b870a9-3c42-4385-b18d-8c72203b866e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Keyboard">
+      <UniqueIdentifier>{533d6e3c-6ae0-4ace-8b6f-d878a153e6e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Keyboard\KeyLayouts">
+      <UniqueIdentifier>{48e409f0-c2af-42b5-ab43-bf69bc6c01c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -34,6 +40,13 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="Actions.cpp" />
+    <ClCompile Include="KeyLayout.cpp">
+      <Filter>Keyboard\KeyLayouts</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -50,6 +63,15 @@
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="Actions.h">
+      <Filter>Keyboard</Filter>
+    </ClInclude>
+    <ClInclude Include="KeyLayout.h">
+      <Filter>Keyboard\KeyLayouts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -69,5 +91,10 @@
     <Image Include="lyre.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="keys.layout">
+      <Filter>Keyboard\KeyLayouts</Filter>
+    </None>
   </ItemGroup>
 </Project>

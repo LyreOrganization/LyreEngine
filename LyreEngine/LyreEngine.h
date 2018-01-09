@@ -39,8 +39,6 @@ private:
 
 	static std::unique_ptr<Camera>				s_pCamera;
 
-	static std::array<bool, 0x100>				s_keys;
-
 	static HRESULT init();
 
 public:
@@ -52,7 +50,4 @@ public:
 	static void GetClientWH(UINT & width, UINT & height);
 	static HRESULT ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode);
 	static void render();
-	static void pressButton(WPARAM button);
-	static void releaseButton(WPARAM button);
-	static void processControls();
 };
