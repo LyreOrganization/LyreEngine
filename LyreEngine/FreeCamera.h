@@ -1,6 +1,6 @@
 #pragma once
 
-class Camera
+class FreeCamera
 {
 public:
 	DirectX::XMFLOAT3 position;
@@ -14,11 +14,13 @@ protected:
 	DirectX::XMVECTOR getRight();
 
 public:
-	Camera();
-	virtual ~Camera();
+	FreeCamera();
+	virtual ~FreeCamera();
 	DirectX::XMFLOAT4X4 getViewProj(float aspectWdivH);
+
 	void tilt(float angle);
 	void pan(float angle);
+	void roll(float angle);
 
 	void moveForward(float dist);
 	void moveBackward(float dist);

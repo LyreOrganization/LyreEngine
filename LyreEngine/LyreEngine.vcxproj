@@ -120,7 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actions.cpp" />
-    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="KeyLayout.cpp" />
     <ClCompile Include="LyreEngine.cpp" />
@@ -138,7 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actions.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyLayout.h" />
     <ClInclude Include="LyreEngine.h" />

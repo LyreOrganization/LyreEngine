@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "LyreEngine.h"
-#include "Camera.h"
+#include "FreeCamera.h"
 #include "Keyboard.h"
 #include "Actions.h"
 #include "KeyLayout.h"
@@ -78,6 +78,9 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 void setupKeyboardLayout() {
 	KeyLayout keys;
+
+	keys[WindowsLetterIdx('Q')] = Action::Camera_RollCCW;
+	keys[WindowsLetterIdx('E')] = Action::Camera_RollCW;
 
 	keys[WindowsLetterIdx('W')] = Action::Camera_MoveForward;
 	keys[WindowsLetterIdx('A')] = Action::Camera_MoveLeft;

@@ -5,7 +5,7 @@
 #include "resource.h"
 
 #include "Planet.h"
-#include "Camera.h"
+#include "FreeCamera.h"
 #include "Keyboard.h"
 #include "Actions.h"
 
@@ -39,7 +39,7 @@ namespace {
 
 	std::unique_ptr<Planet>				s_pPlanet;
 
-	std::unique_ptr<Camera>				s_pCamera;
+	std::unique_ptr<FreeCamera>				s_pCamera;
 
 	HRESULT init() {
 		HRESULT hr;
@@ -228,20 +228,27 @@ namespace {
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		s_pCamera = make_unique<Camera>();
-
-		Keyboard::on(Action::Camera_MoveForward, [](DWORD ticksPerFrame) {
-			s_pCamera->moveForward(0.001f*ticksPerFrame);
-		});
-		Keyboard::on(Action::Camera_MoveBackward, [](DWORD ticksPerFrame) {
-			s_pCamera->moveBackward(0.001f*ticksPerFrame);
-		});
-		Keyboard::on(Action::Camera_MoveRight, [](DWORD ticksPerFrame) {
-			s_pCamera->moveRight(0.001f*ticksPerFrame);
-		});
-		Keyboard::on(Action::Camera_MoveLeft, [](DWORD ticksPerFrame) {
-			s_pCamera->moveLeft(0.001f*ticksPerFrame);
-		});
+		s_pCamera = make_unique<FreeCamera>();
+		/*Setup camera actions*/ {
+			Keyboard::on(Action::Camera_RollCW, [](DWORD ticksPerFrame) {
+				s_pCamera->roll(-0.001f*ticksPerFrame);
+			});
+			Keyboard::on(Action::Camera_RollCCW, [](DWORD ticksPerFrame) {
+				s_pCamera->roll(0.001f*ticksPerFrame);
+			});
+			Keyboard::on(Action::Camera_MoveForward, [](DWORD ticksPerFrame) {
+				s_pCamera->moveForward(0.001f*ticksPerFrame);
+			});
+			Keyboard::on(Action::Camera_MoveBackward, [](DWORD ticksPerFrame) {
+				s_pCamera->moveBackward(0.001f*ticksPerFrame);
+			});
+			Keyboard::on(Action::Camera_MoveRight, [](DWORD ticksPerFrame) {
+				s_pCamera->moveRight(0.001f*ticksPerFrame);
+			});
+			Keyboard::on(Action::Camera_MoveLeft, [](DWORD ticksPerFrame) {
+				s_pCamera->moveLeft(0.001f*ticksPerFrame);
+			});
+		}
 
 		return S_OK;
 	}
@@ -329,7 +336,7 @@ ID3D11Buffer* LyreEngine::getViewProj() {
 	return s_iViewProjConstantBuffer;
 }
 
-Camera * LyreEngine::getCamera() {
+FreeCamera * LyreEngine::getCamera() {
 	return s_pCamera.get();
 }
 

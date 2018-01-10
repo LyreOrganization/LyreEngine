@@ -40,9 +40,6 @@
     <ClCompile Include="Planet.cpp">
       <Filter>Planet</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Camera</Filter>
-    </ClCompile>
     <ClCompile Include="Keyboard.cpp">
       <Filter>Keyboard</Filter>
     </ClCompile>
@@ -58,6 +55,9 @@
     <ClCompile Include="PerlinGrid.cpp">
       <Filter>ProceduralNoise</Filter>
     </ClCompile>
+    <ClCompile Include="FreeCamera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -71,9 +71,6 @@
     </ClInclude>
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="Keyboard.h">
       <Filter>Keyboard</Filter>
@@ -89,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="PerlinGrid.h">
       <Filter>ProceduralNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeCamera.h">
+      <Filter>Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

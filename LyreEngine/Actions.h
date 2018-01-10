@@ -6,8 +6,9 @@ enum class Action {
 	Exit,
 
 	// Camera
-	Camera_Tilt,
-	Camera_Pan,
+	Camera_RollCW,
+	Camera_RollCCW,
+
 	Camera_MoveForward,
 	Camera_MoveBackward,
 	Camera_MoveRight,
