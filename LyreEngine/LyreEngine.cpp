@@ -118,7 +118,7 @@ namespace {
 			ZeroStruct(depthStencil);
 			depthStencil.DepthEnable = true;
 			depthStencil.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-			depthStencil.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+			depthStencil.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
 			depthStencil.StencilEnable = true;
 			depthStencil.StencilReadMask = 0xFF;
 			depthStencil.StencilWriteMask = 0xFF;
@@ -255,14 +255,10 @@ namespace {
 
 }
 
-void LyreEngine::render() {
-	static DWORD s_previousTime = GetTickCount();
-	DWORD ticksPerFrame = (GetTickCount() - s_previousTime);
-	s_previousTime = GetTickCount();
-
+void LyreEngine::render(DWORD ticksPerFrame) {
 	float clearColor[4] = { 0.2f, 0.3f, 0.5f, 1.0f };
 	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
-	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 0.0f, 0);
 
 	s_iContext->RSSetState(s_iRasterizerStateWireframe);
 

@@ -8,9 +8,9 @@ namespace Keyboard {
 	void setLayout(KeyLayout);
 
 	void on(Action, std::function<void(DWORD ticksPerFrame)>);
-	void onTriggered(Action, std::function<void()>);
+	void onTriggered(Action, std::function<void()>, bool onRelease = false);
 
-	void process();
-	void press(WPARAM);
-	void release(WPARAM);
+	void process(DWORD ticksPerFrame);
+	void press(WPARAM keyCode);
+	void release(WPARAM keyCode);
 };

@@ -15,7 +15,12 @@ namespace {
 		bool pressed;
 	};
 
-	unordered_map<Action, std::function<void()>> g_triggeringActions;
+	struct triggerActionDesc {
+		std::function<void()> handler;
+		bool onRelease;
+	};
+
+	unordered_map<Action, triggerActionDesc> g_triggerActions;
 	unordered_map<Action, std::function<void(DWORD)>> g_continuousActions;
 	unordered_map<WPARAM, KeyDesc> g_keys;
 
@@ -32,15 +37,11 @@ void Keyboard::on(Action action, std::function<void(DWORD)> callback) {
 	g_continuousActions[action] = callback;
 }
 
-void Keyboard::onTriggered(Action action, std::function<void()> callback) {
-	g_triggeringActions[action] = callback;
+void Keyboard::onTriggered(Action action, std::function<void()> callback, bool onRelease) {
+	g_triggerActions[action] = { callback, onRelease };
 }
 
-void Keyboard::process() {
-	static DWORD s_previousTime = GetTickCount();
-	DWORD ticksPerFrame = (GetTickCount() - s_previousTime);
-	s_previousTime = GetTickCount();
-
+void Keyboard::process(DWORD ticksPerFrame) {
 	for (auto& pair : g_keys) {
 		KeyDesc key = pair.second;
 		if (key.pressed) {
@@ -54,20 +55,37 @@ void Keyboard::process() {
 	}
 }
 
-void Keyboard::press(WPARAM key) {
+void handleTriggeredAction(Action action) {
+	triggerActionDesc& trigger = g_triggerActions.at(action);
+	if (trigger.onRelease) {
+		trigger.handler();
+	}
+}
+
+void Keyboard::press(WPARAM keyCode) {
 	try {
-		KeyDesc& kd = g_keys.at(key);
-		kd.pressed = true;
-		g_triggeringActions.at(kd.action)();
+		KeyDesc& key = g_keys.at(keyCode);
+		key.pressed = true;
+
+		triggerActionDesc& trigger = g_triggerActions.at(key.action);
+		if (!trigger.onRelease) {
+			trigger.handler();
+		}
 	}
 	catch (std::out_of_range) {
 		return;
 	}
 }
 
-void Keyboard::release(WPARAM key) {
+void Keyboard::release(WPARAM keyCode) {
 	try {
-		g_keys.at(key).pressed = false;
+		KeyDesc& key = g_keys.at(keyCode);
+		key.pressed = false;
+
+		triggerActionDesc& trigger = g_triggerActions.at(key.action);
+		if (trigger.onRelease) {
+			trigger.handler();
+		}
 	}
 	catch (std::out_of_range) {
 		return;

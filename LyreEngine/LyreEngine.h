@@ -16,5 +16,5 @@ namespace LyreEngine
 	FreeCamera* getCamera();
 	void GetClientWH(UINT & width, UINT & height);
 	HRESULT ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode);
-	void render();
+	void render(DWORD ticksPerFrame);
 };

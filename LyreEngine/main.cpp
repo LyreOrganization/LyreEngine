@@ -51,8 +51,9 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	}
 
 	setupKeyboardLayout();
-	Keyboard::onTriggered(Action::Exit, []() { exit(0); });
+	Keyboard::onTriggered(Action::Exit, []() { exit(0); }, true);
 
+	DWORD previousTime = GetTickCount();
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message) {
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -60,6 +61,9 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			DispatchMessage(&msg);
 		}
 		else {
+			DWORD ticksPerFrame = (GetTickCount() - previousTime);
+			previousTime = GetTickCount();
+
 			UINT width, height;
 			LyreEngine::GetClientWH(width, height);
 
@@ -69,8 +73,8 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			LyreEngine::getCamera()->pan((static_cast<LONG>(width / 2) - cursor.x) / 1000.f);
 			SetCursorPos(width / 2, height / 2);
 
-			Keyboard::process();
-			LyreEngine::render();
+			Keyboard::process(ticksPerFrame);
+			LyreEngine::render(ticksPerFrame);
 		}
 	}
 	return static_cast<int>(msg.wParam);
