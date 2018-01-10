@@ -2,18 +2,21 @@
 
 #include "SpherifiedCube.h"
 
+#include "SpherifiedPlane.h"
+
 using namespace std;
 using namespace DirectX;
 
 SpherifiedCube::SpherifiedCube(float radius)
-	: m_radius(radius)
-{
+	: m_radius(radius) {
+
 	buildCube();
 }
 
-void SpherifiedCube::buildCube()
-{
-	float cubeCoords = m_radius/sqrt(3.);
+SpherifiedCube::~SpherifiedCube() {}
+
+void SpherifiedCube::buildCube() {
+	float cubeCoords = m_radius / sqrt(3.f);
 	m_vertices.assign({
 		// front
 		{ { -cubeCoords, -cubeCoords,  cubeCoords } },
@@ -38,8 +41,7 @@ void SpherifiedCube::buildCube()
 	};
 
 	// neighbours
-	for (int i = 0; i < 3; i++)
-	{
+	for (int i = 0; i < 3; i++) {
 		m_cube[i]->m_neighbours[0] = m_cube[(i + 1) % 3].get();
 		m_cube[i]->m_neighbours[3] = m_cube[(i + 2) % 3].get();
 
@@ -52,21 +54,16 @@ void SpherifiedCube::buildCube()
 		m_cube[i]->m_neighbours[2] = m_cube[5 - i].get();
 		m_cube[5 - i]->m_neighbours[2] = m_cube[i].get();
 	}
-
-	divide(2);
 }
 
-void SpherifiedCube::divide(unsigned depth)
-{
-	for (const auto& plane : m_cube)
-	{
+void SpherifiedCube::divide(unsigned depth) {
+	for (const auto& plane : m_cube) {
 		plane->divide(depth);
 	}
 }
 
-DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2)
-{
-	DWORD newInd = m_vertices.size();
+DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2) {
+	DWORD newInd = static_cast<DWORD>(m_vertices.size());
 	m_vertices.push_back(Vertex());
 	XMStoreFloat3(&(m_vertices[newInd].position), XMVector3Normalize({
 		(m_vertices[point1].position.x + m_vertices[point2].position.x) / 2.f,
@@ -77,156 +74,15 @@ DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2)
 	return newInd;
 }
 
-vector<DWORD> SpherifiedCube::getIndicesBuffer()
-{
+vector<DWORD> SpherifiedCube::getIndicesBuffer() {
 	vector<DWORD> indices;
-	for (const auto& plane : m_cube)
-	{
+	for (const auto& plane : m_cube) {
 		vector<DWORD> planeIndices = plane->getIndicesBuffer();
 		indices.insert(indices.end(), planeIndices.begin(), planeIndices.end());
 	}
 	return indices;
 }
 
-vector<SpherifiedCube::Vertex> SpherifiedCube::getVertices() const 
-{ 
-	return m_vertices; 
-}
-
-/*
-void SpherifiedCube::rebuildCPIndicesBuffer()
-{
-	m_indices.clear();
-	m_indices.reserve(m_planesCount * 6);
-	for (int i = 0; i < ICOS_PLANES; ++i)
-	{
-		buildTrianCPIndsR(m_icosahedron[i].get());
-	}
-}
-
-const std::vector<LESimpleVertex>& SpherifiedCube::getVertices()
-{
+vector<SpherifiedCube::Vertex> SpherifiedCube::getVertices() const {
 	return m_vertices;
 }
-
-void SpherifiedCube::fillAllTriangleVertices(std::vector<LESimpleVertex> &allTriangleVertices)
-{
-	allTriangleVertices.clear();
-	for (int i = 0; i < m_indices.size(); i++)
-	{
-		allTriangleVertices.push_back(m_vertices[m_indices[i]]);
-	}
-}
-
-const std::vector<DWORD>& SpherifiedCube::getIndices()
-{
-	return m_indices;
-}
-
-void SpherifiedCube::updatePlanesAmount()
-{
-	m_planesCount = 0;
-	for (int i = 0; i < ICOS_PLANES; ++i)
-	{
-		m_planesCount += m_icosahedron[i]->getTrianglesAmount();
-	}
-}
-
-LESimpleVertex * SpherifiedCube::getVertexByIndex(DWORD index)
-{
-	return &(m_vertices[index]);
-}
-
-LESimpleVertex* SpherifiedCube::getVertexByTrianPoint(SpherifiedPoint * point)
-{
-	return &(m_vertices[point->getIndex()]);
-}
-
-int SpherifiedCube::getTrianPlanesAmount()
-{
-	return m_planesCount;
-}
-
-int SpherifiedCube::getTrianPointsAmount()
-{
-	return m_pointsCount;
-}
-
-int SpherifiedCube::getIndicesAmount()
-{
-	return m_indices.size();
-}
-
-void SpherifiedCube::buildTrianVIndsR(SpherifiedPlane* trian)
-{
-	if (trian->m_divided)
-	{
-		buildTrianVIndsR(trian->m_children[0].get());
-		buildTrianVIndsR(trian->m_children[1].get());
-		buildTrianVIndsR(trian->m_children[2].get());
-		buildTrianVIndsR(trian->m_children[3].get());
-	}
-	//separate in two triangles to cover neighbour's half (if it exists)
-	else switch (trian->m_validHalf)
-	{
-	case 0:
-		m_indices.push_back(trian->getHalfIndex(0));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		////
-		m_indices.push_back(trian->getHalfIndex(0));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		break;
-	case 1:
-		m_indices.push_back(trian->getHalfIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		////
-		m_indices.push_back(trian->getHalfIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		break;
-	case 2:
-		m_indices.push_back(trian->getHalfIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		////
-		m_indices.push_back(trian->getHalfIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		break;
-	default://no halfs exist
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		break;
-	}
-}
-
-void SpherifiedCube::buildTrianCPIndsR(SpherifiedPlane * trian)
-{
-	if (trian->m_divided)
-	{
-		buildTrianCPIndsR(trian->m_children[0].get());
-		buildTrianCPIndsR(trian->m_children[1].get());
-		buildTrianCPIndsR(trian->m_children[2].get());
-		buildTrianCPIndsR(trian->m_children[3].get());
-	}
-	//no half separation for control point patches
-	else
-	{
-		m_indices.push_back(trian->getTrianPointIndex(2));
-		m_indices.push_back(trian->getTrianPointIndex(1));
-		m_indices.push_back(trian->getTrianPointIndex(0));
-		////
-		if (trian->m_neighbours[2]->m_direction != trian->m_direction)
-			m_indices.push_back(trian->m_neighbours[2]->getTrianPointIndex(2));
-		else m_indices.push_back(trian->m_neighbours[2]->getTrianPointIndex(1));
-		if (trian->m_neighbours[1]->m_direction != trian->m_direction)
-			m_indices.push_back(trian->m_neighbours[1]->getTrianPointIndex(1));
-		else m_indices.push_back(trian->m_neighbours[1]->getTrianPointIndex(2));
-		m_indices.push_back(trian->m_neighbours[0]->getTrianPointIndex(0));
-	}
-}
-*/

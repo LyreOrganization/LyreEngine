@@ -1,21 +1,30 @@
 #include "stdafx.h"
 
-#include <unordered_map>
 #include "Keyboard.h"
 
-struct KeyDesc {
-	Action action;
-	bool pressed;
-};
+#include "KeyLayout.h"
+#include "Actions.h"
 
-std::unordered_map<Action, std::function<void()>> g_triggeringActions;
-std::unordered_map<Action, std::function<void(DWORD)>> g_continuousActions;
-std::unordered_map<WPARAM, KeyDesc> g_keys;
+using namespace std;
+using namespace DirectX;
+
+namespace {
+
+	struct KeyDesc {
+		Action action;
+		bool pressed;
+	};
+
+	unordered_map<Action, std::function<void()>> g_triggeringActions;
+	unordered_map<Action, std::function<void(DWORD)>> g_continuousActions;
+	unordered_map<WPARAM, KeyDesc> g_keys;
+
+}
 
 void Keyboard::setLayout(KeyLayout layout) {
 	g_keys.clear();
-	for (auto it = layout.begin(); it != layout.end(); ++it) {
-		g_keys[it->first] = { it->second, false };
+	for (auto& kv : layout) {
+		g_keys[kv.first] = { kv.second, false };
 	}
 }
 
@@ -27,16 +36,16 @@ void Keyboard::onTriggered(Action action, std::function<void()> callback) {
 	g_triggeringActions[action] = callback;
 }
 
-void Keyboard::process(){
+void Keyboard::process() {
 	static DWORD s_previousTime = GetTickCount();
-	DWORD tpf = (GetTickCount() - s_previousTime);
+	DWORD ticksPerFrame = (GetTickCount() - s_previousTime);
 	s_previousTime = GetTickCount();
 
-	for (auto& pair: g_keys) {
+	for (auto& pair : g_keys) {
 		KeyDesc key = pair.second;
 		if (key.pressed) {
 			try {
-				g_continuousActions.at(key.action)(tpf);
+				g_continuousActions.at(key.action)(ticksPerFrame);
 			}
 			catch (std::out_of_range) {
 				continue;

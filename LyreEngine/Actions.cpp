@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "Actions.h"
 
 std::istream & operator>>(std::istream & is, Action & action) {

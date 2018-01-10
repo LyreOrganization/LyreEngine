@@ -6,13 +6,17 @@
 #include <windows.h>
 #include <atlbase.h>
 #include <stdexcept>
+#include <functional>
 #include <memory>
 #include <fstream>
+#include <iostream>
 #include <math.h>
 #include <vector>
 #include <array>
-#include <forward_list>
+#include <unordered_map>
 #include <optional>
+#include <algorithm>
+#include <random>
 
 
 #define ZeroStruct(structure)		(ZeroMemory(&structure, sizeof(structure)))

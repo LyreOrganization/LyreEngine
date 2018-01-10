@@ -1,10 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{b9f5dcdb-9932-46d7-819b-88962de1aaba}</UniqueIdentifier>
     </Filter>
@@ -22,6 +18,13 @@
     </Filter>
     <Filter Include="Keyboard\KeyLayouts">
       <UniqueIdentifier>{48e409f0-c2af-42b5-ab43-bf69bc6c01c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ProceduralNoise">
+      <UniqueIdentifier>{b9e23fed-91c1-44c2-a113-da37e4c0e3db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -43,9 +46,17 @@
     <ClCompile Include="Keyboard.cpp">
       <Filter>Keyboard</Filter>
     </ClCompile>
-    <ClCompile Include="Actions.cpp" />
     <ClCompile Include="KeyLayout.cpp">
       <Filter>Keyboard\KeyLayouts</Filter>
+    </ClCompile>
+    <ClCompile Include="TargetCamera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Actions.cpp">
+      <Filter>Keyboard</Filter>
+    </ClCompile>
+    <ClCompile Include="PerlinGrid.cpp">
+      <Filter>ProceduralNoise</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,10 +84,16 @@
     <ClInclude Include="KeyLayout.h">
       <Filter>Keyboard\KeyLayouts</Filter>
     </ClInclude>
+    <ClInclude Include="TargetCamera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinGrid.h">
+      <Filter>ProceduralNoise</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
-      <Filter>Resource Files</Filter>
+      <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
@@ -89,7 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="lyre.ico">
-      <Filter>Resource Files</Filter>
+      <Filter>Resources</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>

@@ -1,5 +1,4 @@
-struct PS_INPUT
-{
+struct PS_INPUT {
 	float4 pos : SV_Position;
 	float3 color : COLOR;
 };

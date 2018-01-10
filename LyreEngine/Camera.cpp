@@ -5,15 +5,14 @@
 using namespace std;
 using namespace DirectX;
 
-Camera::Camera() 
-	: position{ -5.0f, 0.0f, 0.0f },
-	view{ 1.0f, 0.0f, 0.0f },
-	up{ 0.0f, 1.0f, 0.0f },
+Camera::Camera()
+	: position { -5.0f, 0.0f, 0.0f },
+	view { 1.0f, 0.0f, 0.0f },
+	up { 0.0f, 1.0f, 0.0f },
 	m_fov(XM_PIDIV2 / 2)
 {}
 
-Camera::~Camera()
-{}
+Camera::~Camera() {}
 
 XMVECTOR Camera::getRight() {
 	return XMVector3Cross(XMLoadFloat3(&up), XMLoadFloat3(&view));
@@ -28,7 +27,9 @@ XMFLOAT4X4 Camera::getViewProj(float aspectWdivH) {
 }
 
 void Camera::tilt(float angle) {
-	XMStoreFloat3(&view, XMVector3Transform(XMLoadFloat3(&view), XMMatrixRotationAxis(getRight(), angle)));
+	XMMATRIX rotationMatrix = XMMatrixRotationAxis(getRight(), angle);
+	XMStoreFloat3(&view, XMVector3Transform(XMLoadFloat3(&view), rotationMatrix));
+	XMStoreFloat3(&up, XMVector3Transform(XMLoadFloat3(&up), rotationMatrix));
 }
 
 void Camera::pan(float angle) {

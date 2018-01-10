@@ -1,17 +1,20 @@
 #include "stdafx.h"
+
 #include "KeyLayout.h"
+
+#include "Actions.h"
+
+using namespace std;
 
 KeyLayout KeyLayout::loadFromFile(const char* file) {
 	KeyLayout layout;
-	std::ifstream input(file);
+	ifstream input(file);
 
 	WPARAM key;
 	Action action;
-	for (
-		;
-		input;
-		input >> key >> action
-	) {
+
+	while (input.good()) {
+		input >> key >> action;
 		layout[key] = action;
 	}
 

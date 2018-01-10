@@ -1,8 +1,5 @@
 #pragma once
 
-#include <istream>
-
-
 enum class Action {
 	DummyAction = 0,
 

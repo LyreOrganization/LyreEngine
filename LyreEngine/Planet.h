@@ -4,8 +4,7 @@
 
 #define MAX_CBUFFERS_AMOUNT D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
 
-class Planet final
-{
+class Planet final {
 private:
 	CComPtr<ID3D11VertexShader>			m_iVS = nullptr;
 	CComPtr<ID3D11HullShader>			m_iHS = nullptr;

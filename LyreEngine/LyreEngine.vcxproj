@@ -125,11 +125,15 @@
     <ClCompile Include="KeyLayout.cpp" />
     <ClCompile Include="LyreEngine.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PerlinGrid.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="SpherifiedCube.cpp" />
     <ClCompile Include="SpherifiedPlane.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TargetCamera.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,11 +142,15 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="KeyLayout.h" />
     <ClInclude Include="LyreEngine.h" />
+    <ClInclude Include="PerlinGrid.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SpherifiedCube.h" />
     <ClInclude Include="SpherifiedPlane.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="TargetCamera.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
@@ -155,7 +163,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PS</EntryPointName>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\umpir\Projects\LyreEngine\LyreEngine\LyreEngine\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <FxCompile Include="planet_vs.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
@@ -164,7 +171,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VS</EntryPointName>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\umpir\Projects\LyreEngine\LyreEngine\LyreEngine\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
