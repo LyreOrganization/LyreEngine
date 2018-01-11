@@ -14,6 +14,16 @@ using namespace DirectX;
 
 namespace {
 
+	struct ViewProjConstantBuffer {
+		XMFLOAT4X4 viewProj;
+	};
+
+	struct LightingConstantBuffer {
+		XMFLOAT3 direction;
+		float power;
+		XMFLOAT4 diffuse;
+	};
+
 	HINSTANCE							g_hInstance = nullptr;
 	HWND								g_hWindow = nullptr;
 
@@ -36,6 +46,7 @@ namespace {
 	CComPtr<ID3D11RasterizerState>		s_iRasterizerStateSolid = nullptr;
 
 	CComPtr<ID3D11Buffer>				s_iViewProjConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				s_iLightingConstantBuffer = nullptr;
 
 	std::unique_ptr<Planet>				s_pPlanet;
 
@@ -45,7 +56,7 @@ namespace {
 		HRESULT hr;
 
 		UINT width, height;
-		LyreEngine::GetClientWH(width, height);
+		LyreEngine::getClientWH(width, height);
 
 		D3D_DRIVER_TYPE driverTypes[] =
 		{
@@ -118,7 +129,7 @@ namespace {
 			ZeroStruct(depthStencil);
 			depthStencil.DepthEnable = true;
 			depthStencil.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-			depthStencil.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+			depthStencil.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 			depthStencil.StencilEnable = true;
 			depthStencil.StencilReadMask = 0xFF;
 			depthStencil.StencilWriteMask = 0xFF;
@@ -214,10 +225,21 @@ namespace {
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(LyreEngine::ViewProjConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(ViewProjConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
 		hr = s_iDevice->CreateBuffer(&bufferDesc, nullptr, &s_iViewProjConstantBuffer);
+		if (FAILED(hr))
+			return hr;
+
+		//Lighting constant buffer
+		{
+			ZeroStruct(bufferDesc);
+			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			bufferDesc.ByteWidth = sizeof(LightingConstantBuffer);
+			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		}
+		hr = s_iDevice->CreateBuffer(&bufferDesc, nullptr, &s_iLightingConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -256,22 +278,30 @@ namespace {
 }
 
 void LyreEngine::render(DWORD ticksPerFrame) {
-	float clearColor[4] = { 0.2f, 0.3f, 0.5f, 1.0f };
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
-	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 0.0f, 0);
+	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	s_iContext->RSSetState(s_iRasterizerStateWireframe);
+	s_iContext->RSSetState(s_iRasterizerStateSolid);
 
 	ViewProjConstantBuffer vpcb;
 	vpcb.viewProj = s_pCamera->getViewProj(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
 	s_iContext->UpdateSubresource(s_iViewProjConstantBuffer, 0, nullptr, &vpcb, 0, 0);
+
+	LightingConstantBuffer lcb;
+	lcb.diffuse = { 1.0f, 0.9f, 0.7f, 1.f };
+	static float s_angle = 0;
+	s_angle += ticksPerFrame / 1000.f;
+	lcb.direction = { sin(s_angle), 0.f, cos(s_angle) };
+	lcb.power = 0.95f;
+	s_iContext->UpdateSubresource(s_iLightingConstantBuffer, 0, nullptr, &lcb, 0, 0);
 
 	s_pPlanet->render();
 
 	s_iSwapChain->Present(0, 0);
 }
 
-void LyreEngine::GetClientWH(UINT &width, UINT &height) {
+void LyreEngine::getClientWH(UINT &width, UINT &height) {
 	RECT rc;
 	GetClientRect(g_hWindow, &rc);
 	width = rc.right - rc.left;
@@ -332,11 +362,15 @@ ID3D11Buffer* LyreEngine::getViewProj() {
 	return s_iViewProjConstantBuffer;
 }
 
+ID3D11Buffer* LyreEngine::getLighting() {
+	return s_iLightingConstantBuffer;
+}
+
 FreeCamera * LyreEngine::getCamera() {
 	return s_pCamera.get();
 }
 
-HRESULT LyreEngine::ReadShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode) {
+HRESULT LyreEngine::readShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode) {
 	std::ifstream input(szFileName, std::ios::binary);
 	shaderBytecode = std::vector<char>(std::istreambuf_iterator<char>(input),
 									   std::istreambuf_iterator<char>());

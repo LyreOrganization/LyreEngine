@@ -3,6 +3,7 @@
 #include "SpherifiedCube.h"
 
 #include "SpherifiedPlane.h"
+#include "PerlinGrid.h"
 
 using namespace std;
 using namespace DirectX;
@@ -85,4 +86,24 @@ vector<DWORD> SpherifiedCube::getIndicesBuffer() {
 
 vector<SpherifiedCube::Vertex> SpherifiedCube::getVertices() const {
 	return m_vertices;
+}
+
+void SpherifiedCube::distort() {
+	PerlinGrid noise(777); // argument - seed for random
+	for (auto& vertex : m_vertices) { //works for random mesh
+		XMVECTOR posOriginal = XMLoadFloat3(&vertex.position);
+		XMVECTOR normalOriginal = XMVector3Normalize(posOriginal);
+		XMVECTOR normalDiff { 0.f, 0.f, 0.f, 0.f };
+		XMFLOAT3 scaledPos;
+		float height = 0;
+		for (int i = 0; i < 6/*iMAX*/; i++) { // fractal, iMAX octaves
+			XMStoreFloat3(&scaledPos, posOriginal * (1 << i/*octave*/));
+			XMFLOAT4 perlin = noise.perlinNoise(scaledPos);
+			XMVECTOR vecNormal = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&perlin)); //TODO
+			height += perlin.w / (5.f * (1 << i)/*amplitude*/);
+			normalDiff += vecNormal / (5.f * (1 << i)/*amplitude*/);
+		}
+		XMStoreFloat3(&vertex.position, normalOriginal * (m_radius + height));
+		XMStoreFloat3(&vertex.normal, XMVector3Normalize(normalOriginal - (normalDiff - XMVector3Dot(normalDiff, normalOriginal) * normalOriginal)));
+	}
 }

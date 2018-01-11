@@ -21,7 +21,7 @@ XMVECTOR FreeCamera::getRight() {
 XMFLOAT4X4 FreeCamera::getViewProj(float aspectWdivH) {
 	XMFLOAT4X4 result;
 	XMMATRIX viewMatrix = XMMatrixLookToLH(XMLoadFloat3(&position), XMLoadFloat3(&view), XMLoadFloat3(&up));
-	XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 100.f, 0.01f);
+	XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.01f, 100.f);
 	XMStoreFloat4x4(&result, XMMatrixTranspose(viewMatrix*projectionMatrix));
 	return result;
 }

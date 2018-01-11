@@ -65,7 +65,7 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			previousTime = GetTickCount();
 
 			UINT width, height;
-			LyreEngine::GetClientWH(width, height);
+			LyreEngine::getClientWH(width, height);
 
 			POINT cursor;
 			GetCursorPos(&cursor);

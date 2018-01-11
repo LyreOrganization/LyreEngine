@@ -11,6 +11,10 @@ namespace {
 		return x*x*x*(x*(6.f*x - 15.f) + 10.f);
 	}
 
+	inline float quinticSmoothDerivative(float x) {
+		return 30 * x*x*(x - 1)*(x - 1);
+	}
+
 	inline float gridGrad(int hash, float x, float y, float z) {
 		switch (hash & 0xF) {
 		case 0xC:
@@ -46,7 +50,7 @@ PerlinGrid::PerlinGrid(unsigned seed)
 	copy_n(m_perlinPermutations.begin(), PERLIN_GRID_SIZE, m_perlinPermutations.begin() + PERLIN_GRID_SIZE);
 }
 
-float PerlinGrid::perlinNoise(XMFLOAT3 loc) {
+XMFLOAT4 PerlinGrid::perlinNoise(XMFLOAT3 loc) {
 	XMINT3 locInt {
 		static_cast<int>(floor(loc.x)),
 		static_cast<int>(floor(loc.y)),
@@ -96,10 +100,20 @@ float PerlinGrid::perlinNoise(XMFLOAT3 loc) {
 	float k011 = g011 - g001 - g010 + g000;
 	float k111 = g111 - g011 - g101 + g001 - k110;
 
-	return g000
+	XMFLOAT4 result;
+
+	result.x = quinticSmoothDerivative(x) * (k100 + sy*k110 + sz*k101 + sy*sz*k111);
+
+	result.y = quinticSmoothDerivative(y) * (k010 + sx*k110 + sz*k011 + sx*sz*k111);
+
+	result.z = quinticSmoothDerivative(z) * (k001 + sx*k101 + sy*k011 + sx*sy*k111);
+
+	result.w = g000
 		+ sx*k100 + sy*k010 + sz*k001
 		+ sx*sy*k110
 		+ sx*sz*k101
 		+ sy*sz*k011
 		+ sx*sy*sz*k111;
+
+	return result;
 }

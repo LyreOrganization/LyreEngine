@@ -1,1 +1,1 @@
-# LyreEngine is temporary name!
+# LyreEngine is a temporary name!

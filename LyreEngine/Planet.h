@@ -16,12 +16,12 @@ private:
 
 	CComPtr<ID3D11Buffer>				m_iIndexBuffer = nullptr;
 
-	std::vector<SpherifiedCube::Vertex> m_vertices;
-	std::vector<DWORD>					m_indices;
+	SpherifiedCube						m_sphere;
 
 	std::array<ID3D11Buffer*, MAX_CBUFFERS_AMOUNT> m_cbuffers;
 
 public:
+	Planet();
 	HRESULT init();
 	void render();
 };
