@@ -2,14 +2,13 @@
 
 #include "LyreEngine.h"
 #include "FreeCamera.h"
-#include "Keyboard.h"
-#include "Actions.h"
-#include "KeyLayout.h"
+#include "Controls.h"
 
 using namespace std;
 using namespace DirectX;
 
 void setupKeyboardLayout();
+void setupCommonActions();
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
@@ -20,10 +19,10 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		ValidateRect(hWnd, nullptr);
 		return 0;
 	case WM_KEYDOWN:
-		Keyboard::press(wParam);
+		Controls::press(wParam);
 		break;
 	case WM_KEYUP:
-		Keyboard::release(wParam);
+		Controls::release(wParam);
 		break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -51,7 +50,7 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	}
 
 	setupKeyboardLayout();
-	Keyboard::onTriggered(Action::Exit, []() { exit(0); }, true);
+	setupCommonActions();
 
 	DWORD previousTime = GetTickCount();
 	MSG msg = { 0 };
@@ -73,25 +72,41 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			LyreEngine::getCamera()->pan((static_cast<LONG>(width / 2) - cursor.x) / 1000.f);
 			SetCursorPos(width / 2, height / 2);
 
-			Keyboard::process(ticksPerFrame);
+			Controls::process(ticksPerFrame);
 			LyreEngine::render(ticksPerFrame);
 		}
 	}
 	return static_cast<int>(msg.wParam);
 }
 
+void setupCommonActions() {
+	Controls::ActionGroup common("Common");
+
+	common.action("Exit").onTriggered([]() {
+		exit(0);
+	}, true);
+
+	Controls::addActionGroup(common);
+}
+
 void setupKeyboardLayout() {
-	KeyLayout keys;
+	Controls::KeyLayout keys;
 
-	keys[WindowsLetterIdx('Q')] = Action::Camera_RollCCW;
-	keys[WindowsLetterIdx('E')] = Action::Camera_RollCW;
+	Controls::KeyMapping freeCameraKeys;
+	freeCameraKeys[WindowsLetterIdx('Q')] = "RollCCW";
+	freeCameraKeys[WindowsLetterIdx('E')] = "RollCW";
 
-	keys[WindowsLetterIdx('W')] = Action::Camera_MoveForward;
-	keys[WindowsLetterIdx('A')] = Action::Camera_MoveLeft;
-	keys[WindowsLetterIdx('S')] = Action::Camera_MoveBackward;
-	keys[WindowsLetterIdx('D')] = Action::Camera_MoveRight;
+	freeCameraKeys[WindowsLetterIdx('W')] = "MoveForward";
+	freeCameraKeys[WindowsLetterIdx('A')] = "MoveLeft";
+	freeCameraKeys[WindowsLetterIdx('S')] = "MoveBackward";
+	freeCameraKeys[WindowsLetterIdx('D')] = "MoveRight";
 
-	keys[VK_ESCAPE] = Action::Exit;
+	Controls::KeyMapping commonKeys;
+	commonKeys[VK_ESCAPE] = "Exit";
 
-	Keyboard::setLayout(keys);
+
+	keys["FreeCamera"] = freeCameraKeys;
+	keys["Common"] = commonKeys;
+
+	Controls::setLayout(keys);
 }

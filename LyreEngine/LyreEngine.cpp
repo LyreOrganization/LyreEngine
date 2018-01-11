@@ -6,8 +6,7 @@
 
 #include "Planet.h"
 #include "FreeCamera.h"
-#include "Keyboard.h"
-#include "Actions.h"
+#include "Controls.h"
 
 using namespace std;
 using namespace DirectX;
@@ -252,24 +251,28 @@ namespace {
 		//Camera
 		s_pCamera = make_unique<FreeCamera>();
 		/*Setup camera actions*/ {
-			Keyboard::on(Action::Camera_RollCW, [](DWORD ticksPerFrame) {
+			Controls::ActionGroup camera("FreeCamera");
+
+			camera.action("RollCW").on([](DWORD ticksPerFrame) {
 				s_pCamera->roll(-0.001f*ticksPerFrame);
 			});
-			Keyboard::on(Action::Camera_RollCCW, [](DWORD ticksPerFrame) {
+			camera.action("RollCCW").on([](DWORD ticksPerFrame) {
 				s_pCamera->roll(0.001f*ticksPerFrame);
 			});
-			Keyboard::on(Action::Camera_MoveForward, [](DWORD ticksPerFrame) {
+			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
 				s_pCamera->moveForward(0.001f*ticksPerFrame);
 			});
-			Keyboard::on(Action::Camera_MoveBackward, [](DWORD ticksPerFrame) {
+			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
 				s_pCamera->moveBackward(0.001f*ticksPerFrame);
 			});
-			Keyboard::on(Action::Camera_MoveRight, [](DWORD ticksPerFrame) {
+			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
 				s_pCamera->moveRight(0.001f*ticksPerFrame);
 			});
-			Keyboard::on(Action::Camera_MoveLeft, [](DWORD ticksPerFrame) {
+			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
 				s_pCamera->moveLeft(0.001f*ticksPerFrame);
 			});
+
+			Controls::addActionGroup(camera);
 		}
 
 		return S_OK;

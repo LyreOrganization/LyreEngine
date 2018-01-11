@@ -13,18 +13,24 @@
     <Filter Include="Camera">
       <UniqueIdentifier>{a3b870a9-3c42-4385-b18d-8c72203b866e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Keyboard">
-      <UniqueIdentifier>{533d6e3c-6ae0-4ace-8b6f-d878a153e6e8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Keyboard\KeyLayouts">
-      <UniqueIdentifier>{48e409f0-c2af-42b5-ab43-bf69bc6c01c6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ProceduralNoise">
       <UniqueIdentifier>{b9e23fed-91c1-44c2-a113-da37e4c0e3db}</UniqueIdentifier>
     </Filter>
     <Filter Include="Resources">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Controls">
+      <UniqueIdentifier>{533d6e3c-6ae0-4ace-8b6f-d878a153e6e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls\KeyLayouts">
+      <UniqueIdentifier>{48e409f0-c2af-42b5-ab43-bf69bc6c01c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls\Action">
+      <UniqueIdentifier>{2f58a86c-8dc9-4e07-bf83-5fa60f37b238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controls\ActionGroup">
+      <UniqueIdentifier>{f13452a3-0d0c-4746-b255-443510a1045a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,23 +46,26 @@
     <ClCompile Include="Planet.cpp">
       <Filter>Planet</Filter>
     </ClCompile>
-    <ClCompile Include="Keyboard.cpp">
-      <Filter>Keyboard</Filter>
-    </ClCompile>
-    <ClCompile Include="KeyLayout.cpp">
-      <Filter>Keyboard\KeyLayouts</Filter>
-    </ClCompile>
     <ClCompile Include="TargetCamera.cpp">
       <Filter>Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="Actions.cpp">
-      <Filter>Keyboard</Filter>
     </ClCompile>
     <ClCompile Include="PerlinGrid.cpp">
       <Filter>ProceduralNoise</Filter>
     </ClCompile>
     <ClCompile Include="FreeCamera.cpp">
       <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Controls.cpp">
+      <Filter>Controls</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlsKeyLayout.cpp">
+      <Filter>Controls\KeyLayouts</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlsAction.cpp">
+      <Filter>Controls\Action</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlsActionGroup.cpp">
+      <Filter>Controls\ActionGroup</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,15 +81,6 @@
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
     </ClInclude>
-    <ClInclude Include="Keyboard.h">
-      <Filter>Keyboard</Filter>
-    </ClInclude>
-    <ClInclude Include="Actions.h">
-      <Filter>Keyboard</Filter>
-    </ClInclude>
-    <ClInclude Include="KeyLayout.h">
-      <Filter>Keyboard\KeyLayouts</Filter>
-    </ClInclude>
     <ClInclude Include="TargetCamera.h">
       <Filter>Camera</Filter>
     </ClInclude>
@@ -89,6 +89,18 @@
     </ClInclude>
     <ClInclude Include="FreeCamera.h">
       <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Controls.h">
+      <Filter>Controls</Filter>
+    </ClInclude>
+    <ClInclude Include="ControlsKeyLayout.h">
+      <Filter>Controls\KeyLayouts</Filter>
+    </ClInclude>
+    <ClInclude Include="ControlsAction.h">
+      <Filter>Controls\Action</Filter>
+    </ClInclude>
+    <ClInclude Include="ControlsActionGroup.h">
+      <Filter>Controls\ActionGroup</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,7 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="keys.layout">
-      <Filter>Keyboard\KeyLayouts</Filter>
+      <Filter>Controls\KeyLayouts</Filter>
     </None>
   </ItemGroup>
 </Project>

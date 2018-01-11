@@ -119,10 +119,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Actions.cpp" />
+    <ClCompile Include="ControlsAction.cpp" />
+    <ClCompile Include="ControlsActionGroup.cpp" />
+    <ClCompile Include="Controls.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
-    <ClCompile Include="Keyboard.cpp" />
-    <ClCompile Include="KeyLayout.cpp" />
+    <ClCompile Include="ControlsKeyLayout.cpp" />
     <ClCompile Include="LyreEngine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PerlinGrid.cpp" />
@@ -137,10 +138,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Actions.h" />
+    <ClInclude Include="ControlsAction.h" />
+    <ClInclude Include="ControlsActionGroup.h" />
+    <ClInclude Include="Controls.h" />
     <ClInclude Include="FreeCamera.h" />
-    <ClInclude Include="Keyboard.h" />
-    <ClInclude Include="KeyLayout.h" />
+    <ClInclude Include="ControlsKeyLayout.h" />
     <ClInclude Include="LyreEngine.h" />
     <ClInclude Include="PerlinGrid.h" />
     <ClInclude Include="Planet.h" />

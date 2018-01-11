@@ -67,9 +67,9 @@ DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2) {
 	DWORD newInd = static_cast<DWORD>(m_vertices.size());
 	m_vertices.push_back(Vertex());
 	XMStoreFloat3(&(m_vertices[newInd].position), XMVector3Normalize({
-		(m_vertices[point1].position.x + m_vertices[point2].position.x) / 2.f,
-		(m_vertices[point1].position.y + m_vertices[point2].position.y) / 2.f,
-		(m_vertices[point1].position.z + m_vertices[point2].position.z) / 2.f,
+		m_vertices[point1].position.x + m_vertices[point2].position.x,
+		m_vertices[point1].position.y + m_vertices[point2].position.y,
+		m_vertices[point1].position.z + m_vertices[point2].position.z,
 		0
 	}) * m_radius);
 	return newInd;

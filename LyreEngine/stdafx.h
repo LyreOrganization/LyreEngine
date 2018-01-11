@@ -12,6 +12,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include <string>
 #include <array>
 #include <unordered_map>
 #include <optional>
