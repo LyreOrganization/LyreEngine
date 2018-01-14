@@ -13,8 +13,12 @@ using namespace DirectX;
 
 namespace {
 
-	struct ViewProjConstantBuffer {
-		XMFLOAT4X4 viewProj;
+	struct ViewConstantBuffer {
+		XMFLOAT4X4 view;
+	};
+
+	struct ProjectionConstantBuffer {
+		XMFLOAT4X4 projection;
 	};
 
 	struct LightingConstantBuffer {
@@ -23,33 +27,46 @@ namespace {
 		XMFLOAT4 diffuse;
 	};
 
+	struct LodConstantBuffer {
+		float minDistance;
+		float maxDistance;
+		float minLOD;
+		float maxLOD;
+	};
+
 	HINSTANCE							g_hInstance = nullptr;
 	HWND								g_hWindow = nullptr;
 
-	D3D_DRIVER_TYPE						s_driverType = D3D_DRIVER_TYPE_NULL;
-	D3D_FEATURE_LEVEL					s_featureLevel = D3D_FEATURE_LEVEL_11_0;
+	D3D_DRIVER_TYPE						g_driverType = D3D_DRIVER_TYPE_NULL;
+	D3D_FEATURE_LEVEL					g_featureLevel = D3D_FEATURE_LEVEL_11_0;
 
-	CComPtr<ID3D11Device>				s_iDevice = nullptr;
-	CComPtr<ID3D11DeviceContext>		s_iContext = nullptr;
+	CComPtr<ID3D11Device>				g_iDevice = nullptr;
+	CComPtr<ID3D11DeviceContext>		g_iContext = nullptr;
 
-	CComPtr<IDXGISwapChain>				s_iSwapChain = nullptr;
+	CComPtr<IDXGISwapChain>				g_iSwapChain = nullptr;
 
-	CComPtr<ID3D11RenderTargetView>		s_iRTV = nullptr;
+	CComPtr<ID3D11RenderTargetView>		g_iRTV = nullptr;
 
-	CComPtr<ID3D11DepthStencilState>	s_iDSState = nullptr;
-	CComPtr<ID3D11DepthStencilView>		s_iDSV = nullptr;
+	CComPtr<ID3D11DepthStencilState>	g_iDSState = nullptr;
+	CComPtr<ID3D11DepthStencilView>		g_iDSV = nullptr;
 
-	CComPtr<ID3D11BlendState>			s_iBlendState = nullptr;
+	CComPtr<ID3D11BlendState>			g_iBlendState = nullptr;
 
-	CComPtr<ID3D11RasterizerState>		s_iRasterizerStateWireframe = nullptr;
-	CComPtr<ID3D11RasterizerState>		s_iRasterizerStateSolid = nullptr;
+	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateWireframe = nullptr;
+	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateSolid = nullptr;
 
-	CComPtr<ID3D11Buffer>				s_iViewProjConstantBuffer = nullptr;
-	CComPtr<ID3D11Buffer>				s_iLightingConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iViewConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iProjectionConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iLightingConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iLodConstantBuffer = nullptr;
 
-	std::unique_ptr<Planet>				s_pPlanet;
+	CComPtr<ID3D11SamplerState>			g_iTex2DSampler;
 
-	std::unique_ptr<FreeCamera>				s_pCamera;
+	std::unique_ptr<Planet>				g_pPlanet;
+
+	std::unique_ptr<FreeCamera>			g_pCamera;
+
+	float								g_lightAngle;
 
 	HRESULT init() {
 		HRESULT hr;
@@ -85,10 +102,10 @@ namespace {
 			swapChainDesc.Windowed = TRUE;
 		}
 		for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
-			s_driverType = driverTypes[driverTypeIndex];
-			hr = D3D11CreateDeviceAndSwapChain(nullptr, s_driverType, nullptr, 0, featureLevels,
+			g_driverType = driverTypes[driverTypeIndex];
+			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, D3D11_CREATE_DEVICE_DEBUG, featureLevels,
 											   numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc,
-											   &s_iSwapChain, &s_iDevice, &s_featureLevel, &s_iContext);
+											   &g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
 			if (SUCCEEDED(hr))
 				break;
 		}
@@ -97,10 +114,10 @@ namespace {
 
 		//Creating RTV
 		CComPtr<ID3D11Texture2D> pSwapChainBuffer = nullptr;
-		hr = s_iSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pSwapChainBuffer);
+		hr = g_iSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pSwapChainBuffer);
 		if (FAILED(hr))
 			return hr;
-		hr = s_iDevice->CreateRenderTargetView(pSwapChainBuffer, nullptr, &s_iRTV);
+		hr = g_iDevice->CreateRenderTargetView(pSwapChainBuffer, nullptr, &g_iRTV);
 		if (FAILED(hr))
 			return hr;
 
@@ -119,7 +136,7 @@ namespace {
 			depthSurface.Usage = D3D11_USAGE_DEFAULT;
 			depthSurface.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 		}
-		hr = s_iDevice->CreateTexture2D(&depthSurface, nullptr, &pDSBuffer);
+		hr = g_iDevice->CreateTexture2D(&depthSurface, nullptr, &pDSBuffer);
 		if (FAILED(hr))
 			return hr;
 		//Creating DSState
@@ -141,10 +158,10 @@ namespace {
 			depthStencil.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			depthStencil.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 		}
-		hr = s_iDevice->CreateDepthStencilState(&depthStencil, &s_iDSState);
+		hr = g_iDevice->CreateDepthStencilState(&depthStencil, &g_iDSState);
 		if (FAILED(hr))
 			return hr;
-		s_iContext->OMSetDepthStencilState(s_iDSState, 1);
+		g_iContext->OMSetDepthStencilState(g_iDSState, 1);
 		//Creting DSV
 		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 		{
@@ -153,10 +170,10 @@ namespace {
 			depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 			depthStencilViewDesc.Texture2D.MipSlice = 0;
 		}
-		hr = s_iDevice->CreateDepthStencilView(pDSBuffer, &depthStencilViewDesc, &s_iDSV);
+		hr = g_iDevice->CreateDepthStencilView(pDSBuffer, &depthStencilViewDesc, &g_iDSV);
 		if (FAILED(hr))
 			return hr;
-		s_iContext->OMSetRenderTargets(1, &s_iRTV.p, s_iDSV);
+		g_iContext->OMSetRenderTargets(1, &g_iRTV.p, g_iDSV);
 
 		D3D11_BLEND_DESC blendStateDesc;
 		{
@@ -164,11 +181,11 @@ namespace {
 			blendStateDesc.AlphaToCoverageEnable = 0;
 			blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		}
-		hr = s_iDevice->CreateBlendState(&blendStateDesc, &s_iBlendState);
+		hr = g_iDevice->CreateBlendState(&blendStateDesc, &g_iBlendState);
 		if (FAILED(hr))
 			return hr;
 		float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		s_iContext->OMSetBlendState(s_iBlendState, blendFactor, 0xffffffff);
+		g_iContext->OMSetBlendState(g_iBlendState, blendFactor, 0xffffffff);
 
 		//Setting rasterizer states
 		///solid
@@ -186,7 +203,7 @@ namespace {
 			rasterizerState.MultisampleEnable = false;
 			rasterizerState.AntialiasedLineEnable = false;
 		}
-		hr = s_iDevice->CreateRasterizerState(&rasterizerState, &s_iRasterizerStateSolid);
+		hr = g_iDevice->CreateRasterizerState(&rasterizerState, &g_iRasterizerStateSolid);
 		if (FAILED(hr))
 			return hr;
 		///wireframe
@@ -203,9 +220,10 @@ namespace {
 			rasterizerState.MultisampleEnable = false;
 			rasterizerState.AntialiasedLineEnable = false;
 		}
-		hr = s_iDevice->CreateRasterizerState(&rasterizerState, &s_iRasterizerStateWireframe);
+		hr = g_iDevice->CreateRasterizerState(&rasterizerState, &g_iRasterizerStateWireframe);
 		if (FAILED(hr))
 			return hr;
+		g_iContext->RSSetState(g_iRasterizerStateSolid);
 		//Setup the viewport
 		D3D11_VIEWPORT vp;
 		{
@@ -216,18 +234,29 @@ namespace {
 			vp.TopLeftX = 0;
 			vp.TopLeftY = 0;
 		}
-		s_iContext->RSSetViewports(1, &vp);
+		g_iContext->RSSetViewports(1, &vp);
 
 		D3D11_BUFFER_DESC bufferDesc;
 
-		//ViewProj constant buffer
+		//View constant buffer
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(ViewProjConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(ViewConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = s_iDevice->CreateBuffer(&bufferDesc, nullptr, &s_iViewProjConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iViewConstantBuffer);
+		if (FAILED(hr))
+			return hr;
+
+		//Projection constant buffer
+		{
+			ZeroStruct(bufferDesc);
+			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			bufferDesc.ByteWidth = sizeof(ProjectionConstantBuffer);
+			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		}
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iProjectionConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -238,41 +267,91 @@ namespace {
 			bufferDesc.ByteWidth = sizeof(LightingConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = s_iDevice->CreateBuffer(&bufferDesc, nullptr, &s_iLightingConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iLightingConstantBuffer);
+		if (FAILED(hr))
+			return hr;
+
+		//LOD constant buffer
+		{
+			ZeroStruct(bufferDesc);
+			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+			bufferDesc.ByteWidth = sizeof(LodConstantBuffer);
+			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		}
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iLodConstantBuffer);
+		if (FAILED(hr))
+			return hr;
+
+		//Texture sampler
+		D3D11_SAMPLER_DESC tex2DSamplerDesc;
+		{
+			ZeroStruct(tex2DSamplerDesc);
+			tex2DSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			tex2DSamplerDesc.AddressU = tex2DSamplerDesc.AddressV = tex2DSamplerDesc.AddressW =
+				D3D11_TEXTURE_ADDRESS_CLAMP;
+			tex2DSamplerDesc.MinLOD = 0.f;
+			tex2DSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		}
+		hr = LyreEngine::getDevice()->CreateSamplerState(&tex2DSamplerDesc, &g_iTex2DSampler);
 		if (FAILED(hr))
 			return hr;
 
 		//Planet
-		s_pPlanet = make_unique<Planet>();
-		hr = s_pPlanet->init();
+		g_pPlanet = make_unique<Planet>(1.f);
+		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		s_pCamera = make_unique<FreeCamera>();
-		/*Setup camera actions*/ {
+		g_pCamera = make_unique<FreeCamera>();
+		/*Setup camera actions*/
+		{
 			Controls::ActionGroup camera("FreeCamera");
 
 			camera.action("RollCW").on([](DWORD ticksPerFrame) {
-				s_pCamera->roll(-0.001f*ticksPerFrame);
+				g_pCamera->roll(-0.001f*ticksPerFrame);
 			});
 			camera.action("RollCCW").on([](DWORD ticksPerFrame) {
-				s_pCamera->roll(0.001f*ticksPerFrame);
+				g_pCamera->roll(0.001f*ticksPerFrame);
 			});
 			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
-				s_pCamera->moveForward(0.001f*ticksPerFrame);
+				g_pCamera->moveForward(0.001f*ticksPerFrame);
 			});
 			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
-				s_pCamera->moveBackward(0.001f*ticksPerFrame);
+				g_pCamera->moveBackward(0.001f*ticksPerFrame);
 			});
 			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
-				s_pCamera->moveRight(0.001f*ticksPerFrame);
+				g_pCamera->moveRight(0.001f*ticksPerFrame);
 			});
 			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
-				s_pCamera->moveLeft(0.001f*ticksPerFrame);
+				g_pCamera->moveLeft(0.001f*ticksPerFrame);
 			});
 
+			camera.action("ToggleWireframe").onTriggered([]() {
+				static bool s_bWireframe = false;
+				if (s_bWireframe ^= true) g_iContext->RSSetState(g_iRasterizerStateWireframe);
+				else g_iContext->RSSetState(g_iRasterizerStateSolid);
+			}, false);
+
 			Controls::addActionGroup(camera);
+		}
+
+		//Lighting
+		g_lightAngle = 0.f;
+		/*Setup lighting actions*/
+		{
+			Controls::ActionGroup lighting("Lighting");
+
+			lighting.action("RotateCW").on([](DWORD ticksPerFrame) {
+				g_lightAngle += ticksPerFrame / 500.f;
+				if (g_lightAngle > XM_PI*2.f) g_lightAngle = 0.f;
+			});
+			lighting.action("RotateCCW").on([](DWORD ticksPerFrame) {
+				g_lightAngle -= ticksPerFrame / 500.f;
+				if (g_lightAngle < -XM_PI*2.f) g_lightAngle = 0.f;
+			});
+
+			Controls::addActionGroup(lighting);
 		}
 
 		return S_OK;
@@ -281,27 +360,37 @@ namespace {
 }
 
 void LyreEngine::render(DWORD ticksPerFrame) {
-	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	s_iContext->ClearRenderTargetView(s_iRTV, clearColor);
-	s_iContext->ClearDepthStencilView(s_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	ViewConstantBuffer cbView;
+	cbView.view = g_pCamera->getView();
+	g_iContext->UpdateSubresource(g_iViewConstantBuffer, 0, nullptr, &cbView, 0, 0);
 
-	s_iContext->RSSetState(s_iRasterizerStateSolid);
+	ProjectionConstantBuffer cbProjection;
+	cbProjection.projection = g_pCamera->getProjection(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
+	g_iContext->UpdateSubresource(g_iProjectionConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
-	ViewProjConstantBuffer vpcb;
-	vpcb.viewProj = s_pCamera->getViewProj(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
-	s_iContext->UpdateSubresource(s_iViewProjConstantBuffer, 0, nullptr, &vpcb, 0, 0);
+	LightingConstantBuffer cbLight;
+	cbLight.diffuse = { 1.0f, 0.9f, 0.7f, 1.f };
+	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
+	cbLight.power = 0.95f;
+	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
-	LightingConstantBuffer lcb;
-	lcb.diffuse = { 1.0f, 0.9f, 0.7f, 1.f };
-	static float s_angle = 0;
-	s_angle += ticksPerFrame / 1000.f;
-	lcb.direction = { sin(s_angle), 0.f, cos(s_angle) };
-	lcb.power = 0.95f;
-	s_iContext->UpdateSubresource(s_iLightingConstantBuffer, 0, nullptr, &lcb, 0, 0);
+	LodConstantBuffer cbLod;
+	cbLod.minDistance = 1.f;
+	cbLod.maxDistance = 32.f;
+	cbLod.minLOD = 1.f;
+	cbLod.maxLOD = 63.f;
+	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 
-	s_pPlanet->render();
+	float sky = 0;
+	XMFLOAT3 eye = g_pCamera->getPosition();
+	//XMStoreFloat(&sky, XMVector3Dot(XMVector3Normalize(XMLoadFloat3(&eye)), XMLoadFloat3(&cbLight.direction)));
+	float clearColor[4] = { 0.3f*sky, 0.5f*sky, 0.9f*sky, 1.0f };
+	g_iContext->ClearRenderTargetView(g_iRTV, clearColor);
+	g_iContext->ClearDepthStencilView(g_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	s_iSwapChain->Present(0, 0);
+	g_pPlanet->render();
+
+	g_iSwapChain->Present(0, 0);
 }
 
 void LyreEngine::getClientWH(UINT &width, UINT &height) {
@@ -344,33 +433,45 @@ HRESULT LyreEngine::initWindow(HINSTANCE hInst, int nCmdShow, WNDPROC WndProc) {
 }
 
 ID3D11Device* LyreEngine::getDevice() {
-	if (s_iDevice == nullptr)
+	if (g_iDevice == nullptr)
 		if (FAILED(init())) {
 			throw runtime_error("D3D11 init failed!");
 		}
 
-	return s_iDevice;
+	return g_iDevice;
 }
 
 ID3D11DeviceContext* LyreEngine::getContext() {
-	if (s_iContext == nullptr)
+	if (g_iContext == nullptr)
 		if (FAILED(init())) {
 			throw runtime_error("D3D11 init failed!");
 		}
 
-	return s_iContext;
+	return g_iContext;
 }
 
-ID3D11Buffer* LyreEngine::getViewProj() {
-	return s_iViewProjConstantBuffer;
+ID3D11Buffer* LyreEngine::getViewCB() {
+	return g_iViewConstantBuffer;
 }
 
-ID3D11Buffer* LyreEngine::getLighting() {
-	return s_iLightingConstantBuffer;
+ID3D11Buffer* LyreEngine::getProjectionCB() {
+	return g_iProjectionConstantBuffer;
+}
+
+ID3D11Buffer* LyreEngine::getLightingCB() {
+	return g_iLightingConstantBuffer;
+}
+
+ID3D11Buffer* LyreEngine::getLodCB() {
+	return g_iLodConstantBuffer;
+}
+
+ID3D11SamplerState * LyreEngine::getSampler2D() {
+	return g_iTex2DSampler;
 }
 
 FreeCamera * LyreEngine::getCamera() {
-	return s_pCamera.get();
+	return g_pCamera.get();
 }
 
 HRESULT LyreEngine::readShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode) {

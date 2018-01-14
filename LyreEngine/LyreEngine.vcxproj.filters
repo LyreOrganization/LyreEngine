@@ -115,6 +115,12 @@
     <FxCompile Include="planet_vs.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="planet_hs.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_ds.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="lyre.ico">

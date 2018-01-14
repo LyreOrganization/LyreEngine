@@ -68,9 +68,14 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 			POINT cursor;
 			GetCursorPos(&cursor);
-			LyreEngine::getCamera()->tilt((cursor.y - static_cast<LONG>(height / 2)) / 1000.f);
-			LyreEngine::getCamera()->pan((static_cast<LONG>(width / 2) - cursor.x) / 1000.f);
-			SetCursorPos(width / 2, height / 2);
+			static POINT s_prevPos(cursor);
+			LyreEngine::getCamera()->tilt((cursor.y - s_prevPos.y) / 1000.f);
+			LyreEngine::getCamera()->pan((s_prevPos.x - cursor.x) / 1000.f);
+			if (abs(cursor.x - static_cast<LONG>(width / 2)) > 50 || abs(cursor.y - static_cast<LONG>(height / 2)) > 50) {
+				SetCursorPos(width / 2, height / 2);
+				GetCursorPos(&s_prevPos);
+			}
+			else s_prevPos = cursor;
 
 			Controls::process(ticksPerFrame);
 			LyreEngine::render(ticksPerFrame);
@@ -101,11 +106,18 @@ void setupKeyboardLayout() {
 	freeCameraKeys[WindowsLetterIdx('S')] = "MoveBackward";
 	freeCameraKeys[WindowsLetterIdx('D')] = "MoveRight";
 
+	freeCameraKeys[WindowsLetterIdx('R')] = "ToggleWireframe";
+
+	Controls::KeyMapping lightingKeys;
+	lightingKeys[WindowsLetterIdx('Z')] = "RotateCCW";
+	lightingKeys[WindowsLetterIdx('X')] = "RotateCW";
+
 	Controls::KeyMapping commonKeys;
 	commonKeys[VK_ESCAPE] = "Exit";
 
 
 	keys["FreeCamera"] = freeCameraKeys;
+	keys["Lighting"] = lightingKeys;
 	keys["Common"] = commonKeys;
 
 	Controls::setLayout(keys);

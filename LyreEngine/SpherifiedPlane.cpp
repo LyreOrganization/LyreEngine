@@ -3,20 +3,53 @@
 #include "SpherifiedPlane.h"
 
 #include "SpherifiedCube.h"
+#include "PerlinGrid.h"
 
 using namespace std;
 using namespace DirectX;
 
 namespace {
 
-	static constexpr DWORD nextIdx(DWORD index) { return ((index + 1) % 4); }		// next clockwise ement index (of 4)
-	static constexpr DWORD previousIdx(DWORD index) { return ((index + 3) % 4); }	// previous clockwise ement index (of 4)
-	static constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
+	constexpr DWORD nextIdx(DWORD index) { return ((index + 1) % 4); }		// next clockwise ement index (of 4)
+	constexpr DWORD previousIdx(DWORD index) { return ((index + 3) % 4); }	// previous clockwise ement index (of 4)
+	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
+
+	PerlinGrid noise(112); // argument - seed for random
 
 }
 
+XMFLOAT3 SpherifiedPlane::uv2pos(float u, float v) const {
+	XMFLOAT3 result;
+	XMStoreFloat3(&result, (XMLoadFloat3(&m_pSphere->vertices()[m_points[0]].position)*u +
+							XMLoadFloat3(&m_pSphere->vertices()[m_points[1]].position)*(1 - u))*v +
+							(XMLoadFloat3(&m_pSphere->vertices()[m_points[3]].position)*u +
+							 XMLoadFloat3(&m_pSphere->vertices()[m_points[2]].position)*(1 - u))*(1 - v));
+	return result;
+}
+
+void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<DWORD>& indices) {
+	if (m_divided) {
+		for (const auto& child : m_children) {
+			child->loadTopology(terrain, indices);
+		}
+	}
+	else {
+		for (int i = 0; i < 4; i++) {
+			indices.push_back(m_points[i]);
+		}
+		for (int i = 0; i < 4; i++) {
+			indices.push_back(m_neighbours[i]->m_middle);
+		}
+		indices.push_back(m_middle);
+
+		terrain.insert(terrain.end(), m_terrainMap.value().begin(), m_terrainMap.value().end());
+	}
+}
+
 SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* parent)
-	: m_pSphere(sphere), m_points(points), m_pParent(parent) {}
+	: m_pSphere(sphere), m_points(points), m_pParent(parent), m_terrainMap() {
+	m_middle = m_pSphere->createMidpoint(m_points);
+}
 
 void SpherifiedPlane::divide(int depth) {
 	if (depth < 1) return;
@@ -37,31 +70,28 @@ void SpherifiedPlane::divide(int depth) {
 			}
 		}
 
-		//create middle point
-		DWORD middle = m_pSphere->createHalf(m_halfs[0].value(), m_halfs[2].value());
-
 		//creating children
 		m_children[0] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
 			m_points[0],
 			m_halfs[0].value(),
-			middle,
+			m_middle,
 			m_halfs[3].value()
 		}, this);
 		m_children[1] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
 			m_halfs[0].value(),
 			m_points[1],
 			m_halfs[1].value(),
-			middle
+			m_middle
 		}, this);
 		m_children[2] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
-			middle,
+			m_middle,
 			m_halfs[1].value(),
 			m_points[2],
 			m_halfs[2].value()
 		}, this);
 		m_children[3] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
 			m_halfs[3].value(),
-			middle,
+			m_middle,
 			m_halfs[2].value(),
 			m_points[3]
 		}, this);
@@ -105,46 +135,39 @@ void SpherifiedPlane::divide(int depth) {
 		m_children[i]->divide(depth - 1);
 }
 
-vector<DWORD> SpherifiedPlane::getIndicesBuffer() {
-	vector<DWORD> indices;
+void SpherifiedPlane::generateTerrain() {
 	if (m_divided) {
-		for (const auto& child : m_children) {
-			vector<DWORD> childIndices = child->getIndicesBuffer();
-			indices.insert(indices.end(), childIndices.begin(), childIndices.end());
-		}
+		for (const auto& child : m_children)
+			child->generateTerrain();
 	}
 	else {
-		for (int i = 0; i < 4; i++) {
-			if (m_halfs[i]) {
-				if (m_halfs[nextIdx(i)])
-					return {
-					m_halfs[i].value(), m_points[nextIdx(i)], m_halfs[nextIdx(i)].value(),
-					m_halfs[nextIdx(i)].value(), m_points[oppositeIdx(i)],  m_points[previousIdx(i)],
-					m_points[previousIdx(i)], m_points[i], m_halfs[i].value(),
-					m_halfs[i].value(), m_halfs[nextIdx(i)].value(), m_points[previousIdx(i)]
-				};
-				if (m_halfs[oppositeIdx(i)])
-					return {
-					m_points[previousIdx(i)],  m_points[i], m_halfs[i].value(),
-					m_points[previousIdx(i)], m_halfs[i].value(), m_halfs[oppositeIdx(i)].value(),
-					m_halfs[oppositeIdx(i)].value(), m_halfs[i].value(), m_points[nextIdx(i)],
-					m_halfs[oppositeIdx(i)].value(), m_points[nextIdx(i)], m_points[oppositeIdx(i)],
-				};
-				return {
-					m_points[previousIdx(i)],  m_points[i], m_halfs[i].value(),
-					m_halfs[i].value(), m_points[nextIdx(i)], m_points[oppositeIdx(i)],
-					m_points[oppositeIdx(i)], m_points[previousIdx(i)], m_halfs[i].value()
-				};
+		auto& r_vertices = m_pSphere->vertices();
+		m_terrainMap.emplace();
+
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
+			for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
+				XMFLOAT3 originalPosition = uv2pos(
+					i / static_cast<float>(HEIGHTMAP_RESOLUTION - 1),
+					j / static_cast<float>(HEIGHTMAP_RESOLUTION - 1)
+				);
+
+				XMVECTOR original = XMLoadFloat3(&originalPosition);
+				XMVECTOR normal = XMVector3Normalize(original);
+				XMVECTOR normalDiff = XMVectorZero();
+				XMFLOAT3 scaledPos;
+				float height = 0;
+				for (int i = 0; i < 7/*iMAX*/; i++) { // fractal, iMAX octaves
+					XMStoreFloat3(&scaledPos, original * (1 << (i + 0/*octave*/)));
+					XMFLOAT4 perlin = noise.perlinNoise(scaledPos);
+					XMVECTOR vecNormal = XMLoadFloat4(&perlin);
+					height += perlin.w / (5.f * (1 << i)/*amplitude*/);
+					normalDiff += vecNormal / (5.f * (1 << i)/*amplitude*/);
+				}
+				XMStoreFloat4(&m_terrainMap.value()[j + i * HEIGHTMAP_RESOLUTION], XMVectorSetW(
+					XMVector3Normalize(normal - (normalDiff - XMVector3Dot(normalDiff, normal) * normal)),
+					height));
 			}
 		}
-		return {
-			m_points[0],
-			m_points[1],
-			m_points[2],
-			m_points[0],
-			m_points[2],
-			m_points[3],
-		};
 	}
-	return indices;
 }
+

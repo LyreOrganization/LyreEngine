@@ -15,5 +15,6 @@ const std::string& ActionGroup::getName() const {
 }
 
 Action& ActionGroup::action(const string & name) {
-	return this->emplace_back(name);
+	this->emplace_back(name);
+	return this->back();
 }

@@ -1,26 +1,17 @@
-cbuffer ViewProj : register(b0) {
-	matrix viewProj;
-}
-
-cbuffer Lighting : register(b1) {
-	float3 direction;
-	float power;
-	float4 diffuse;
+cbuffer Viewer : register(b0) {
+	matrix ViewMatrix;
 }
 
 struct VS_INPUT {
-	float3 pos : POSITION;
-	float3 normal : NORMAL;
+	float3 pos : CONTROL_POINT_WORLD_POSITION;
 };
 
 struct VS_OUTPUT {
-	float4 pos : SV_Position;
-	float3 color : COLOR;
+	float4 pos : CONTROL_POINT_VIEW_POSITION;
 };
 
 VS_OUTPUT VS(VS_INPUT input) {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.color = diffuse * power * clamp(dot(input.normal, direction), 0.f, 1.f) + (float3)1.f - power;
-	output.pos = mul(float4(input.pos, 1.f), viewProj);
+	output.pos = mul(float4(input.pos, 1.f), ViewMatrix);
 	return output;
 }

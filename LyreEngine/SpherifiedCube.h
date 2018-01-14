@@ -1,13 +1,15 @@
 #pragma once
 
-class SpherifiedPlane;
+#include "SpherifiedPlane.h"
 
 class SpherifiedCube final {
 public:
 	struct Vertex {
 		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT3 normal;
 	};
+
+	std::vector<DWORD> indices;
+	std::vector<DirectX::XMFLOAT4> terrain;
 
 private:
 	float m_radius;
@@ -21,7 +23,9 @@ public:
 	~SpherifiedCube();
 	void divide(unsigned depth);
 	DWORD createHalf(DWORD point1, DWORD point2);
-	std::vector<DWORD> getIndicesBuffer();
-	std::vector<Vertex> getVertices() const;
+	DWORD createMidpoint(const SpherifiedPlane::DWORD4& points);
+	const std::vector<Vertex>& vertices();
 	void distort();
+	void applyTopology();
+	float getRadius() const;
 };
