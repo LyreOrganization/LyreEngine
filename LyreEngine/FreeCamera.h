@@ -19,6 +19,7 @@ public:
 	DirectX::XMFLOAT3 getPosition();
 	DirectX::XMFLOAT4X4 getView();
 	DirectX::XMFLOAT4X4 getProjection(float aspectWdivH);
+	DirectX::XMFLOAT4X4 getViewProj(float aspectWdivH);
 
 	void tilt(float angle);
 	void pan(float angle);

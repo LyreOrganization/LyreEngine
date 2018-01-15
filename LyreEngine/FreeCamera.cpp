@@ -34,6 +34,13 @@ DirectX::XMFLOAT4X4 FreeCamera::getProjection(float aspectWdivH) {
 	return result;
 }
 
+DirectX::XMFLOAT4X4 FreeCamera::getViewProj(float aspectWdivH) {
+	XMFLOAT4X4 result;
+	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_view), XMLoadFloat3(&m_up))*
+											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.01f, 100.f)));
+	return result;
+}
+
 void FreeCamera::tilt(float angle) {
 	XMMATRIX rotationMatrix = XMMatrixRotationAxis(getRight(), angle);
 	XMStoreFloat3(&m_view, XMVector3Transform(XMLoadFloat3(&m_view), rotationMatrix));
