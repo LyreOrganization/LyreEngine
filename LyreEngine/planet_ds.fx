@@ -47,8 +47,8 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 						1.f);
 	output.pos = mul(output.pos, ProjMatrix);
 	terrain.w = (terrain.w + 1.f)*1.5f;
-	output.color = float3(clamp(terrain.w , 0.f, 1.f),
-						  clamp(terrain.w - 0.5f, 0.f, 1.f),
+	output.color = float3(clamp(terrain.w - 0.2f, 0.f, 1.f),
+						  clamp(terrain.w - 0.3f, 0.f, 1.f),
 						  clamp(terrain.w - 1.f, 0.f, 1.f)) *
 						  Diffuse * Power * clamp(dot(terrain.xyz, Direction), 0.f, 1.f);
 	return output;

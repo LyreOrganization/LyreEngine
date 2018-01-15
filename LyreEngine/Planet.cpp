@@ -71,7 +71,7 @@ HRESULT Planet::init() {
 	if (FAILED(hr))
 		return hr;
 
-	m_sphere.divide(1);
+	m_sphere.divide(2);
 	m_sphere.distort();
 	m_sphere.applyTopology();
 	const vector<SpherifiedCube::Vertex>& vertices = m_sphere.vertices();

@@ -14,7 +14,7 @@ namespace {
 	constexpr DWORD previousIdx(DWORD index) { return ((index + 3) % 4); }	// previous clockwise ement index (of 4)
 	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
 
-	PerlinGrid noise(112); // argument - seed for random
+	PerlinGrid g_noise(11); // argument - seed for random
 
 }
 
@@ -153,18 +153,21 @@ void SpherifiedPlane::generateTerrain() {
 
 				XMVECTOR original = XMLoadFloat3(&originalPosition);
 				XMVECTOR normal = XMVector3Normalize(original);
-				XMVECTOR normalDiff = XMVectorZero();
+				XMVECTOR surfaceDerivative = XMVectorZero();
 				XMFLOAT3 scaledPos;
 				float height = 0;
 				for (int i = 0; i < 7/*iMAX*/; i++) { // fractal, iMAX octaves
-					XMStoreFloat3(&scaledPos, original * (1 << (i + 0/*octave*/)));
-					XMFLOAT4 perlin = noise.perlinNoise(scaledPos);
+					XMStoreFloat3(&scaledPos, original * (float)(1 << (i + 0/*octave*/)));
+					XMFLOAT4 perlin = g_noise.perlinNoise(scaledPos);
 					XMVECTOR vecNormal = XMLoadFloat4(&perlin);
-					height += perlin.w / (5.f * (1 << i)/*amplitude*/);
-					normalDiff += vecNormal / (5.f * (1 << i)/*amplitude*/);
+					height += -abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));
+					float smooth = fabs(perlin.w) > 0.1f ? 1.f : (perlin.w / 0.1f);
+					smooth = smooth*smooth;
+					surfaceDerivative +=
+						(perlin.w > 0 ? -vecNormal : vecNormal) * smooth / (float)(1 << (i + 2/*amplitude*/));
 				}
 				XMStoreFloat4(&m_terrainMap.value()[j + i * HEIGHTMAP_RESOLUTION], XMVectorSetW(
-					XMVector3Normalize(normal - (normalDiff - XMVector3Dot(normalDiff, normal) * normal)),
+					XMVector3Normalize(normal - (surfaceDerivative - XMVector3Dot(surfaceDerivative, normal) * normal)),
 					height));
 			}
 		}
