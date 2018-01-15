@@ -5,7 +5,7 @@ cbuffer Viewer : register(b0) {
 struct GS_INPUT {
 	float3 pos : POSITION;
 	float3 color : COLOR;
-	float3 normalEnd : NORMAL_END;
+	float3 normal : NORMAL;
 };
 
 struct Geometry {
