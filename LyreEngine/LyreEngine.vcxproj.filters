@@ -32,6 +32,12 @@
     <Filter Include="Controls\ActionGroup">
       <UniqueIdentifier>{f13452a3-0d0c-4746-b255-443510a1045a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Normals">
+      <UniqueIdentifier>{8c441f64-f4fe-420f-a808-7b2381b68966}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Geometry">
+      <UniqueIdentifier>{7be43f3e-b472-42f4-9d81-5eb48debc7c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -109,9 +115,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="planet_ps.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="planet_vs.fx">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -120,6 +123,21 @@
     </FxCompile>
     <FxCompile Include="planet_ds.fx">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_gs.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_geometry_ps.fx">
+      <Filter>Shaders\Geometry</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_geometry_vs.fx">
+      <Filter>Shaders\Geometry</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_normals_ps.fx">
+      <Filter>Shaders\Normals</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_normals_vs.fx">
+      <Filter>Shaders\Normals</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

@@ -6,11 +6,11 @@ cbuffer Lod : register(b0) {
 }
 
 struct HS_INPUT {
-	float4 pos : CONTROL_POINT_VIEW_POSITION;
+	float3 pos : CONTROL_POINT_VIEW_POSITION;
 };
 
 struct HS_OUTPUT {
-	float4 pos : QUAD_POINT_VIEW_POSITION;
+	float3 pos : QUAD_POINT_VIEW_POSITION;
 };
 
 struct HSCF_OUTPUT {

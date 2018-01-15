@@ -160,11 +160,39 @@ void SpherifiedPlane::generateTerrain() {
 					XMStoreFloat3(&scaledPos, original * (float)(1 << (i + 0/*octave*/)));
 					XMFLOAT4 perlin = g_noise.perlinNoise(scaledPos);
 					XMVECTOR vecNormal = XMLoadFloat4(&perlin);
-					height += -abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));
-					float smooth = fabs(perlin.w) > 0.1f ? 1.f : (perlin.w / 0.1f);
-					smooth = smooth*smooth;
-					surfaceDerivative +=
-						(perlin.w > 0 ? -vecNormal : vecNormal) * smooth / (float)(1 << (i + 2/*amplitude*/));
+
+					//normal
+					height += perlin.w / (float)(1 << (i + 2/*amplitude*/));
+					surfaceDerivative += vecNormal / (float)(1 << (i + 2/*amplitude*/));
+
+					////erosion
+					//height += abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));
+					//float smooth = fabs(perlin.w) > 0.1f ? 1.f : (perlin.w / 0.1f);
+					//smooth = smooth*smooth;
+					//surfaceDerivative += (perlin.w > 0 ? vecNormal : -vecNormal) * smooth / (float)(1 << (i + 2/*amplitude*/));
+
+					////ridges
+					//height += -abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));
+					//float smooth = fabs(perlin.w) > 0.1f ? 1.f : (perlin.w / 0.1f);
+					//smooth = smooth*smooth;
+					//surfaceDerivative += (perlin.w > 0 ? -vecNormal : vecNormal) * smooth / (float)(1 << (i + 2/*amplitude*/));
+
+					////plates
+					//float plate = floor(perlin.w * 4.f) / 4.f;
+					//float rest = perlin.w - plate;
+					//float smoothA = 1.f - rest / 0.25f;
+					//float smoothB = 1.f - (0.25f - rest) / 0.25f;
+					//if (smoothA > smoothB) {
+					//	//smoothA *= smoothA*smoothA;
+					//	height += (plate + rest*smoothA*2.f) / (float)(1 << (i + 2/*amplitude*/));
+					//	surfaceDerivative += vecNormal * smoothA / (float)(1 << (i + 2/*amplitude*/));
+					//}
+					//else {
+					//	//smoothB *= smoothB*smoothB;
+					//	height += (plate + 0.25f - rest*smoothB*2.f) / (float)(1 << (i + 2/*amplitude*/));
+					//	surfaceDerivative -= vecNormal * smoothB / (float)(1 << (i + 2/*amplitude*/));
+					//}
+
 				}
 				XMStoreFloat4(&m_terrainMap.value()[j + i * HEIGHTMAP_RESOLUTION], XMVectorSetW(
 					XMVector3Normalize(normal - (surfaceDerivative - XMVector3Dot(surfaceDerivative, normal) * normal)),

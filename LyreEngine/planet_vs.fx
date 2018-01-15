@@ -7,11 +7,11 @@ struct VS_INPUT {
 };
 
 struct VS_OUTPUT {
-	float4 pos : CONTROL_POINT_VIEW_POSITION;
+	float3 pos : CONTROL_POINT_VIEW_POSITION;
 };
 
 VS_OUTPUT VS(VS_INPUT input) {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.pos = mul(float4(input.pos, 1.f), ViewMatrix);
+	output.pos = mul(float4(input.pos, 1.f), ViewMatrix).xyz;
 	return output;
 }
