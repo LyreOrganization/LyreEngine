@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ControlsAction.cpp" />
     <ClCompile Include="ControlsActionGroup.cpp" />
     <ClCompile Include="Controls.cpp" />
@@ -138,6 +139,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ControlsAction.h" />
     <ClInclude Include="ControlsActionGroup.h" />
     <ClInclude Include="Controls.h" />

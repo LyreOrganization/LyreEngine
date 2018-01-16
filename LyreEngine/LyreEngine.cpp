@@ -64,7 +64,7 @@ namespace {
 
 	std::unique_ptr<Planet>				g_pPlanet;
 
-	std::unique_ptr<FreeCamera>			g_pCamera;
+	std::unique_ptr<Camera>				g_pCamera;
 
 	float								g_lightAngle;
 
@@ -303,28 +303,48 @@ namespace {
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		g_pCamera = make_unique<FreeCamera>();
-		/*Setup camera actions*/
+		g_pCamera = make_unique<FreeCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
+											XMFLOAT3 { 1.f, 0.f, 0.f },
+											XMFLOAT3 { 0.f, 1.f, 0.f });
+		//Setup Free Camera actions
 		{
 			Controls::ActionGroup camera("FreeCamera");
 
 			camera.action("RollCW").on([](DWORD ticksPerFrame) {
-				g_pCamera->roll(-0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->roll(-0.001f*ticksPerFrame);
+				}
 			});
 			camera.action("RollCCW").on([](DWORD ticksPerFrame) {
-				g_pCamera->roll(0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->roll(0.001f*ticksPerFrame);
+				}
 			});
 			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
-				g_pCamera->moveForward(0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->moveForward(0.001f*ticksPerFrame);
+				}
 			});
 			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
-				g_pCamera->moveBackward(0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->moveBackward(0.001f*ticksPerFrame);
+				}
 			});
 			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
-				g_pCamera->moveRight(0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->moveRight(0.001f*ticksPerFrame);
+				}
 			});
 			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
-				g_pCamera->moveLeft(0.001f*ticksPerFrame);
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera != nullptr) {
+					pFreeCamera->moveLeft(0.001f*ticksPerFrame);
+				}
 			});
 
 			camera.action("ToggleWireframe").onTriggered([]() {
@@ -338,7 +358,7 @@ namespace {
 
 		//Lighting
 		g_lightAngle = 0.f;
-		/*Setup lighting actions*/
+		//Setup Lighting actions
 		{
 			Controls::ActionGroup lighting("Lighting");
 
@@ -361,11 +381,11 @@ namespace {
 
 void LyreEngine::render(DWORD ticksPerFrame) {
 	ViewConstantBuffer cbView;
-	cbView.view = g_pCamera->getView();
+	cbView.view = g_pCamera->calculateViewMatrix();
 	g_iContext->UpdateSubresource(g_iViewConstantBuffer, 0, nullptr, &cbView, 0, 0);
 
 	ProjectionConstantBuffer cbProjection;
-	cbProjection.projection = g_pCamera->getProjection(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
+	cbProjection.projection = g_pCamera->calculateProjectionMatrix(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
 	g_iContext->UpdateSubresource(g_iProjectionConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
 	LightingConstantBuffer cbLight;
@@ -470,8 +490,8 @@ ID3D11SamplerState * LyreEngine::getSampler2D() {
 	return g_iTex2DSampler;
 }
 
-FreeCamera * LyreEngine::getCamera() {
-	return g_pCamera.get();
+FreeCamera* LyreEngine::getCamera() {
+	return dynamic_cast<FreeCamera*>(g_pCamera.get());
 }
 
 HRESULT LyreEngine::readShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode) {

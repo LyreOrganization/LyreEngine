@@ -244,7 +244,7 @@ HRESULT Planet::init() {
 		FAILED(hr = initNormalsPipeline()))
 		return hr;
 
-	m_sphere.divide(2);
+	m_sphere.divide(0);
 	m_sphere.distort();
 	m_sphere.applyTopology();
 	const vector<SpherifiedCube::Vertex>& vertices = m_sphere.vertices();
@@ -317,7 +317,7 @@ HRESULT Planet::init() {
 void Planet::render() {
 	ID3D11DeviceContext* pContext = LyreEngine::getContext();
 
-	XMFLOAT4X4 view = LyreEngine::getCamera()->getView();
+	XMFLOAT4X4 view = LyreEngine::getCamera()->calculateViewMatrix();
 
 	PlanetConstantBuffer cbPlanet;
 	XMStoreFloat3(&cbPlanet.planetViewPos, XMVector4Transform(XMVectorSetW(XMVectorZero(), 1.f), XMMatrixTranspose(XMLoadFloat4x4(&view))));

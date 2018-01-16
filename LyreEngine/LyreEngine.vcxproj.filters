@@ -38,6 +38,12 @@
     <Filter Include="Shaders\Geometry">
       <UniqueIdentifier>{7be43f3e-b472-42f4-9d81-5eb48debc7c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Camera\Free">
+      <UniqueIdentifier>{8d916d67-ec61-4b63-ad27-1a7ee0e73ae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Camera\Target">
+      <UniqueIdentifier>{6e95ac9e-0fc6-4fe0-af66-1445aecee823}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -52,14 +58,8 @@
     <ClCompile Include="Planet.cpp">
       <Filter>Planet</Filter>
     </ClCompile>
-    <ClCompile Include="TargetCamera.cpp">
-      <Filter>Camera</Filter>
-    </ClCompile>
     <ClCompile Include="PerlinGrid.cpp">
       <Filter>ProceduralNoise</Filter>
-    </ClCompile>
-    <ClCompile Include="FreeCamera.cpp">
-      <Filter>Camera</Filter>
     </ClCompile>
     <ClCompile Include="Controls.cpp">
       <Filter>Controls</Filter>
@@ -72,6 +72,15 @@
     </ClCompile>
     <ClCompile Include="ControlsActionGroup.cpp">
       <Filter>Controls\ActionGroup</Filter>
+    </ClCompile>
+    <ClCompile Include="FreeCamera.cpp">
+      <Filter>Camera\Free</Filter>
+    </ClCompile>
+    <ClCompile Include="TargetCamera.cpp">
+      <Filter>Camera\Target</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,14 +96,8 @@
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
     </ClInclude>
-    <ClInclude Include="TargetCamera.h">
-      <Filter>Camera</Filter>
-    </ClInclude>
     <ClInclude Include="PerlinGrid.h">
       <Filter>ProceduralNoise</Filter>
-    </ClInclude>
-    <ClInclude Include="FreeCamera.h">
-      <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="Controls.h">
       <Filter>Controls</Filter>
@@ -107,6 +110,15 @@
     </ClInclude>
     <ClInclude Include="ControlsActionGroup.h">
       <Filter>Controls\ActionGroup</Filter>
+    </ClInclude>
+    <ClInclude Include="FreeCamera.h">
+      <Filter>Camera\Free</Filter>
+    </ClInclude>
+    <ClInclude Include="TargetCamera.h">
+      <Filter>Camera\Target</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
