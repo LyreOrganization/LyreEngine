@@ -5,6 +5,7 @@
 #include "LyreEngine.h"
 #include "SpherifiedPlane.h"
 #include "FreeCamera.h"
+#include "Utils.h"
 
 using namespace std;
 using namespace DirectX;
@@ -30,23 +31,11 @@ Planet::Planet(float radius) : m_sphere(radius) {}
 HRESULT Planet::setupStreamOutputBuffers() {
 	HRESULT hr;
 
-	D3D11_BUFFER_DESC bufferDesc;
-	{
-		ZeroStruct(bufferDesc);
-		bufferDesc.BindFlags = D3D11_BIND_STREAM_OUTPUT | D3D11_BIND_VERTEX_BUFFER;
-		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		bufferDesc.ByteWidth = (63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry);
-	}
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, nullptr, &m_iGeometryBuffer);
-	if (FAILED(hr))
-		return hr;
+	ID3D11Buffer* buffer = Utils::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry));
+	m_geometryPipeline.geometry.loadVertexBuffer(buffer, sizeof(Geometry), 0);
 
-	{
-		bufferDesc.ByteWidth = (63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2;
-	}
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, nullptr, &m_iNormalsBuffer);
-	if (FAILED(hr))
-		return hr;
+	buffer = Utils::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2);
+	m_normalsPipeline.geometry.loadVertexBuffer(buffer, sizeof(Normal), 0);
 
 	m_soBuffers.second.fill(0);
 
@@ -136,16 +125,14 @@ HRESULT Planet::initGeometryPipeline() {
 	if (FAILED(hr))
 		return hr;
 	///Vertex buffer format
-	std::vector<D3D11_INPUT_ELEMENT_DESC> layout
-	{
-		//  { SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, InputSlotClass, InstanceDataStepRate }
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	m_geometryPipeline.geometry.addVertexElement(
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
+	m_geometryPipeline.geometry.addVertexElement(
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-	hr = LyreEngine::getDevice()->CreateInputLayout(&layout[0], static_cast<UINT>(layout.size()), shaderBytecode.data(),
-													shaderBytecode.size(), &m_geometryPipeline.iVertexLayout);
-	if (FAILED(hr))
-		return hr;
+	);
+	m_geometryPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
+	m_geometryPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//Pixel shader
 	hr = LyreEngine::readShaderFromFile(L"planet_geometry_ps.cso", shaderBytecode);
@@ -174,15 +161,11 @@ HRESULT Planet::initNormalsPipeline() {
 	if (FAILED(hr))
 		return hr;
 	///Vertex buffer format
-	std::vector<D3D11_INPUT_ELEMENT_DESC> layout
-	{
-		//  { SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, InputSlotClass, InstanceDataStepRate }
+	m_normalsPipeline.geometry.addVertexElement(
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-	hr = LyreEngine::getDevice()->CreateInputLayout(&layout[0], static_cast<UINT>(layout.size()), shaderBytecode.data(),
-													shaderBytecode.size(), &m_normalsPipeline.iVertexLayout);
-	if (FAILED(hr))
-		return hr;
+	);
+	m_normalsPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
+	m_normalsPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	//Pixel shader
 	hr = LyreEngine::readShaderFromFile(L"planet_normals_ps.cso", shaderBytecode);
@@ -195,31 +178,51 @@ HRESULT Planet::initNormalsPipeline() {
 	return S_OK;
 }
 
-HRESULT Planet::init() {
+HRESULT Planet::initGeometryAndVS() {
 	HRESULT hr;
-
-	D3D11_BUFFER_DESC bufferDesc;
-	D3D11_SUBRESOURCE_DATA initData;
-
 	std::vector<char> shaderBytecode;
 
-	//Vertex shader
 	hr = LyreEngine::readShaderFromFile(L"planet_vs.cso", shaderBytecode);
 	if (FAILED(hr))
 		return hr;
 	hr = LyreEngine::getDevice()->CreateVertexShader(shaderBytecode.data(), shaderBytecode.size(), nullptr, &m_iVS);
 	if (FAILED(hr))
 		return hr;
-	///Vertex buffer format
-	std::vector<D3D11_INPUT_ELEMENT_DESC> layout
-	{
-		//  { SemanticName, SemanticIndex, Format, InputSlot, AlignedByteOffset, InputSlotClass, InstanceDataStepRate }
-		{ "CONTROL_POINT_WORLD_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-	};
-	hr = LyreEngine::getDevice()->CreateInputLayout(&layout[0], static_cast<UINT>(layout.size()), shaderBytecode.data(),
-													shaderBytecode.size(), &m_iVertexLayout);
-	if (FAILED(hr))
-		return hr;
+
+	m_geometry.addVertexElement(
+		{"CONTROL_POINT_WORLD_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
+
+	/*auto& vertexElement = m_geometry.createVertexElement();
+	vertexElement.SemanticName = "CONTROL_POINT_WORLD_POSITION";
+	vertexElement.SemanticIndex = 0;
+	vertexElement.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	vertexElement.InputSlot = 0;
+	vertexElement.AlignedByteOffset = 0;
+	vertexElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	vertexElement.InstanceDataStepRate = 0;*/
+
+	m_sphere.divide(0);
+	m_sphere.distort();
+	m_sphere.applyTopology();
+
+	m_geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
+	m_geometry.loadVertices(m_sphere.vertices(), 0);
+	m_geometry.loadIndices(m_sphere.indices);
+	m_geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST);
+
+	return S_OK;
+}
+
+HRESULT Planet::init() {
+	HRESULT hr;
+
+	D3D11_BUFFER_DESC bufferDesc;
+
+	//IA and VS
+	initGeometryAndVS();
+
+	std::vector<char> shaderBytecode;
 
 	//Hull shader
 	hr = LyreEngine::readShaderFromFile(L"planet_hs.cso", shaderBytecode);
@@ -242,35 +245,6 @@ HRESULT Planet::init() {
 		FAILED(hr = initGeometryShader()) ||
 		FAILED(hr = initGeometryPipeline()) ||
 		FAILED(hr = initNormalsPipeline()))
-		return hr;
-
-	m_sphere.divide(0);
-	m_sphere.distort();
-	m_sphere.applyTopology();
-	const vector<SpherifiedCube::Vertex>& vertices = m_sphere.vertices();
-
-	//Setting vertex buffer
-	{
-		ZeroStruct(bufferDesc);
-		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		bufferDesc.ByteWidth = static_cast<UINT>(VecBufferSize(vertices));
-		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	}
-	initData.pSysMem = vertices.data();
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &m_iVertexBuffer);
-	if (FAILED(hr))
-		return hr;
-
-	//Setting index buffer
-	{
-		ZeroStruct(bufferDesc);
-		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		bufferDesc.ByteWidth = static_cast<UINT>(VecBufferSize(m_sphere.indices));
-		bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	}
-	initData.pSysMem = m_sphere.indices.data();
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &m_iIndexBuffer);
-	if (FAILED(hr))
 		return hr;
 
 	//Planet constant buffer
@@ -324,12 +298,7 @@ void Planet::render() {
 	cbPlanet.radius = m_sphere.getRadius();
 	pContext->UpdateSubresource(m_iPlanetConstantBuffer, 0, nullptr, &cbPlanet, 0, 0);
 
-	pContext->IASetInputLayout(m_iVertexLayout);
-	pContext->IASetIndexBuffer(m_iIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST);
-	UINT stride = VecElementSize(m_sphere.vertices());
-	UINT offset = 0;
-	pContext->IASetVertexBuffers(0, 1, &m_iVertexBuffer.p, &stride, &offset);
+	m_geometry.bind();
 
 	pContext->VSSetShader(m_iVS, nullptr, 0);
 	m_cBuffers.fill(nullptr);
@@ -358,8 +327,8 @@ void Planet::render() {
 	m_cBuffers[0] = LyreEngine::getViewCB();
 	pContext->GSSetConstantBuffers(0, MAX_CBUFFERS_AMOUNT, m_cBuffers.data());
 	m_soBuffers.first.fill(nullptr);
-	m_soBuffers.first[0] = m_iGeometryBuffer;
-	m_soBuffers.first[1] = m_iNormalsBuffer;
+	m_soBuffers.first[0] = m_geometryPipeline.geometry.getVertexBuffer(0);
+	m_soBuffers.first[1] = m_normalsPipeline.geometry.getVertexBuffer(0);
 	pContext->SOSetTargets(MAX_SOBUFFERS_AMOUNT, m_soBuffers.first.data(), m_soBuffers.second.data());
 
 	pContext->PSSetShader(nullptr, nullptr, 0);
@@ -380,11 +349,7 @@ void Planet::render() {
 void Planet::renderGeometry() {
 	ID3D11DeviceContext* pContext = LyreEngine::getContext();
 
-	pContext->IASetInputLayout(m_geometryPipeline.iVertexLayout);
-	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	UINT stride = sizeof(Geometry);
-	UINT offset = 0;
-	pContext->IASetVertexBuffers(0, 1, &m_iGeometryBuffer.p, &stride, &offset);
+	m_geometryPipeline.geometry.bind();
 
 	pContext->VSSetShader(m_geometryPipeline.iVS, nullptr, 0);
 	m_cBuffers.fill(nullptr);
@@ -399,11 +364,7 @@ void Planet::renderGeometry() {
 void Planet::renderNormals() {
 	ID3D11DeviceContext* pContext = LyreEngine::getContext();
 
-	pContext->IASetInputLayout(m_normalsPipeline.iVertexLayout);
-	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	UINT stride = sizeof(Normal);
-	UINT offset = 0;
-	pContext->IASetVertexBuffers(0, 1, &m_iNormalsBuffer.p, &stride, &offset);
+	m_normalsPipeline.geometry.bind();
 
 	pContext->VSSetShader(m_normalsPipeline.iVS, nullptr, 0);
 	m_cBuffers.fill(nullptr);

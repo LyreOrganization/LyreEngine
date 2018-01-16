@@ -44,6 +44,9 @@
     <Filter Include="Camera\Target">
       <UniqueIdentifier>{6e95ac9e-0fc6-4fe0-af66-1445aecee823}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DirectXAPI">
+      <UniqueIdentifier>{7513d264-c102-4344-8b9d-acfa36414fd1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -82,6 +85,13 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
+    <ClCompile Include="D3DGeometry.cpp">
+      <Filter>DirectXAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="D3DPipelineConfig.cpp">
+      <Filter>DirectXAPI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -119,6 +129,18 @@
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DGeometry.h">
+      <Filter>DirectXAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>DirectXAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DPipelineConfig.h">
+      <Filter>DirectXAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DConstantBuffer.h">
+      <Filter>DirectXAPI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

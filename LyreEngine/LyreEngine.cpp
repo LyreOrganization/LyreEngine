@@ -494,7 +494,7 @@ FreeCamera* LyreEngine::getCamera() {
 	return dynamic_cast<FreeCamera*>(g_pCamera.get());
 }
 
-HRESULT LyreEngine::readShaderFromFile(WCHAR* szFileName, std::vector<char> &shaderBytecode) {
+HRESULT LyreEngine::readShaderFromFile(const WCHAR* szFileName, std::vector<char> &shaderBytecode) {
 	std::ifstream input(szFileName, std::ios::binary);
 	shaderBytecode = std::vector<char>(std::istreambuf_iterator<char>(input),
 									   std::istreambuf_iterator<char>());
