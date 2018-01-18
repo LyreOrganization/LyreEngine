@@ -7,7 +7,7 @@
 using namespace std;
 using namespace DirectX;
 
-SpherifiedCube::SpherifiedCube(float radius)
+SpherifiedCube::SpherifiedCube(float radius, float startingOctave)
 	: m_radius(radius) {
 
 	buildCube();
@@ -87,11 +87,6 @@ DWORD SpherifiedCube::createMidpoint(const SpherifiedPlane::DWORD4& points) {
 
 const vector<SpherifiedCube::Vertex>& SpherifiedCube::vertices() {
 	return m_vertices;
-}
-
-void SpherifiedCube::distort() {
-	for (const auto& plane : m_cube)
-		plane->generateTerrain();
 }
 
 void SpherifiedCube::applyTopology() {

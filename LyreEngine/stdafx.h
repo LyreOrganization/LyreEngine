@@ -15,9 +15,11 @@
 #include <string>
 #include <array>
 #include <unordered_map>
+#include <queue>
 #include <optional>
 #include <algorithm>
 #include <random>
+#include <mutex>
 
 
 #define ZeroStruct(structure)		(ZeroMemory(&structure, sizeof(structure)))

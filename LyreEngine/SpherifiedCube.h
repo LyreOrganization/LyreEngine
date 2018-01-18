@@ -19,13 +19,12 @@ private:
 	void buildCube();
 
 public:
-	SpherifiedCube(float radius);
+	SpherifiedCube(float radius, float startingOctave);
 	~SpherifiedCube();
 	void divide(unsigned depth);
 	DWORD createHalf(DWORD point1, DWORD point2);
 	DWORD createMidpoint(const SpherifiedPlane::DWORD4& points);
 	const std::vector<Vertex>& vertices();
-	void distort();
 	void applyTopology();
 	float getRadius() const;
 };

@@ -2,7 +2,7 @@
 
 class SpherifiedCube;
 
-#define HEIGHTMAP_RESOLUTION 64
+class TerrainMap;
 
 class SpherifiedPlane final {
 	friend class SpherifiedCube;
@@ -18,18 +18,16 @@ class SpherifiedPlane final {
 	std::array<std::optional<DWORD>, 4> m_halfs;
 	DWORD m_middle;
 
-	std::optional<
-		std::array<DirectX::XMFLOAT4, HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION>
-	> m_terrainMap;
+	std::unique_ptr<TerrainMap> m_pTerrainMap;
 	
 	bool m_divided;
 	std::array<std::unique_ptr<SpherifiedPlane>, 4> m_children;
 
-	DirectX::XMFLOAT3 uv2pos(float u, float v) const;
 	void loadTopology(std::vector<DirectX::XMFLOAT4>& terrain, std::vector<DWORD>& indices);
+
+	void detail();
+	void divide(int depth = 1);
 
 public:
 	SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* fatherPlane = nullptr);
-	void divide(int depth = 1);
-	void generateTerrain();
 };

@@ -129,6 +129,8 @@
     <ClCompile Include="ControlsKeyLayout.cpp" />
     <ClCompile Include="LyreEngine.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TerrainMap.cpp" />
+    <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="PerlinGrid.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="SpherifiedCube.cpp" />
@@ -150,6 +152,8 @@
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="ControlsKeyLayout.h" />
     <ClInclude Include="LyreEngine.h" />
+    <ClInclude Include="TerrainMap.h" />
+    <ClInclude Include="MapLoader.h" />
     <ClInclude Include="PerlinGrid.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="resource.h" />
