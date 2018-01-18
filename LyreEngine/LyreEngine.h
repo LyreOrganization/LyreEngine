@@ -1,7 +1,7 @@
 #pragma once
 
 class Planet;
-class FreeCamera;
+class Camera;
 
 namespace LyreEngine
 {
@@ -13,7 +13,7 @@ namespace LyreEngine
 	ID3D11Buffer* getLightingCB();
 	ID3D11Buffer* getLodCB();
 	ID3D11SamplerState* getSampler2D();
-	FreeCamera* getCamera();
+	Camera* getCamera();
 	void getClientWH(UINT & width, UINT & height);
 	HRESULT readShaderFromFile(const WCHAR* szFileName, std::vector<char> &shaderBytecode);
 	void render(DWORD ticksPerFrame);

@@ -1,21 +1,20 @@
 #pragma once
 
-class TargetCamera final {
-public:
-	TargetCamera(float x, float y, float z,
-				 float targ_x, float targ_y, float targ_z);
-	void Look(float targ_x, float targ_y, float targ_z);
-	void GoToTarget(float distance);
-	void ApproachToTarget(float percentage);
-	void RotateAroundTargetH(float angle);
-	void RotateAroundTargetV(float angle);
-	virtual void RotateUpAxis(float angle);
-	virtual void RotateHeading(float angle);
-	virtual DirectX::XMFLOAT3 up();
-	virtual DirectX::XMFLOAT3 at();
-	float TargetDist();
+#include "Camera.h"
 
+class TargetCamera : public Camera {
 protected:
 	DirectX::XMFLOAT3 m_target;
-	float m_headingAngle;
+	float m_radius;
+
+public:
+	TargetCamera(const DirectX::XMFLOAT3 &position,
+				 const DirectX::XMFLOAT3 &target, float radius);
+	TargetCamera(const Camera& camera, const DirectX::XMFLOAT3 &target, float radius);
+	virtual ~TargetCamera() override;
+	void approach(float percentage);
+	void rotateAroundHorizontally(float angle);
+	void rotateAroundVertically(float angle);
+	void spin(float angle);
+	void tilt(float angle);
 };

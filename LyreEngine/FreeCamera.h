@@ -5,17 +5,17 @@
 class FreeCamera : public Camera
 {
 public:
-	FreeCamera(DirectX::XMFLOAT3 position,
-		   DirectX::XMFLOAT3 view,
-		   DirectX::XMFLOAT3 up);
+	FreeCamera();
+	FreeCamera(const DirectX::XMFLOAT3& position,
+			   const DirectX::XMFLOAT3& view,
+			   const DirectX::XMFLOAT3& up);
+	FreeCamera(const Camera& camera);
 	virtual ~FreeCamera() override;
 
 	void tilt(float angle);
 	void pan(float angle);
 	void roll(float angle);
 
-	void moveForward(float dist);
-	void moveBackward(float dist);
-	void moveRight(float dist);
-	void moveLeft(float dist);
+	void moveAhead(float dist);
+	void moveAside(float dist);
 };

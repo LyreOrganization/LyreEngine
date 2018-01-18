@@ -136,9 +136,7 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TargetCamera.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="TargetCamera.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,9 +156,7 @@
     <ClInclude Include="SpherifiedCube.h" />
     <ClInclude Include="SpherifiedPlane.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="TargetCamera.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClInclude>
+    <ClInclude Include="TargetCamera.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>

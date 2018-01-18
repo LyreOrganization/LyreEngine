@@ -16,18 +16,18 @@ SpherifiedCube::SpherifiedCube(float radius)
 SpherifiedCube::~SpherifiedCube() {}
 
 void SpherifiedCube::buildCube() {
-	float cubeCoords = m_radius / sqrt(3.f);
+	const float CUBE_COORDS = m_radius / sqrt(3.f);
 	m_vertices.assign({
 		// front
-		{ { -cubeCoords, -cubeCoords,  cubeCoords } },
-		{ { cubeCoords, -cubeCoords,  cubeCoords } },
-		{ { cubeCoords,  cubeCoords,  cubeCoords } },
-		{ { -cubeCoords,  cubeCoords,  cubeCoords } },
+		{ { -CUBE_COORDS, -CUBE_COORDS,  CUBE_COORDS } },
+		{ { CUBE_COORDS, -CUBE_COORDS,  CUBE_COORDS } },
+		{ { CUBE_COORDS,  CUBE_COORDS,  CUBE_COORDS } },
+		{ { -CUBE_COORDS,  CUBE_COORDS,  CUBE_COORDS } },
 		// back
-		{ { -cubeCoords, -cubeCoords, -cubeCoords } },
-		{ { cubeCoords, -cubeCoords, -cubeCoords } },
-		{ { cubeCoords,  cubeCoords, -cubeCoords } },
-		{ { -cubeCoords,  cubeCoords, -cubeCoords } },
+		{ { -CUBE_COORDS, -CUBE_COORDS, -CUBE_COORDS } },
+		{ { CUBE_COORDS, -CUBE_COORDS, -CUBE_COORDS } },
+		{ { CUBE_COORDS,  CUBE_COORDS, -CUBE_COORDS } },
+		{ { -CUBE_COORDS,  CUBE_COORDS, -CUBE_COORDS } },
 	});
 
 	m_cube = {
