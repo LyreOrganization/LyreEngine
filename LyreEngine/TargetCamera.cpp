@@ -2,74 +2,87 @@
 
 #include "TargetCamera.h"
 
-TargetCamera::TargetCamera(float x, float y, float z, float targ_x, float targ_y, float targ_z)
-	: m_target { targ_x, targ_y, targ_z }, m_headingAngle(0.f)
-{}
+using namespace DirectX;
 
-void TargetCamera::Look(float targ_x, float targ_y, float targ_z) {
-	m_target = { targ_x,targ_y,targ_z };
+namespace {
+	const float MAX_TILT = XM_PIDIV2 - 0.001f;
 }
 
-void TargetCamera::GoToTarget(float distance) {
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) +
-				  XMVector3Normalize(XMLoadFloat3(&m_target)
-									 - XMLoadFloat3(&m_position)) * distance);
+TargetCamera::TargetCamera(const XMFLOAT3& position,
+						   const XMFLOAT3& target, float radius)
+	: Camera(), m_target(target), m_radius(radius) {
+
+	m_position = position;
+	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&position);
+	float distance = (XMVectorGetX(XMVector3Length(vTarget)) - m_radius);
+	if (distance < 0)
+		XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) - XMVector3Normalize(vTarget)*distance);
+
+	XMVECTOR vView = XMVector3Normalize(XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position));
+	XMStoreFloat3(&m_view, vView);
+	XMVECTOR vUp = XMLoadFloat3(&m_up);
+	XMVector3ComponentsFromNormal(&XMVECTOR(), &vUp, XMLoadFloat3(&m_up), vView);
+	XMStoreFloat3(&m_up, XMVector3Normalize(vUp));
 }
 
-void TargetCamera::ApproachToTarget(float percentage) {
-	//SAME AS : position += (target - position) * p
-	XMVECTOR direction = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
-	float moveLength = (XMVectorGetX(XMVector3Length(direction)) - PLANET_RAD) * percentage / 100.f;
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) +
-		(moveLength > 0 ?
-		 XMVector3ClampLength(direction, moveLength, moveLength) :
-		 -XMVector3ClampLength(direction, -moveLength, -moveLength)));
+TargetCamera::TargetCamera(const Camera& camera, 
+						   const DirectX::XMFLOAT3 &target, float radius)
+	:Camera(camera), m_target(target), m_radius(radius) {
+
+	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
+	float distance = (XMVectorGetX(XMVector3Length(vTarget)) - m_radius);
+	if (distance < 0)
+		XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) - XMVector3Normalize(vTarget)*distance);
+
+	XMVECTOR vView = XMVector3Normalize(XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position));
+	XMStoreFloat3(&m_view, vView);
+	XMVECTOR vUp = XMLoadFloat3(&m_up);
+	XMVector3ComponentsFromNormal(&XMVECTOR(), &vUp, XMLoadFloat3(&m_up), vView);
+	XMStoreFloat3(&m_up, XMVector3Normalize(vUp));
 }
 
-void TargetCamera::RotateAroundTargetH(float angle) {
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_target) +
-				  XMVector3Rotate(XMLoadFloat3(&m_position) - XMLoadFloat3(&m_target),
-								  XMQuaternionRotationNormal(XMLoadFloat3(&m_upAxis), angle)));
+TargetCamera::~TargetCamera() {}
+
+void TargetCamera::approach(float percentage) {
+	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
+	float moveDistance = (XMVectorGetX(XMVector3Length(vTarget)) - m_radius) * percentage / 100.f;
+	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) + XMVector3Normalize(vTarget)*moveDistance);
 }
 
-void TargetCamera::RotateAroundTargetV(float angle) {
-	XMVECTOR direction = XMLoadFloat3(&m_position) - XMLoadFloat3(&m_target);
-	XMVECTOR right_axis = XMVector3Cross(direction, XMLoadFloat3(&m_upAxis));
-	direction = XMVector3Rotate(direction, XMQuaternionRotationAxis(right_axis, angle));
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_target) + direction);
-	XMStoreFloat3(&m_upAxis, XMVector3Normalize(XMVector3Cross(right_axis, direction)));
+void TargetCamera::rotateAroundHorizontally(float angle) {
+	XMVECTOR quaternion = XMQuaternionRotationNormal(XMVector3Normalize(getRight()), angle);
+	XMStoreFloat3(&m_position, XMLoadFloat3(&m_target) + XMVector3Rotate(
+		XMLoadFloat3(&m_position) - XMLoadFloat3(&m_target), quaternion));
+	XMStoreFloat3(&m_view, XMVector3Rotate(XMLoadFloat3(&m_view), quaternion));
+	XMStoreFloat3(&m_up, XMVector3Rotate(XMLoadFloat3(&m_up), quaternion));
 }
 
-void TargetCamera::RotateUpAxis(float angle) {
-	XMStoreFloat3(&m_upAxis, XMVector3Rotate(XMLoadFloat3(&m_upAxis),
-											 XMQuaternionRotationAxis(XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position), angle)));
+void TargetCamera::rotateAroundVertically(float angle) {
+	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
+	XMVECTOR vUp = XMLoadFloat3(&m_up);
+	XMVector3ComponentsFromNormal(&XMVECTOR(), &vUp, XMLoadFloat3(&m_up), XMVector3Normalize(vTarget));
+	XMVECTOR quaternion = XMQuaternionRotationNormal(XMVector3Normalize(vUp), angle);
+	XMStoreFloat3(&m_position, XMLoadFloat3(&m_target) + XMVector3Rotate(-vTarget, quaternion));
+	XMStoreFloat3(&m_view, XMVector3Rotate(XMLoadFloat3(&m_view), quaternion));
+	XMStoreFloat3(&m_up, XMVector3Rotate(XMLoadFloat3(&m_up), quaternion));
 }
 
-void TargetCamera::RotateHeading(float angle) {
-	m_headingAngle += angle;
+void TargetCamera::spin(float angle) {
+	XMVECTOR quaternion = XMQuaternionRotationNormal(XMVector3Normalize(
+		XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position)), angle);
+	XMStoreFloat3(&m_view, XMVector3Rotate(XMLoadFloat3(&m_view), quaternion));
+	XMStoreFloat3(&m_up, XMVector3Rotate(XMLoadFloat3(&m_up), quaternion));
 }
 
-XMFLOAT3 TargetCamera::at() {
-	XMFLOAT3 result;
-	XMVECTOR direction = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
-	XMVECTOR right_axis = XMVector3Cross(direction, XMLoadFloat3(&m_upAxis));
-	XMVECTOR at = XMVector3Rotate(direction, XMQuaternionRotationAxis(right_axis, m_headingAngle));
-	at = XMLoadFloat3(&m_position) + XMVector3Normalize(at);
-	XMStoreFloat3(&result, at);
-	return result;
-}
-
-XMFLOAT3 TargetCamera::up() {
-	XMFLOAT3 result;
-	XMVECTOR direction = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
-	XMVECTOR right_axis = XMVector3Cross(direction, XMLoadFloat3(&m_upAxis));
-	XMStoreFloat3(&result, XMVector3Rotate(XMLoadFloat3(&m_upAxis),
-										   XMQuaternionRotationAxis(right_axis, m_headingAngle)));
-	return result;
-}
-
-float TargetCamera::TargetDist() {
-	float len;
-	XMStoreFloat(&len, XMVector3Length(XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position)));
-	return len;
+void TargetCamera::tilt(float angle) {
+	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
+	XMVECTOR quaternion = XMQuaternionRotationAxis(getRight(), angle);
+	XMVECTOR vNewView = XMVector3Rotate(XMLoadFloat3(&m_view), quaternion);
+	if (XMVectorGetX(XMVector3AngleBetweenVectors(vNewView, vTarget)) > MAX_TILT)
+		return;
+	XMVECTOR vNewUp = XMVector3Rotate(XMLoadFloat3(&m_up), quaternion);
+	if (XMVectorGetX(XMVector3AngleBetweenVectors(vNewUp, vTarget)) < MAX_TILT)
+		return;
+	XMStoreFloat3(&m_view, vNewView);
+	XMStoreFloat3(&m_up, vNewUp);
 }

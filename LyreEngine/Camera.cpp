@@ -5,8 +5,26 @@
 using namespace std;
 using namespace DirectX;
 
-Camera::Camera(XMFLOAT3 position, XMFLOAT3 view, XMFLOAT3 up)
-	: m_position(position), m_view(view), m_up(up), m_fov(XM_PIDIV4) {}
+Camera::Camera(const XMFLOAT3& position,
+			   const XMFLOAT3& view,
+			   const XMFLOAT3& up)
+	: m_position(position), m_view(view), m_up(up), m_fov(XM_PIDIV4) {
+	XMVECTOR vView = XMVector3Normalize(XMLoadFloat3(&m_view));
+	XMStoreFloat3(&m_view, vView);
+	XMVECTOR vUp = XMLoadFloat3(&m_up);
+	XMVector3ComponentsFromNormal(&XMVECTOR(), &vUp, XMLoadFloat3(&m_up), vView);
+	XMStoreFloat3(&m_up, XMVector3Normalize(vUp));
+}
+
+Camera::Camera()
+	: m_position({ 0.f, 0.f, -1.f }),
+	m_view({ 0.f, 0.f, 1.f }),
+	m_up({ 0.f, 1.f, 0.f }),
+	m_fov(XM_PIDIV4) {}
+
+Camera::Camera(const Camera& camera)
+	: m_position(camera.m_position), m_view(camera.m_view), m_up(camera.m_up), 
+	m_fov(camera.m_fov) {}
 
 Camera::~Camera() {}
 

@@ -2,6 +2,7 @@
 
 #include "LyreEngine.h"
 #include "FreeCamera.h"
+#include "TargetCamera.h"
 #include "Controls.h"
 
 using namespace std;
@@ -53,6 +54,7 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	setupCommonActions();
 
 	DWORD previousTime = GetTickCount();
+
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message) {
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -69,8 +71,20 @@ int WINAPI wWinMain(HINSTANCE m_hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 			POINT cursor;
 			GetCursorPos(&cursor);
 			static POINT s_prevPos(cursor);
-			LyreEngine::getCamera()->tilt((cursor.y - s_prevPos.y) / 1000.f);
-			LyreEngine::getCamera()->pan((s_prevPos.x - cursor.x) / 1000.f);
+
+			FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(LyreEngine::getCamera());
+			if (pFreeCamera != nullptr) {
+				pFreeCamera->tilt((cursor.y - s_prevPos.y) / 1000.f);
+				pFreeCamera->pan((s_prevPos.x - cursor.x) / 1000.f);
+			}
+
+			TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(LyreEngine::getCamera());
+
+			if (pTargetCamera != nullptr) {
+				pTargetCamera->tilt((cursor.y - s_prevPos.y) * 0.0005f);
+				pTargetCamera->spin((s_prevPos.x - cursor.x) * 0.0005f);
+			}
+
 			if (abs(cursor.x - static_cast<LONG>(width / 2)) > 50 || abs(cursor.y - static_cast<LONG>(height / 2)) > 50) {
 				SetCursorPos(width / 2, height / 2);
 				GetCursorPos(&s_prevPos);
@@ -97,16 +111,32 @@ void setupCommonActions() {
 void setupKeyboardLayout() {
 	Controls::KeyLayout keys;
 
+	Controls::KeyMapping cameraKeys;
+	{
+		cameraKeys[WindowsLetterIdx('R')] = "ToggleWireframe";
+		cameraKeys[WindowsDigitIdx('1')] = "SwitchToFreeCamera";
+		cameraKeys[WindowsDigitIdx('2')] = "SwitchToTargetCamera";
+	}
 	Controls::KeyMapping freeCameraKeys;
-	freeCameraKeys[WindowsLetterIdx('Q')] = "RollCCW";
-	freeCameraKeys[WindowsLetterIdx('E')] = "RollCW";
+	{
+		freeCameraKeys[WindowsLetterIdx('Q')] = "RollCCW";
+		freeCameraKeys[WindowsLetterIdx('E')] = "RollCW";
 
-	freeCameraKeys[WindowsLetterIdx('W')] = "MoveForward";
-	freeCameraKeys[WindowsLetterIdx('A')] = "MoveLeft";
-	freeCameraKeys[WindowsLetterIdx('S')] = "MoveBackward";
-	freeCameraKeys[WindowsLetterIdx('D')] = "MoveRight";
+		freeCameraKeys[WindowsLetterIdx('W')] = "MoveForward";
+		freeCameraKeys[WindowsLetterIdx('A')] = "MoveLeft";
+		freeCameraKeys[WindowsLetterIdx('S')] = "MoveBackward";
+		freeCameraKeys[WindowsLetterIdx('D')] = "MoveRight";
+	}
+	Controls::KeyMapping targetCameraKeys;
+	{
+		targetCameraKeys[WindowsLetterIdx('W')] = "RotateUp";
+		targetCameraKeys[WindowsLetterIdx('S')] = "RotateDown";
+		targetCameraKeys[WindowsLetterIdx('A')] = "RotateRight";
+		targetCameraKeys[WindowsLetterIdx('D')] = "RotateLeft";
+		targetCameraKeys[VK_CONTROL] = "Approach";
+		targetCameraKeys[VK_SPACE] = "MoveFurther";
 
-	freeCameraKeys[WindowsLetterIdx('R')] = "ToggleWireframe";
+	}
 
 	Controls::KeyMapping lightingKeys;
 	lightingKeys[WindowsLetterIdx('Z')] = "RotateCCW";
@@ -115,8 +145,9 @@ void setupKeyboardLayout() {
 	Controls::KeyMapping commonKeys;
 	commonKeys[VK_ESCAPE] = "Exit";
 
-
+	keys["Camera"] = cameraKeys;
 	keys["FreeCamera"] = freeCameraKeys;
+	keys["TargetCamera"] = targetCameraKeys;
 	keys["Lighting"] = lightingKeys;
 	keys["Common"] = commonKeys;
 

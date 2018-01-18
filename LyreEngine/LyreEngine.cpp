@@ -6,6 +6,7 @@
 
 #include "Planet.h"
 #include "FreeCamera.h"
+#include "TargetCamera.h"
 #include "Controls.h"
 
 using namespace std;
@@ -297,15 +298,38 @@ namespace {
 			return hr;
 
 		//Planet
-		g_pPlanet = make_unique<Planet>(1.f);
+		g_pPlanet = make_unique<Planet>(sqrt(3.f));
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		g_pCamera = make_unique<FreeCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
-											XMFLOAT3 { 1.f, 0.f, 0.f },
-											XMFLOAT3 { 0.f, 1.f, 0.f });
+		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
+											  XMFLOAT3 { 0.f, 0.f, 0.f }, sqrt(3.f));
+		//Setup common Camera actions
+		{
+			Controls::ActionGroup camera("Camera");
+
+			camera.action("SwitchToFreeCamera").onTriggered([]() {
+				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
+				if (pFreeCamera == nullptr) {
+					g_pCamera = make_unique<FreeCamera>(*g_pCamera);
+				}
+			});
+			camera.action("SwitchToTargetCamera").onTriggered([]() {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera == nullptr) {
+					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, sqrt(3.f));
+				}
+			});
+			camera.action("ToggleWireframe").onTriggered([]() {
+				static bool s_bWireframe = false;
+				if (s_bWireframe ^= true) g_iContext->RSSetState(g_iRasterizerStateWireframe);
+				else g_iContext->RSSetState(g_iRasterizerStateSolid);
+			}, false);
+
+			Controls::addActionGroup(camera);
+		}
 		//Setup Free Camera actions
 		{
 			Controls::ActionGroup camera("FreeCamera");
@@ -325,33 +349,94 @@ namespace {
 			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveForward(0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(0.001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveBackward(0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(-0.001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveRight(0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(0.001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveLeft(0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(-0.001f*ticksPerFrame);
 				}
 			});
 
-			camera.action("ToggleWireframe").onTriggered([]() {
-				static bool s_bWireframe = false;
-				if (s_bWireframe ^= true) g_iContext->RSSetState(g_iRasterizerStateWireframe);
-				else g_iContext->RSSetState(g_iRasterizerStateSolid);
-			}, false);
+			Controls::addActionGroup(camera);
+		}
+		//Setup Target Camera actions
+		{
+			Controls::ActionGroup camera("TargetCamera");
+
+			camera.action("RotateUp").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->rotateAroundHorizontally(0.0002f*ticksPerFrame);
+				}
+			});
+			camera.action("RotateDown").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->rotateAroundHorizontally(-0.0002f*ticksPerFrame);
+				}
+			});
+			camera.action("RotateRight").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->rotateAroundVertically(0.0002f*ticksPerFrame);
+				}
+			});
+			camera.action("RotateLeft").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->rotateAroundVertically(-0.0002f*ticksPerFrame);
+				}
+			});
+			camera.action("Approach").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->approach(0.05f*ticksPerFrame);
+				}
+			});
+			camera.action("MoveFurther").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->approach(-0.05f*ticksPerFrame);
+				}
+			});
+			camera.action("SpinCW").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->spin(0.001f*ticksPerFrame);
+				}
+			});
+			camera.action("SpinCCW").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->spin(-0.001f*ticksPerFrame);
+				}
+			});
+			camera.action("TiltUp").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->tilt(0.001f*ticksPerFrame);
+				}
+			});
+			camera.action("TiltDown").on([](DWORD ticksPerFrame) {
+				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
+				if (pTargetCamera != nullptr) {
+					pTargetCamera->tilt(-0.001f*ticksPerFrame);
+				}
+			});
 
 			Controls::addActionGroup(camera);
 		}
@@ -490,8 +575,8 @@ ID3D11SamplerState * LyreEngine::getSampler2D() {
 	return g_iTex2DSampler;
 }
 
-FreeCamera* LyreEngine::getCamera() {
-	return dynamic_cast<FreeCamera*>(g_pCamera.get());
+Camera* LyreEngine::getCamera() {
+	return g_pCamera.get();
 }
 
 HRESULT LyreEngine::readShaderFromFile(const WCHAR* szFileName, std::vector<char> &shaderBytecode) {

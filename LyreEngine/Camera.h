@@ -10,10 +10,13 @@ protected:
 
 	DirectX::XMVECTOR getRight();
 
+	Camera();
+
 public:
-	Camera(DirectX::XMFLOAT3 position, 
-		   DirectX::XMFLOAT3 view, 
-		   DirectX::XMFLOAT3 up);
+	Camera(const DirectX::XMFLOAT3& position,
+		   const DirectX::XMFLOAT3& view,
+		   const DirectX::XMFLOAT3& up);
+	Camera(const Camera& camera);
 	virtual ~Camera();
 	DirectX::XMFLOAT3 getPosition();
 	DirectX::XMFLOAT4X4 calculateViewMatrix();

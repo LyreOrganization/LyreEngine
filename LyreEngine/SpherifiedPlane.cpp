@@ -156,14 +156,14 @@ void SpherifiedPlane::generateTerrain() {
 				XMVECTOR surfaceDerivative = XMVectorZero();
 				XMFLOAT3 scaledPos;
 				float height = 0;
-				for (int i = 0; i < 7/*iMAX*/; i++) { // fractal, iMAX octaves
-					XMStoreFloat3(&scaledPos, original * (float)(1 << (i + 0/*octave*/)));
+				for (int i = 0; i < 3/*iMAX*/; i++) { // fractal, iMAX octaves
+					XMStoreFloat3(&scaledPos, original * (float)(1 << (i + 2/*octave*/)));
 					XMFLOAT4 perlin = g_noise.perlinNoise(scaledPos);
 					XMVECTOR vecNormal = XMLoadFloat4(&perlin);
 
-					//normal
-					height += perlin.w / (float)(1 << (i + 2/*amplitude*/));
-					surfaceDerivative += vecNormal / (float)(1 << (i + 2/*amplitude*/));
+					//basic
+					height += perlin.w / (float)(1 << (i + 4/*amplitude*/));
+					surfaceDerivative += vecNormal / (float)(1 << (i + 1/*amplitude*/));
 
 					////erosion
 					//height += abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));

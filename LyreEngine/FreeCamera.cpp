@@ -5,15 +5,22 @@
 using namespace std;
 using namespace DirectX;
 
-FreeCamera::FreeCamera(XMFLOAT3 position, XMFLOAT3 view, XMFLOAT3 up)
+FreeCamera::FreeCamera() : Camera() {}
+
+FreeCamera::FreeCamera(const XMFLOAT3& position,
+					   const XMFLOAT3& view,
+					   const XMFLOAT3& up)
 	: Camera(position, view, up) {}
+
+FreeCamera::FreeCamera(const Camera& camera)
+	: Camera(camera) {}
 
 FreeCamera::~FreeCamera() {}
 
 void FreeCamera::tilt(float angle) {
-	XMMATRIX rotationMatrix = XMMatrixRotationAxis(getRight(), angle);
-	XMStoreFloat3(&m_view, XMVector3Transform(XMLoadFloat3(&m_view), rotationMatrix));
-	XMStoreFloat3(&m_up, XMVector3Transform(XMLoadFloat3(&m_up), rotationMatrix));
+	XMVECTOR quaternion = XMQuaternionRotationAxis(getRight(), angle);
+	XMStoreFloat3(&m_view, XMVector3Rotate(XMLoadFloat3(&m_view), quaternion));
+	XMStoreFloat3(&m_up, XMVector3Rotate(XMLoadFloat3(&m_up), quaternion));
 }
 
 void FreeCamera::pan(float angle) {
@@ -24,18 +31,10 @@ void FreeCamera::roll(float angle) {
 	XMStoreFloat3(&m_up, XMVector3Transform(XMLoadFloat3(&m_up), XMMatrixRotationAxis(XMLoadFloat3(&m_view), angle)));
 }
 
-void FreeCamera::moveForward(float dist) {
+void FreeCamera::moveAhead(float dist) {
 	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) + XMLoadFloat3(&m_view)*dist);
 }
 
-void FreeCamera::moveBackward(float dist) {
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) - XMLoadFloat3(&m_view)*dist);
-}
-
-void FreeCamera::moveRight(float dist) {
+void FreeCamera::moveAside(float dist) {
 	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) + getRight()*dist);
-}
-
-void FreeCamera::moveLeft(float dist) {
-	XMStoreFloat3(&m_position, XMLoadFloat3(&m_position) - getRight()*dist);
 }
