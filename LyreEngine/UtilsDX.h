@@ -1,5 +1,5 @@
 #pragma once
 
-namespace Utils {
+namespace UtilsDX {
 	ID3D11Buffer* createStreamOutputBuffer(UINT size);
 }
