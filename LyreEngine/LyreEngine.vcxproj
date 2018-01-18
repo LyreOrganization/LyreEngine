@@ -123,8 +123,8 @@
     <ClCompile Include="ControlsAction.cpp" />
     <ClCompile Include="ControlsActionGroup.cpp" />
     <ClCompile Include="Controls.cpp" />
-    <ClCompile Include="D3DGeometry.cpp" />
-    <ClCompile Include="D3DPipelineConfig.cpp" />
+    <ClCompile Include="GeometryDX.cpp" />
+    <ClCompile Include="PipelineConfigDX.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="ControlsKeyLayout.cpp" />
     <ClCompile Include="LyreEngine.cpp" />
@@ -139,16 +139,16 @@
     <ClCompile Include="TargetCamera.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="UtilsDX.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ControlsAction.h" />
     <ClInclude Include="ControlsActionGroup.h" />
     <ClInclude Include="Controls.h" />
-    <ClInclude Include="D3DConstantBuffer.h" />
-    <ClInclude Include="D3DGeometry.h" />
-    <ClInclude Include="D3DPipelineConfig.h" />
+    <ClInclude Include="ConstantBufferDX.h" />
+    <ClInclude Include="GeometryDX.h" />
+    <ClInclude Include="PipelineConfigDX.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="ControlsKeyLayout.h" />
     <ClInclude Include="LyreEngine.h" />
@@ -161,7 +161,7 @@
     <ClInclude Include="TargetCamera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Utils.h" />
+    <ClInclude Include="UtilsDX.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

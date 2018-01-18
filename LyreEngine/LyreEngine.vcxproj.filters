@@ -85,11 +85,13 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
-    <ClCompile Include="D3DGeometry.cpp">
+    <ClCompile Include="GeometryDX.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
-    <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="D3DPipelineConfig.cpp">
+    <ClCompile Include="PipelineConfigDX.cpp">
+      <Filter>DirectXAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="UtilsDX.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -130,16 +132,16 @@
     <ClInclude Include="Camera.h">
       <Filter>Camera</Filter>
     </ClInclude>
-    <ClInclude Include="D3DGeometry.h">
+    <ClInclude Include="ConstantBufferDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
-    <ClInclude Include="Utils.h">
+    <ClInclude Include="GeometryDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
-    <ClInclude Include="D3DPipelineConfig.h">
+    <ClInclude Include="PipelineConfigDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
-    <ClInclude Include="D3DConstantBuffer.h">
+    <ClInclude Include="UtilsDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
   </ItemGroup>
