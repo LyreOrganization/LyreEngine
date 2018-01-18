@@ -136,15 +136,8 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
-<<<<<<< HEAD
-    <ClCompile Include="TargetCamera.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="UtilsDX.cpp" />
-=======
     <ClCompile Include="TargetCamera.cpp" />
-    <ClCompile Include="Utils.cpp" />
->>>>>>> d6742b105a706941b0f1a4c489cb239bd00248b3
+    <ClCompile Include="UtilsDX.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -163,15 +156,8 @@
     <ClInclude Include="SpherifiedCube.h" />
     <ClInclude Include="SpherifiedPlane.h" />
     <ClInclude Include="stdafx.h" />
-<<<<<<< HEAD
-    <ClInclude Include="TargetCamera.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="UtilsDX.h" />
-=======
     <ClInclude Include="TargetCamera.h" />
-    <ClInclude Include="Utils.h" />
->>>>>>> d6742b105a706941b0f1a4c489cb239bd00248b3
+    <ClInclude Include="UtilsDX.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
