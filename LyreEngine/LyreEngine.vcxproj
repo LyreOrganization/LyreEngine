@@ -69,7 +69,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ExcludePath>c:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\;$(ExcludePath)</ExcludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -124,6 +126,12 @@
     <ClCompile Include="ControlsActionGroup.cpp" />
     <ClCompile Include="Controls.cpp" />
     <ClCompile Include="GeometryDX.cpp" />
+    <ClCompile Include="helper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="log.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="PipelineConfigDX.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="ControlsKeyLayout.cpp" />
@@ -148,6 +156,12 @@
     <ClInclude Include="Controls.h" />
     <ClInclude Include="ConstantBufferDX.h" />
     <ClInclude Include="GeometryDX.h" />
+    <ClInclude Include="helper.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="PipelineConfigDX.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="ControlsKeyLayout.h" />

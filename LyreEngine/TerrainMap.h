@@ -1,8 +1,9 @@
 #pragma once
 
-#define HEIGHTMAP_RESOLUTION 64
+// 64 + 1 (right edge texel for easy magnification)
+#define HEIGHTMAP_RESOLUTION 65 
 
-class TerrainMap {
+class TerrainMap final {
 	friend class MapLoader;
 
 public:
@@ -22,16 +23,22 @@ public:
 	};
 
 private:
-	std::array<DirectX::XMFLOAT4, HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION> m_heightMap;
+	MapLoader* m_pMapLoader;
 
-	std::mutex m_membersLock;
+	std::vector<DirectX::XMFLOAT4> m_heightMap;
+
+	mutable std::mutex m_membersLock;
 
 	Description m_desc;
 	State m_state;
 
+	//these are not thread-safe!
+	DirectX::XMFLOAT3 sampleSphere(float u, float v) const;
+	void nextOctave();
+
 public:
 	TerrainMap(const TerrainMap& base, unsigned regionIdx);
-	TerrainMap(const Description& desc);
-	DirectX::XMFLOAT3 sampleSphere(float u, float v) const;
-	bool loadTerrain(std::vector<DirectX::XMFLOAT4>& terrain);
+	TerrainMap(const Description& desc, MapLoader* pMapLoader);
+	void loadTerrain(std::vector<DirectX::XMFLOAT4>& terrain);
+	State getState() const;
 };

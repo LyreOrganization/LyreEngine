@@ -48,7 +48,7 @@ private:
 	SpherifiedCube						m_sphere;
 
 public:
-	Planet(float radius);
+	Planet(float radius, unsigned seed);
 	HRESULT init();
 	void render();
 	void renderGeometry();

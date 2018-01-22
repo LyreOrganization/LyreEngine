@@ -3,7 +3,7 @@
 #include "Planet.h"
 
 #include "LyreEngine.h"
-#include "SpherifiedPlane.h"
+#include "TerrainMap.h"
 #include "FreeCamera.h"
 #include "UtilsDX.h"
 
@@ -21,7 +21,7 @@ namespace {
 	};
 }
 
-Planet::Planet(float radius) : m_sphere(radius) {}
+Planet::Planet(float radius, unsigned seed) : m_sphere(radius, seed) {}
 
 HRESULT Planet::setupStreamOutputBuffers() {
 	HRESULT hr;
@@ -109,10 +109,6 @@ HRESULT Planet::initGeometryAndVS() {
 	vertexElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	vertexElement.InstanceDataStepRate = 0;*/
 
-	m_sphere.divide(0);
-	m_sphere.distort();
-	m_sphere.applyTopology();
-
 	m_geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
 	m_geometry.loadVertices(m_sphere.vertices(), 0);
 	m_geometry.loadIndices(m_sphere.indices);
@@ -196,7 +192,7 @@ void Planet::render() {
 	m_renderConfig.unbind();
 
 	renderGeometry();
-	renderNormals();
+	//renderNormals();
 }
 
 void Planet::renderGeometry() {

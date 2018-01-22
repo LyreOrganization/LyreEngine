@@ -15,11 +15,12 @@ namespace {
 	constexpr DWORD nextIdx(DWORD index) { return ((index + 1) % 4); }		// next clockwise ement index (of 4)
 	constexpr DWORD previousIdx(DWORD index) { return ((index + 3) % 4); }	// previous clockwise ement index (of 4)
 	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
-
-	/////////////PerlinGrid g_noise(11); // argument - seed for random
 }
 
 void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<DWORD>& indices) {
+	if (m_pTerrainMap == nullptr)
+		return;
+
 	if (m_divided) {
 		for (const auto& child : m_children) {
 			child->loadTopology(terrain, indices);
@@ -30,21 +31,29 @@ void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<D
 			indices.push_back(m_points[i]);
 		}
 		for (int i = 0; i < 4; i++) {
-			indices.push_back(m_neighbours[i]->m_middle);
+			if (m_neighbours[i] != nullptr) {
+				indices.push_back(m_neighbours[i]->m_middle);
+			}
+			else {
+				indices.push_back(m_pParent->m_neighbours[i]->m_middle);
+			}
 		}
 		indices.push_back(m_middle);
 
-		////////////////
+		m_pTerrainMap->loadTerrain(terrain);
 	}
 }
 
 SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* parent)
 	: m_pSphere(sphere), m_points(points), m_pParent(parent), m_pTerrainMap(nullptr) {
+
 	m_middle = m_pSphere->createMidpoint(m_points);
 }
 
 void SpherifiedPlane::divide(int depth) {
 	if (depth < 1) return;
+
+	if (m_pTerrainMap->getState() != TerrainMap::State::MapReady) return;
 
 	if (!m_divided) {
 		//divide father's neighbour if it is not divided
@@ -120,19 +129,16 @@ void SpherifiedPlane::divide(int depth) {
 			}
 		}
 
+		//setting terrain map
+		for (int i = 0; i < 4; ++i) {
+			m_children[i]->m_pTerrainMap = make_unique<TerrainMap>(*m_pTerrainMap, i);
+		}
+
 		m_divided = true;
 	}
 
 	for (int i = 0; i < 4; ++i)
 		m_children[i]->divide(depth - 1);
-}
-
-void SpherifiedPlane::detail() {
-	if (m_pTerrainMap)
-		return;
-
-	if (!m_pParent)
-		m_pTerrainMap = make_unique<TerrainMap>(this, m_octave, DETAIL_DEPTH);
 }
 
 //void SpherifiedPlane::generateTerrain(int idx, int nOctaves) {
@@ -151,8 +157,8 @@ void SpherifiedPlane::detail() {
 		//for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
 		//	for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
 		//		XMFLOAT3 originalPosition = sampleSphere(
-		//			i / static_cast<float>(HEIGHTMAP_RESOLUTION - 1),
-		//			j / static_cast<float>(HEIGHTMAP_RESOLUTION - 1)
+		//			j / static_cast<float>(HEIGHTMAP_RESOLUTION - 1),
+		//			i / static_cast<float>(HEIGHTMAP_RESOLUTION - 1)
 		//		);
 
 		//		XMVECTOR original = XMLoadFloat3(&originalPosition);
@@ -203,7 +209,7 @@ void SpherifiedPlane::detail() {
 		//			height));
 		//	}
 		//}
-	
+
 		//if (m_divided) {
 		//	for (const auto& child : m_children)
 		//		child->generateTerrain(m_pTerrainMap);

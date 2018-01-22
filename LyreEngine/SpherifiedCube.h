@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SpherifiedPlane.h"
+#include "MapLoader.h"
 
 class SpherifiedCube final {
 public:
@@ -16,12 +17,13 @@ private:
 	std::array<std::unique_ptr<SpherifiedPlane>, 6> m_cube;
 	std::vector<Vertex> m_vertices;
 
+	MapLoader m_mapLoader;
+
 	void buildCube();
 
 public:
-	SpherifiedCube(float radius, float startingOctave);
+	SpherifiedCube(float radius, unsigned seed);
 	~SpherifiedCube();
-	void divide(unsigned depth);
 	DWORD createHalf(DWORD point1, DWORD point2);
 	DWORD createMidpoint(const SpherifiedPlane::DWORD4& points);
 	const std::vector<Vertex>& vertices();

@@ -3,12 +3,13 @@
 #include "SpherifiedCube.h"
 
 #include "SpherifiedPlane.h"
+#include "TerrainMap.h"
 
 using namespace std;
 using namespace DirectX;
 
-SpherifiedCube::SpherifiedCube(float radius, float startingOctave)
-	: m_radius(radius) {
+SpherifiedCube::SpherifiedCube(float radius, unsigned seed)
+	: m_radius(radius), m_mapLoader(seed) {
 
 	buildCube();
 }
@@ -54,11 +55,32 @@ void SpherifiedCube::buildCube() {
 		m_cube[i]->m_neighbours[2] = m_cube[5 - i].get();
 		m_cube[5 - i]->m_neighbours[2] = m_cube[i].get();
 	}
-}
 
-void SpherifiedCube::divide(unsigned depth) {
-	for (const auto& plane : m_cube) {
-		plane->divide(depth);
+	m_mapLoader.start();
+
+	//terrain
+	TerrainMap::Description terrainDesc;
+	for (int i = 0; i < 6; i++) {
+		for (int v = 0; v < 4; v++) {
+			terrainDesc.quad[v] = m_vertices[m_cube[i]->m_points[v]].position;
+		}
+		terrainDesc.octave = 1.f;
+		terrainDesc.amplitude = 0.25f;
+		terrainDesc.shift = 1.f;
+		terrainDesc.currentOctaveDepth = 1;
+		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(terrainDesc, &m_mapLoader);
+	}
+
+	auto pPlane = m_cube[5].get();
+	applyTopology();
+	for (int i = 0; i < 4; i++) {
+		this_thread::sleep_for(chrono::seconds(5));
+		pPlane->divide();
+		for (int i = 0; i < 4; i++) {
+			pPlane->m_neighbours[i]->divide();
+		}
+		pPlane = pPlane->m_children[(i + i*i) % 4].get();
+		applyTopology();
 	}
 }
 
@@ -100,3 +122,4 @@ void SpherifiedCube::applyTopology() {
 float SpherifiedCube::getRadius() const {
 	return m_radius;
 }
+

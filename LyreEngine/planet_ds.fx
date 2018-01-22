@@ -36,11 +36,12 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
 	output.pos = planetViewPos +
 		normalize(lerp(
-			lerp(patch[2].pos, patch[1].pos, uv.x),
-			lerp(patch[3].pos, patch[0].pos, uv.x),
+			lerp(patch[0].pos, patch[1].pos, uv.x),
+			lerp(patch[3].pos, patch[2].pos, uv.x),
 			uv.y
 		).xyz - planetViewPos)*(radius + terrain.w);
 	terrain.w = (terrain.w + 1.f)*1.5f;
+
 	output.color = float3(clamp(terrain.w - 0.2f, 0.f, 1.f),
 						  clamp(terrain.w - 0.3f, 0.f, 1.f),
 						  clamp(terrain.w - 1.f, 0.f, 1.f)) *

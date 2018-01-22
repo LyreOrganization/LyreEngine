@@ -25,7 +25,6 @@ class SpherifiedPlane final {
 
 	void loadTopology(std::vector<DirectX::XMFLOAT4>& terrain, std::vector<DWORD>& indices);
 
-	void detail();
 	void divide(int depth = 1);
 
 public:

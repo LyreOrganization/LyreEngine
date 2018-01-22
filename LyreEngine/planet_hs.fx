@@ -38,17 +38,17 @@ HSCF_OUTPUT HSCF(InputPatch<HS_INPUT, 9> patch) {
 	};
 
 	output.inside[0] = output.inside[1] = lods[4];
-	output.edge[0] = min(lods[4], lods[2]);
-	output.edge[1] = min(lods[4], lods[1]);
-	output.edge[2] = min(lods[4], lods[0]);
-	output.edge[3] = min(lods[4], lods[3]);
+	output.edge[0] = min(lods[4], lods[3]);
+	output.edge[1] = min(lods[4], lods[0]);
+	output.edge[2] = min(lods[4], lods[1]);
+	output.edge[3] = min(lods[4], lods[2]);
 
 	return output;
 }
 
 [domain("quad")]
-[partitioning("fractional_odd")]
-[outputtopology("triangle_ccw")]
+[partitioning("fractional_even")]
+[outputtopology("triangle_cw")]
 [outputcontrolpoints(4)]
 [patchconstantfunc("HSCF")]
 HS_OUTPUT HS(InputPatch<HS_INPUT, 9> patch, uint i : SV_OutputControlPointID) {
