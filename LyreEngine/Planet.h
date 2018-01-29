@@ -30,7 +30,7 @@ private:
 
 	//ConstantBuffers
 	struct PlanetCB {
-		DirectX::XMFLOAT3 planetViewPos;
+		DirectX::XMFLOAT3 planetPos;
 		float radius;
 	};
 	ConstantBufferDX<PlanetCB>			m_planetCb;

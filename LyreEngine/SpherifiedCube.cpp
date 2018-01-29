@@ -64,24 +64,21 @@ void SpherifiedCube::buildCube() {
 		for (int v = 0; v < 4; v++) {
 			terrainDesc.quad[v] = m_vertices[m_cube[i]->m_points[v]].position;
 		}
-		terrainDesc.octave = 1.f;
-		terrainDesc.amplitude = 0.25f;
-		terrainDesc.shift = 1.f;
-		terrainDesc.currentOctaveDepth = 1;
+		terrainDesc.octave = 0.25f;
+		terrainDesc.amplitude = 0.5f;
+		terrainDesc.shift = sqrt(3);
+		terrainDesc.currentOctaveDepth = 7;
 		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(terrainDesc, &m_mapLoader);
 	}
 
 	auto pPlane = m_cube[5].get();
-	applyTopology();
+	this_thread::sleep_for(chrono::milliseconds(1600));
 	for (int i = 0; i < 4; i++) {
-		this_thread::sleep_for(chrono::seconds(5));
 		pPlane->divide();
-		for (int i = 0; i < 4; i++) {
-			pPlane->m_neighbours[i]->divide();
-		}
-		pPlane = pPlane->m_children[(i + i*i) % 4].get();
-		applyTopology();
+		pPlane = pPlane->m_children[i % 4].get();
+		this_thread::sleep_for(chrono::milliseconds(1200 + i * 40));
 	}
+	applyTopology();
 }
 
 DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2) {

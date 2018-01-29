@@ -1,6 +1,6 @@
 cbuffer Planet : register(b0) {
-	float3 planetViewPos;
-	float radius;
+	float3 PlanetPos;
+	float Radius;
 }
 
 cbuffer Lighting : register(b1) {
@@ -19,7 +19,7 @@ struct DS_OUTPUT {
 };
 
 struct HS_OUTPUT {
-	float3 pos : QUAD_POINT_VIEW_POSITION;
+	float3 pos : POSITION;
 };
 
 struct HSCF_OUTPUT {
@@ -34,18 +34,13 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 			   uint PatchID : SV_PrimitiveID) {
 	DS_OUTPUT output;
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
-	output.pos = planetViewPos +
-		normalize(lerp(
-			lerp(patch[0].pos, patch[1].pos, uv.x),
-			lerp(patch[3].pos, patch[2].pos, uv.x),
-			uv.y
-		).xyz - planetViewPos)*(radius + terrain.w);
-	terrain.w = (terrain.w + 1.f)*1.5f;
+	output.normal = normalize(lerp(lerp(patch[0].pos, patch[1].pos, uv.x),
+								   lerp(patch[3].pos, patch[2].pos, uv.x),
+								   uv.y));
+	output.pos = PlanetPos + output.normal*(Radius + terrain.w);
 
-	output.color = float3(clamp(terrain.w - 0.2f, 0.f, 1.f),
-						  clamp(terrain.w - 0.3f, 0.f, 1.f),
-						  clamp(terrain.w - 1.f, 0.f, 1.f)) *
-		Diffuse * Power * clamp(dot(terrain.xyz, Direction), 0.f, 1.f);
-	output.normal = terrain.xyz;
+	output.normal = normalize(output.normal - (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
+
+	output.color = Diffuse * Power * clamp(dot(output.normal, Direction), 0.f, 1.f);
 	return output;
 }

@@ -23,9 +23,8 @@ MapLoader::~MapLoader() {
 void MapLoader::start() {
 	m_tLoader = thread([this]() {
 		XMFLOAT3 gridPosition;
-		XMVECTOR originalPosition, normal, surfaceDerivative;
+		XMVECTOR originalPosition, normal;
 		XMFLOAT4 perlin;
-		float height;
 
 		while (true) {
 			unique_lock<mutex> queueLocker(m_membersLock);
@@ -39,12 +38,8 @@ void MapLoader::start() {
 
 			queueLocker.unlock();
 
-			unique_lock<mutex> mapLocker(pMap->m_membersLock);
-			if (pMap->m_desc.currentOctaveDepth <= 0 ||
-				pMap->m_state != TerrainMap::State::NoMap)
-				continue;
-
-			pMap->m_state = TerrainMap::State::MapLoading;
+			unique_lock<shared_mutex> mapLocker(pMap->m_membersLock); // writer
+			if (pMap->m_desc.currentOctaveDepth <= 0) continue;
 
 			for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
 				for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
@@ -56,32 +51,24 @@ void MapLoader::start() {
 					originalPosition = XMLoadFloat3(&gridPosition);
 					normal = XMVector3Normalize(originalPosition);
 
+					gridPosition.x += pMap->m_desc.shift;
+					gridPosition.y += pMap->m_desc.shift;
+					gridPosition.z += pMap->m_desc.shift;
 					XMStoreFloat3(&gridPosition, originalPosition * pMap->m_desc.octave);
 					perlin = m_terrainGenerator.perlinNoise(gridPosition);
 
-					height = perlin.w * pMap->m_desc.amplitude;
-					surfaceDerivative = 2.f * XMLoadFloat4(&perlin) * pMap->m_desc.amplitude;
-
 					XMStoreFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION],
 								  XMLoadFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION]) +
-								  XMVectorSetW(XMVector3Normalize(normal - (surfaceDerivative - XMVector3Dot(surfaceDerivative, normal) * normal)),
-											   height));
+								  XMLoadFloat4(&perlin) * pMap->m_desc.amplitude);
 				}
-
-				//just give it a break
-				mapLocker.unlock();
-				this_thread::sleep_for(chrono::milliseconds(1));
-				mapLocker.lock();
 			}
 
-			if (--(pMap->m_desc.currentOctaveDepth) > 0) {
-				pMap->nextOctave();
-				pMap->m_state = TerrainMap::State::NoMap;
-				mapLocker.unlock();
-				pushToQueue(pMap);
-			}
-			else {
-				pMap->m_state = TerrainMap::State::MapReady;
+			pMap->nextOctave();
+
+			if (pMap->m_desc.currentOctaveDepth > 0) {
+				mapLocker.unlock(); // avoid locking two at the same time
+				queueLocker.lock();
+				m_loadingQueue.push(pMap);
 			}
 		}
 	});

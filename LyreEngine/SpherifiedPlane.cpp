@@ -53,7 +53,7 @@ SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, Spherifi
 void SpherifiedPlane::divide(int depth) {
 	if (depth < 1) return;
 
-	if (m_pTerrainMap->getState() != TerrainMap::State::MapReady) return;
+	if (!m_pTerrainMap->isComplete()) return;
 
 	if (!m_divided) {
 		//divide father's neighbour if it is not divided

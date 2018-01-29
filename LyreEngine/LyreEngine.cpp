@@ -14,12 +14,13 @@ using namespace DirectX;
 
 namespace {
 
-	struct ViewConstantBuffer {
-		XMFLOAT4X4 view;
+	struct CameraConstantBuffer {
+		XMFLOAT3 position;
+		float _dummy_;
 	};
 
-	struct ProjectionConstantBuffer {
-		XMFLOAT4X4 projection;
+	struct ViewProjConstantBuffer {
+		XMFLOAT4X4 viewProj;
 	};
 
 	struct LightingConstantBuffer {
@@ -56,8 +57,8 @@ namespace {
 	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateWireframe = nullptr;
 	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateSolid = nullptr;
 
-	CComPtr<ID3D11Buffer>				g_iViewConstantBuffer = nullptr;
-	CComPtr<ID3D11Buffer>				g_iProjectionConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iCameraConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iViewProjConstantBuffer = nullptr;
 	CComPtr<ID3D11Buffer>				g_iLightingConstantBuffer = nullptr;
 	CComPtr<ID3D11Buffer>				g_iLodConstantBuffer = nullptr;
 
@@ -243,10 +244,10 @@ namespace {
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(ViewConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(CameraConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iViewConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iCameraConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -254,10 +255,10 @@ namespace {
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(ProjectionConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(ViewProjConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iProjectionConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iViewProjConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -298,14 +299,15 @@ namespace {
 			return hr;
 
 		//Planet
-		g_pPlanet = make_unique<Planet>(sqrt(3.f), 11);
+		const float PLANET_RADIUS = 5.f * sqrt(3.f);
+		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 7);
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
-											  XMFLOAT3 { 0.f, 0.f, 0.f }, sqrt(3.f));
+		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -10.f, 0.f, 0.f },
+											  XMFLOAT3 { 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
 		//Setup common Camera actions
 		{
 			Controls::ActionGroup camera("Camera");
@@ -316,10 +318,10 @@ namespace {
 					g_pCamera = make_unique<FreeCamera>(*g_pCamera);
 				}
 			});
-			camera.action("SwitchToTargetCamera").onTriggered([]() {
+			camera.action("SwitchToTargetCamera").onTriggered([PLANET_RADIUS]() {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera == nullptr) {
-					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, sqrt(3.f));
+					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
 				}
 			});
 			camera.action("ToggleWireframe").onTriggered([]() {
@@ -386,31 +388,31 @@ namespace {
 			camera.action("RotateDown").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundHorizontally(-0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundHorizontally(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("RotateRight").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundVertically(0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundVertically(0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("RotateLeft").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundVertically(-0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundVertically(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("Approach").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->approach(0.05f*ticksPerFrame);
+					pTargetCamera->approach(0.1f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveFurther").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->approach(-0.05f*ticksPerFrame);
+					pTargetCamera->approach(-0.1f*ticksPerFrame);
 				}
 			});
 			camera.action("SpinCW").on([](DWORD ticksPerFrame) {
@@ -465,18 +467,18 @@ namespace {
 }
 
 void LyreEngine::render(DWORD ticksPerFrame) {
-	ViewConstantBuffer cbView;
-	cbView.view = g_pCamera->calculateViewMatrix();
-	g_iContext->UpdateSubresource(g_iViewConstantBuffer, 0, nullptr, &cbView, 0, 0);
+	CameraConstantBuffer cbCamera;
+	cbCamera.position = g_pCamera->getPosition();
+	g_iContext->UpdateSubresource(g_iCameraConstantBuffer, 0, nullptr, &cbCamera, 0, 0);
 
-	ProjectionConstantBuffer cbProjection;
-	cbProjection.projection = g_pCamera->calculateProjectionMatrix(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
-	g_iContext->UpdateSubresource(g_iProjectionConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
+	ViewProjConstantBuffer cbProjection;
+	cbProjection.viewProj = g_pCamera->calculateViewProjMatrix(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
+	g_iContext->UpdateSubresource(g_iViewProjConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
 	LightingConstantBuffer cbLight;
-	cbLight.diffuse = { 0.5f, 0.9f, 0.3f, 1.f };
+	cbLight.diffuse = { 0.7f, 1.f, 0.3f, 1.f };
 	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
-	cbLight.power = 0.8f;
+	cbLight.power = 0.67f;
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;
@@ -486,7 +488,7 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	cbLod.maxLOD = 63.f;
 	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 
-	float sky = 0;
+	float sky = 1.f;
 	XMFLOAT3 eye = g_pCamera->getPosition();
 	//XMStoreFloat(&sky, XMVector3Dot(XMVector3Normalize(XMLoadFloat3(&eye)), XMLoadFloat3(&cbLight.direction)));
 	float clearColor[4] = { 0.3f*sky, 0.5f*sky, 0.9f*sky, 1.0f };
@@ -555,12 +557,12 @@ ID3D11DeviceContext* LyreEngine::getContext() {
 	return g_iContext;
 }
 
-ID3D11Buffer* LyreEngine::getViewCB() {
-	return g_iViewConstantBuffer;
+ID3D11Buffer* LyreEngine::getCameraCB() {
+	return g_iCameraConstantBuffer;
 }
 
-ID3D11Buffer* LyreEngine::getProjectionCB() {
-	return g_iProjectionConstantBuffer;
+ID3D11Buffer* LyreEngine::getViewProjCB() {
+	return g_iViewProjConstantBuffer;
 }
 
 ID3D11Buffer* LyreEngine::getLightingCB() {

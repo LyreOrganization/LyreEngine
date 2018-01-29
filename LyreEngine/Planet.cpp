@@ -26,11 +26,11 @@ Planet::Planet(float radius, unsigned seed) : m_sphere(radius, seed) {}
 HRESULT Planet::setupStreamOutputBuffers() {
 	HRESULT hr;
 
-	ID3D11Buffer* buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry));
+	ID3D11Buffer* buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (250) * sizeof(Geometry));
 	m_renderConfig.setSOBuffer(buffer, 0);
 	m_geometryPipeline.geometry.loadVertexBuffer(buffer, sizeof(Geometry), 0);
 
-	buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2);
+	buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (250) * sizeof(Normal) * 2);
 	m_renderConfig.setSOBuffer(buffer, 1);
 	m_normalsPipeline.geometry.loadVertexBuffer(buffer, sizeof(Normal), 0);
 
@@ -98,7 +98,7 @@ HRESULT Planet::initGeometryAndVS() {
 	std::vector<char> shaderBytecode = m_renderConfig.loadShader(Shader::VS, L"planet_vs.cso");
 
 	m_geometry.addVertexElement(
-		{"CONTROL_POINT_WORLD_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	/*auto& vertexElement = m_geometry.createVertexElement();
 	vertexElement.SemanticName = "CONTROL_POINT_WORLD_POSITION";
@@ -167,22 +167,18 @@ HRESULT Planet::init() {
 }
 
 void Planet::render() {
-	XMFLOAT4X4 view = LyreEngine::getCamera()->calculateViewMatrix();
-
-	XMStoreFloat3(&m_planetCb.data.planetViewPos, XMVector4Transform(XMVectorSetW(XMVectorZero(), 1.f), XMMatrixTranspose(XMLoadFloat4x4(&view))));
+	XMStoreFloat3(&m_planetCb.data.planetPos, XMVectorZero());
 	m_planetCb.data.radius = m_sphere.getRadius();
 	m_planetCb.update();
 
-	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getViewCB(), 0);
-
 	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getLodCB(), 0);
+	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getCameraCB(), 1);
+	m_renderConfig.setConstantBuffer(Shader::HS, m_planetCb.getBuffer(), 2);
 
 	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 0);
 	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);
 	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSampler2D(), 0);
 	m_renderConfig.setSRV(Shader::DS, m_iTerrainSRV, 0);
-
-	m_renderConfig.setConstantBuffer(Shader::GS, LyreEngine::getViewCB(), 0);
 
 	m_geometry.bind();
 	m_renderConfig.bind();
@@ -192,13 +188,13 @@ void Planet::render() {
 	m_renderConfig.unbind();
 
 	renderGeometry();
-	//renderNormals();
+	renderNormals();
 }
 
 void Planet::renderGeometry() {
 	m_geometryPipeline.geometry.bind();
 
-	m_geometryPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getProjectionCB(), 0);
+	m_geometryPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getViewProjCB(), 0);
 	m_geometryPipeline.config.bind();
 
 	LyreEngine::getContext()->DrawAuto();
@@ -207,7 +203,7 @@ void Planet::renderGeometry() {
 void Planet::renderNormals() {
 	m_normalsPipeline.geometry.bind();
 
-	m_normalsPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getProjectionCB(), 0);
+	m_normalsPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getViewProjCB(), 0);
 	m_normalsPipeline.config.bind();
 
 	LyreEngine::getContext()->DrawAuto();
