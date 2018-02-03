@@ -50,15 +50,19 @@ SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, Spherifi
 	m_middle = m_pSphere->createMidpoint(m_points);
 }
 
-void SpherifiedPlane::divide(int depth) {
-	if (depth < 1) return;
+bool SpherifiedPlane::tryDivide(int depth) {
+	if (depth < 1) return false;
 
-	if (!m_pTerrainMap->isComplete()) return;
+	if (!m_pTerrainMap->isComplete()) return false;
 
 	if (!m_divided) {
-		//divide father's neighbour if it is not divided
-		for (int i = 0; i < 4; i++)
-			if (m_neighbours[i] == nullptr) m_pParent->m_neighbours[i]->divide();
+		// We can't divide if any of our neighbours missing, so we try to 
+		// divede respective parent's neighbour to create our own one.
+		for (int i = 0; i < 4; i++) {
+			if (m_neighbours[i] == nullptr && !m_pParent->m_neighbours[i]->tryDivide()) { 
+				return false;
+			}
+		}
 
 		//creating halfs if they don't exist
 		for (int i = 0; i < 4; i++) {
@@ -138,7 +142,26 @@ void SpherifiedPlane::divide(int depth) {
 	}
 
 	for (int i = 0; i < 4; ++i)
-		m_children[i]->divide(depth - 1);
+		m_children[i]->tryDivide(depth - 1);
+
+	return true;
+}
+
+bool SpherifiedPlane::tryUndivide() {
+	if (!m_divided) return true;
+
+	bool bChildrenAreLeaves = true;
+
+	for (int i = 0; i < 4; i++) {
+		if (m_children[i]->m_divided && !m_children[i]->tryUndivide()) {
+			bChildrenAreLeaves = false;
+		}
+	}
+
+	if (!bChildrenAreLeaves)
+		return bChildrenAreLeaves;
+
+
 }
 
 //void SpherifiedPlane::generateTerrain(int idx, int nOctaves) {

@@ -67,16 +67,16 @@ void SpherifiedCube::buildCube() {
 		terrainDesc.octave = 0.25f;
 		terrainDesc.amplitude = 0.5f;
 		terrainDesc.shift = sqrt(3);
-		terrainDesc.currentOctaveDepth = 7;
+		terrainDesc.currentOctaveDepth = 3;
 		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(terrainDesc, &m_mapLoader);
 	}
 
 	auto pPlane = m_cube[5].get();
-	this_thread::sleep_for(chrono::milliseconds(1600));
-	for (int i = 0; i < 4; i++) {
-		pPlane->divide();
+	this_thread::sleep_for(chrono::milliseconds(2000));
+	for (int i = 0; i < 10; i++) {
+		pPlane->tryDivide();
 		pPlane = pPlane->m_children[i % 4].get();
-		this_thread::sleep_for(chrono::milliseconds(1200 + i * 40));
+		this_thread::sleep_for(chrono::milliseconds(1500 + i * 50));
 	}
 	applyTopology();
 }

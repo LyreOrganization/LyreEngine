@@ -25,7 +25,8 @@ class SpherifiedPlane final {
 
 	void loadTopology(std::vector<DirectX::XMFLOAT4>& terrain, std::vector<DWORD>& indices);
 
-	void divide(int depth = 1);
+	bool tryDivide(int depth = 1);
+	bool tryUndivide();
 
 public:
 	SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* fatherPlane = nullptr);

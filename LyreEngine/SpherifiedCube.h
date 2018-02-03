@@ -19,6 +19,9 @@ private:
 
 	MapLoader m_mapLoader;
 
+	std::thread m_tDivider, m_tUndivider;
+	std::mutex m_membersLock;
+
 	void buildCube();
 
 public:
@@ -29,4 +32,5 @@ public:
 	const std::vector<Vertex>& vertices();
 	void applyTopology();
 	float getRadius() const;
+	
 };

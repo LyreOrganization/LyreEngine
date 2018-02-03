@@ -29,6 +29,7 @@ struct HSCF_OUTPUT {
 };
 
 float ComputePatchLOD(float3 midPoint) {
+	return 63.f;
 	float dist = length(PlanetPos + midPoint - Position);
 	if (dist > MaxDistance) return 0.f;
 	float d = 1.f - (clamp(dist, MinDistance, MaxDistance) - MinDistance) / (MaxDistance - MinDistance);

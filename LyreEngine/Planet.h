@@ -12,6 +12,13 @@
 
 class Planet final {
 private:
+	static const size_t SLERP_LOOKUP_RESOLUTION = 1024;
+	static const size_t SLERP_LOOKUP_STEPS = 10;
+	//first step - angle=asin(1/sqrt(3)) (initial cube)
+	//each step divides angle by two
+	//last step - slerp=lerp
+	static std::array<std::array<float, SLERP_LOOKUP_RESOLUTION>, SLERP_LOOKUP_STEPS> s_slerpLookup;
+
 	PipelineConfigDX					m_renderConfig;
 
 	//Pipelines

@@ -188,7 +188,7 @@ void Planet::render() {
 	m_renderConfig.unbind();
 
 	renderGeometry();
-	renderNormals();
+	//renderNormals();
 }
 
 void Planet::renderGeometry() {

@@ -32,6 +32,10 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 			   float2 uv : SV_DomainLocation,
 			   const OutputPatch<HS_OUTPUT, 4> patch,
 			   uint PatchID : SV_PrimitiveID) {
+	static const float3 COLOR_OCEAN = { 0.2f,0.3f,0.8f };
+	static const float3 COLOR_SAND = { 0.6f,0.7f,0.3f };
+	static const float3 COLOR_ROCK = { 0.44f,0.42f,0.4f };
+
 	DS_OUTPUT output;
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
 	output.normal = normalize(lerp(lerp(patch[0].pos, patch[1].pos, uv.x),
@@ -41,6 +45,19 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 
 	output.normal = normalize(output.normal - (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
 
-	output.color = Diffuse * Power * clamp(dot(output.normal, Direction), 0.f, 1.f);
+	if (terrain.w < -0.02f) {
+		output.color = COLOR_OCEAN; //ocean
+	}
+	else if (terrain.w < 0.f) {
+		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.02f)/0.02f); //ocean -> sand
+	}
+	else if (terrain.w < 0.04f) {
+		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w)/0.04f); //sand -> rocks
+	}
+	else {
+		output.color = COLOR_ROCK; //rocks
+	}
+
+	output.color *= Diffuse.xyz * (Power * clamp(dot(output.normal, Direction), 0.f, 1.f) + (1.f - Power));
 	return output;
 }

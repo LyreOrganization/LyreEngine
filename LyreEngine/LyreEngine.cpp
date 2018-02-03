@@ -300,7 +300,7 @@ namespace {
 
 		//Planet
 		const float PLANET_RADIUS = 5.f * sqrt(3.f);
-		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 7);
+		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 1);
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
@@ -476,9 +476,9 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	g_iContext->UpdateSubresource(g_iViewProjConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
 	LightingConstantBuffer cbLight;
-	cbLight.diffuse = { 0.7f, 1.f, 0.3f, 1.f };
+	cbLight.diffuse = { 1.0f, 0.95f, 0.9f, 1.f };
 	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
-	cbLight.power = 0.67f;
+	cbLight.power = 0.9f;
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;

@@ -26,6 +26,7 @@ private:
 	typedef std::vector<DirectX::XMFLOAT4> HeightMapType;
 
 	HeightMapType m_heightMap;
+	std::array<HeightMapType, 4> m_edgesBackup;
 
 	//configuration for MapLoader
 	Description m_desc;
@@ -44,6 +45,8 @@ private:
 	//Child maps will be moved from here on construction.
 	//Not needed in any other cases, so it is marked as mutable.
 	mutable std::array<HeightMapType, 4> m_heightMapScaledRegions;
+
+	bool bDeleteMark;
 
 public:
 	TerrainMap(const TerrainMap& base, unsigned regionIdx);
