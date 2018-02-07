@@ -4,6 +4,7 @@
 #include "GeometryDX.h"
 #include "ConstantBufferDX.h"
 #include "PipelineConfigDX.h"
+#include "ComputePipelineConfigDX.h"
 
 #define MAX_CBUFFERS_AMOUNT D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
 #define MAX_SAMPLERS_AMOUNT D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT
@@ -25,6 +26,8 @@ private:
 		PipelineConfigDX				config;
 	} m_normalsPipeline;
 
+	ComputePipelineConfigDX				m_precompHeightmap;
+
 	//Geometry
 	GeometryDX							m_geometry;
 
@@ -36,6 +39,8 @@ private:
 	ConstantBufferDX<PlanetCB>			m_planetCb;
 
 	CComPtr<ID3D11ShaderResourceView>	m_iTerrainSRV = nullptr;
+	CComPtr<ID3D11UnorderedAccessView>	m_iCurvMapUAV = nullptr;
+
 
 	HRESULT setupStreamOutputBuffers();
 	HRESULT initGeometryShader();
@@ -44,6 +49,8 @@ private:
 	HRESULT initNormalsPipeline();
 
 	HRESULT initGeometryAndVS();
+
+	HRESULT precomputeHeightMap();
 
 	SpherifiedCube						m_sphere;
 

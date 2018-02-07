@@ -1,16 +1,11 @@
 #pragma once
 
 #include "stdafx.h"
-#include "LyreEngine.h"
+#include "DeviceReference.h"
 
 #define BUFFERS_AMOUNT D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT
 
-class GeometryDX {
-	//Device
-	ID3D11Device*					m_pDevice;
-	ID3D11DeviceContext*			m_pContext;
-
-	// IA data
+class GeometryDX :public DeviceReference {
 	std::array<ID3D11Buffer*, BUFFERS_AMOUNT > m_vertexBuffers;
 	CComPtr<ID3D11Buffer> m_indexBuffer;
 	CComPtr<ID3D11InputLayout> m_layout;

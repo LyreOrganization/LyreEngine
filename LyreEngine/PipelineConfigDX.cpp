@@ -2,10 +2,25 @@
 #include "PipelineConfigDX.h"
 #include "LyreEngine.h"
 
-PipelineConfigDX::PipelineConfigDX():
-	m_pDevice(LyreEngine::getDevice()),
-	m_pContext(LyreEngine::getContext())
-{}
+ShaderData& PipelineConfigDX::getShaderData(Shader shader) {
+	switch (shader) {
+	case Shader::VS:
+		return m_VSData;
+		break;
+	case Shader::HS:
+		return m_HSData;
+		break;
+	case Shader::DS:
+		return m_DSData;
+		break;
+	case Shader::GS:
+		return m_GSData;
+		break;
+	case Shader::PS:
+		return m_PSData;
+		break;
+	}
+}
 
 std::vector<char> PipelineConfigDX::loadShader(Shader shader, const WCHAR* fileName) {
 	std::vector<char> shaderBytecode;
@@ -37,63 +52,48 @@ std::vector<char> PipelineConfigDX::loadShader(Shader shader, const WCHAR* fileN
 }
 
 void PipelineConfigDX::setConstantBuffer(Shader shader, ID3D11Buffer* cb, UINT slot) {
-	switch (shader) {
-	case Shader::VS:
-		m_VSData.cBuffers[slot] = cb;
-		break;
-	case Shader::HS:
-		m_HSData.cBuffers[slot] = cb;
-		break;
-	case Shader::DS:
-		m_DSData.cBuffers[slot] = cb;
-		break;
-	case Shader::GS:
-		m_GSData.cBuffers[slot] = cb;
-		break;
-	case Shader::PS:
-		m_PSData.cBuffers[slot] = cb;
-		break;
+	ShaderData& data = getShaderData(shader);
+	ID3D11Buffer* currentCbuffer;
+
+	currentCbuffer = data.cBuffers[slot];
+	if (currentCbuffer) {
+		currentCbuffer->Release();
 	}
+
+	if (cb) {
+		cb->AddRef();
+	}
+	data.cBuffers[slot] = cb;
 }
 
 void PipelineConfigDX::setSampler(Shader shader, ID3D11SamplerState* sampler, UINT slot) {
-	switch (shader) {
-	case Shader::VS:
-		m_VSData.samplers[slot] = sampler;
-		break;
-	case Shader::HS:
-		m_HSData.samplers[slot] = sampler;
-		break;
-	case Shader::DS:
-		m_DSData.samplers[slot] = sampler;
-		break;
-	case Shader::GS:
-		m_GSData.samplers[slot] = sampler;
-		break;
-	case Shader::PS:
-		m_PSData.samplers[slot] = sampler;
-		break;
+	ShaderData& data = getShaderData(shader);
+	ID3D11SamplerState* currentSampler;
+
+	currentSampler = data.samplers[slot];
+	if (currentSampler) {
+		currentSampler->Release();
 	}
+
+	if (sampler) {
+		sampler->AddRef();
+	}
+	data.samplers[slot] = sampler;
 }
 
 void PipelineConfigDX::setSRV(Shader shader, ID3D11ShaderResourceView* srv, UINT slot) {
-	switch (shader) {
-	case Shader::VS:
-		m_VSData.srvs[slot] = srv;
-		break;
-	case Shader::HS:
-		m_HSData.srvs[slot] = srv;
-		break;
-	case Shader::DS:
-		m_DSData.srvs[slot] = srv;
-		break;
-	case Shader::GS:
-		m_GSData.srvs[slot] = srv;
-		break;
-	case Shader::PS:
-		m_PSData.srvs[slot] = srv;
-		break;
+	ShaderData& data = getShaderData(shader);
+	ID3D11ShaderResourceView* currentSrv;
+
+	currentSrv = data.srvs[slot];
+	if (currentSrv) {
+		currentSrv->Release();
 	}
+
+	if (srv) {
+		srv->AddRef();
+	}
+	data.srvs[slot] = srv;
 }
 
 D3D11_SO_DECLARATION_ENTRY& PipelineConfigDX::createSOEntry() {
@@ -106,6 +106,11 @@ void PipelineConfigDX::addSOEntry(D3D11_SO_DECLARATION_ENTRY entry) {
 }
 
 void PipelineConfigDX::setSOBuffer(ID3D11Buffer* buffer, UINT slot, UINT offset) {
+	ID3D11Buffer* currentBuffer = m_GSData.SO.buffers[slot];
+	if (currentBuffer) {
+		currentBuffer->Release();
+	}
+	buffer->AddRef();
 	m_GSData.SO.buffers[slot] = buffer;
 	m_GSData.SO.offsets[slot] = offset;
 }
@@ -119,7 +124,7 @@ void PipelineConfigDX::loadGSwithSO(const WCHAR* fileName, const std::vector<UIN
 		throw std::runtime_error("PipelineConfigDX.loadGSwithSO: failed to read shader from file.");
 	}
 
-	hr = LyreEngine::getDevice()->CreateGeometryShaderWithStreamOutput(
+	hr = m_pDevice->CreateGeometryShaderWithStreamOutput(
 		shaderBytecode.data(), shaderBytecode.size(),
 		m_GSData.SO.entries.data(), m_GSData.SO.entries.size(),
 		strides.data(), strides.size(),

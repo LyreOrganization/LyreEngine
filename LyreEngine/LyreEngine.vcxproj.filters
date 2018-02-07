@@ -47,6 +47,9 @@
     <Filter Include="DirectXAPI">
       <UniqueIdentifier>{7513d264-c102-4344-8b9d-acfa36414fd1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Compute">
+      <UniqueIdentifier>{8f99865e-75b1-49c3-a0fe-e7495e662ea5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -92,6 +95,12 @@
       <Filter>DirectXAPI</Filter>
     </ClCompile>
     <ClCompile Include="UtilsDX.cpp">
+      <Filter>DirectXAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceReference.cpp">
+      <Filter>DirectXAPI</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputePipelineConfigDX.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
   </ItemGroup>
@@ -144,6 +153,12 @@
     <ClInclude Include="UtilsDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
+    <ClInclude Include="DeviceReference.h">
+      <Filter>DirectXAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputePipelineConfigDX.h">
+      <Filter>DirectXAPI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -174,6 +189,9 @@
     </FxCompile>
     <FxCompile Include="planet_normals_vs.fx">
       <Filter>Shaders\Normals</Filter>
+    </FxCompile>
+    <FxCompile Include="planet_cs.fx">
+      <Filter>Shaders\Compute</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

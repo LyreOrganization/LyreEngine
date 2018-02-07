@@ -15,16 +15,13 @@ void GeometryDX::_loadVertices(const void* data, UINT size, UINT stride, UINT sl
 	{
 		initData.pSysMem = data;
 	}
-	HRESULT hr = LyreEngine::getDevice()->CreateBuffer(&desc, &initData, &m_vertexBuffers[slot]);
+	HRESULT hr = m_pDevice->CreateBuffer(&desc, &initData, &m_vertexBuffers[slot]);
 	if (FAILED(hr)) {
 		throw std::runtime_error("GeometryDX.loadVertices: device->CreateBuffer() failed.");
 	}
 }
 
 GeometryDX::GeometryDX() {
-	m_pDevice = LyreEngine::getDevice();
-	m_pContext = LyreEngine::getContext();
-
 	m_vertexBuffers.fill(nullptr);
 	m_strides.fill(0);
 	offsets.fill(0);

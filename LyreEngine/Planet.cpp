@@ -26,13 +26,13 @@ Planet::Planet(float radius) : m_sphere(radius) {}
 HRESULT Planet::setupStreamOutputBuffers() {
 	HRESULT hr;
 
-	ID3D11Buffer* buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry));
-	m_renderConfig.setSOBuffer(buffer, 0);
-	m_geometryPipeline.geometry.loadVertexBuffer(buffer, sizeof(Geometry), 0);
+	CComPtr<ID3D11Buffer> geometry = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry));
+	m_renderConfig.setSOBuffer(geometry, 0);
+	m_geometryPipeline.geometry.loadVertexBuffer(geometry, sizeof(Geometry), 0);
 
-	buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2);
-	m_renderConfig.setSOBuffer(buffer, 1);
-	m_normalsPipeline.geometry.loadVertexBuffer(buffer, sizeof(Normal), 0);
+	CComPtr<ID3D11Buffer> normals = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2);
+	m_renderConfig.setSOBuffer(normals, 1);
+	m_normalsPipeline.geometry.loadVertexBuffer(normals, sizeof(Normal), 0);
 
 	return S_OK;
 }
@@ -121,6 +121,46 @@ HRESULT Planet::initGeometryAndVS() {
 	return S_OK;
 }
 
+HRESULT Planet::precomputeHeightMap() {
+	HRESULT hr;
+
+	size_t patchesAmount = m_sphere.indices.size() / 9;
+	D3D11_TEXTURE1D_DESC desc;
+	{
+		ZeroStruct(desc);
+		desc.Width = patchesAmount;
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R32_FLOAT;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	}
+	CComPtr<ID3D11Texture1D> deviations = nullptr;
+	hr = LyreEngine::getDevice()->CreateTexture1D(&desc, nullptr, &deviations);
+	if (FAILED(hr))
+		return hr;
+	hr = LyreEngine::getDevice()->CreateUnorderedAccessView(deviations, nullptr, &m_iCurvMapUAV);
+	if (FAILED(hr))
+		return hr;
+
+	m_precompHeightmap.loadShader(L"planet_cs.cso");
+	m_precompHeightmap.setSRV(m_iTerrainSRV, 0);
+	m_precompHeightmap.setUAV(m_iCurvMapUAV, 0);
+
+	m_precompHeightmap.bind();
+
+	LyreEngine::getContext()->Dispatch(patchesAmount, 1, 1);
+
+	m_precompHeightmap.unbind();
+
+	CComPtr<ID3D11ShaderResourceView> srv;
+	LyreEngine::getDevice()->CreateShaderResourceView(deviations, nullptr, &srv);
+
+	m_renderConfig.setSRV(Shader::HS, srv, 0);
+
+	return S_OK;
+}
+
 HRESULT Planet::init() {
 	HRESULT hr;
 
@@ -164,6 +204,10 @@ HRESULT Planet::init() {
 													HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain));
 	}
 	hr = LyreEngine::getDevice()->CreateShaderResourceView(texArray, nullptr, &m_iTerrainSRV);
+	if (FAILED(hr))
+		return hr;
+
+	hr = precomputeHeightMap();
 	if (FAILED(hr))
 		return hr;
 

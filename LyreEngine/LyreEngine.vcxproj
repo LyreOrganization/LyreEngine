@@ -120,9 +120,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ComputePipelineConfigDX.cpp" />
     <ClCompile Include="ControlsAction.cpp" />
     <ClCompile Include="ControlsActionGroup.cpp" />
     <ClCompile Include="Controls.cpp" />
+    <ClCompile Include="DeviceReference.cpp" />
     <ClCompile Include="GeometryDX.cpp" />
     <ClCompile Include="PipelineConfigDX.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
@@ -141,10 +143,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ComputePipelineConfigDX.h" />
     <ClInclude Include="ControlsAction.h" />
     <ClInclude Include="ControlsActionGroup.h" />
     <ClInclude Include="Controls.h" />
     <ClInclude Include="ConstantBufferDX.h" />
+    <ClInclude Include="DeviceReference.h" />
     <ClInclude Include="GeometryDX.h" />
     <ClInclude Include="PipelineConfigDX.h" />
     <ClInclude Include="FreeCamera.h" />
@@ -163,6 +167,17 @@
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="planet_cs.fx">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CS</EntryPointName>
+    </FxCompile>
     <FxCompile Include="planet_ds.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Domain</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

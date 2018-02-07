@@ -1,9 +1,6 @@
 #pragma once
 
-#define MAX_CBUFFERS_AMOUNT D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
-#define MAX_SAMPLERS_AMOUNT D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT
-#define MAX_SRVS_AMOUNT D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT
-#define MAX_SOBUFFERS_AMOUNT D3D11_SO_BUFFER_SLOT_COUNT
+#include "DeviceReference.h"
 
 struct ShaderData {
 	std::array<ID3D11Buffer*, MAX_CBUFFERS_AMOUNT>			cBuffers;
@@ -15,6 +12,24 @@ struct ShaderData {
 		samplers.fill(nullptr);
 		srvs.fill(nullptr);
 	}
+
+	~ShaderData() {
+		for (auto& buffer : cBuffers) {
+			if (buffer) {
+				buffer->Release();
+			}
+		}
+		for (auto& sampler : samplers) {
+			if (sampler) {
+				sampler->Release();
+			}
+		}
+		for (auto& srv : srvs) {
+			if (srv) {
+				srv->Release();
+			}
+		}
+	}
 };
 
 struct GShaderData :public ShaderData {
@@ -25,36 +40,16 @@ struct GShaderData :public ShaderData {
 	} SO;
 
 	GShaderData() {
-		{
-			{
-				{
-					{
-						{
-							{
-								{
-									{
-										{
-											{
-												{
-													{
-														SO.buffers.fill(nullptr);
-														SO.offsets.fill(0);
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
+		SO.buffers.fill(nullptr);
+		SO.offsets.fill(0);
+	}
+	~GShaderData() {
+		for (auto& buffer : SO.buffers) {
+			if (buffer) {
+				buffer->Release();
 			}
 		}
 	}
-	/*~GShaderData() {
-
-	}*/
 };
 
 enum class Shader {
@@ -65,12 +60,8 @@ enum class Shader {
 	PS
 };
 
-class PipelineConfigDX {
-	//Device
-	ID3D11Device*					m_pDevice;
-	ID3D11DeviceContext*			m_pContext;
+class PipelineConfigDX :public DeviceReference {
 
-	//Shaders
 	CComPtr<ID3D11VertexShader>		m_iVS = nullptr;
 	ShaderData						m_VSData;
 	CComPtr<ID3D11HullShader>		m_iHS = nullptr;
@@ -82,9 +73,9 @@ class PipelineConfigDX {
 	CComPtr<ID3D11PixelShader>		m_iPS = nullptr;
 	ShaderData						m_PSData;
 
-public:
-	PipelineConfigDX();
+	ShaderData& getShaderData(Shader);
 
+public:
 	std::vector<char> loadShader(Shader shader, const WCHAR* fileName);
 
 	void setConstantBuffer(Shader shader, ID3D11Buffer* cb, UINT slot);

@@ -1,24 +1,16 @@
 #pragma once
 
 #include "stdafx.h"
-#include "LyreEngine.h"
+#include "DeviceReference.h"
 
 template<class BufferStruct>
-class ConstantBufferDX {
-
-	//Device
-	ID3D11Device* m_pDevice;
-	ID3D11DeviceContext* m_pContext;
-
-	//Data
+class ConstantBufferDX : public DeviceReference {
 	CComPtr<ID3D11Buffer> m_buffer;
+
 public:
 	BufferStruct data;
 
-	ConstantBufferDX():
-		m_pDevice(LyreEngine::getDevice()),
-		m_pContext(LyreEngine::getContext()) 
-	{
+	ConstantBufferDX() {
 		D3D11_BUFFER_DESC desc;
 		{
 			ZeroStruct(desc);
@@ -26,7 +18,7 @@ public:
 			desc.ByteWidth = sizeof(BufferStruct);
 			desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		HRESULT hr = LyreEngine::getDevice()->CreateBuffer(&desc, nullptr, &m_buffer);
+		HRESULT hr = m_pDevice->CreateBuffer(&desc, nullptr, &m_buffer);
 		if (FAILED(hr)) {
 			throw std::runtime_error("ConstantBufferDX: device->CreateBuffer() failed.");
 		}

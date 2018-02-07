@@ -9,7 +9,7 @@ cbuffer Lighting : register(b1) {
 	float4 Diffuse;
 }
 
-Texture2DArray Terrain : register(t0);
+Texture2DArray<float4> Terrain : register(t0);
 SamplerState Tex2DSampler : register(s0);
 
 struct DS_OUTPUT {
@@ -36,8 +36,8 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
 	output.pos = planetViewPos +
 		normalize(lerp(
-			lerp(patch[2].pos, patch[1].pos, uv.x),
-			lerp(patch[3].pos, patch[0].pos, uv.x),
+			lerp(patch[0].pos, patch[1].pos, uv.x),
+			lerp(patch[3].pos, patch[2].pos, uv.x),
 			uv.y
 		).xyz - planetViewPos)*(radius + terrain.w);
 	terrain.w = (terrain.w + 1.f)*1.5f;

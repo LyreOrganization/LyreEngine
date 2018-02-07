@@ -20,10 +20,18 @@ namespace {
 
 XMFLOAT3 SpherifiedPlane::uv2pos(float u, float v) const {
 	XMFLOAT3 result;
-	XMStoreFloat3(&result, (XMLoadFloat3(&m_pSphere->vertices()[m_points[0]].position)*u +
-							XMLoadFloat3(&m_pSphere->vertices()[m_points[1]].position)*(1 - u))*v +
-							(XMLoadFloat3(&m_pSphere->vertices()[m_points[3]].position)*u +
-							 XMLoadFloat3(&m_pSphere->vertices()[m_points[2]].position)*(1 - u))*(1 - v));
+	XMVECTOR points[4];
+
+	for (int i = 0; i < 4; ++i) {
+		points[i] = XMLoadFloat3(&m_pSphere->vertices()[m_points[i]].position);
+	}
+
+	XMStoreFloat3(
+		&result, 
+		(points[0]*(1-u) + points[1]*u)*(1-v) + 
+		(points[3]*(1-u) + points[2]*u)*v
+	);
+
 	return result;
 }
 
@@ -156,14 +164,14 @@ void SpherifiedPlane::generateTerrain() {
 				XMVECTOR surfaceDerivative = XMVectorZero();
 				XMFLOAT3 scaledPos;
 				float height = 0;
-				for (int i = 0; i < 3/*iMAX*/; i++) { // fractal, iMAX octaves
+				for (int i = 0; i < 0/*iMAX*/; i++) { // fractal, iMAX octaves
 					XMStoreFloat3(&scaledPos, original * (float)(1 << (i + 2/*octave*/)));
 					XMFLOAT4 perlin = g_noise.perlinNoise(scaledPos);
 					XMVECTOR vecNormal = XMLoadFloat4(&perlin);
 
 					//basic
 					height += perlin.w / (float)(1 << (i + 4/*amplitude*/));
-					surfaceDerivative += vecNormal / (float)(1 << (i + 1/*amplitude*/));
+					surfaceDerivative += vecNormal / (float)(1 << (i + 3/*amplitude*/));
 
 					////erosion
 					//height += abs(perlin.w) / (float)(1 << (i + 2/*amplitude*/));
@@ -194,7 +202,7 @@ void SpherifiedPlane::generateTerrain() {
 					//}
 
 				}
-				XMStoreFloat4(&m_terrainMap.value()[j + i * HEIGHTMAP_RESOLUTION], XMVectorSetW(
+				XMStoreFloat4(&m_terrainMap.value()[i + j * HEIGHTMAP_RESOLUTION], XMVectorSetW(
 					XMVector3Normalize(normal - (surfaceDerivative - XMVector3Dot(surfaceDerivative, normal) * normal)),
 					height));
 			}
