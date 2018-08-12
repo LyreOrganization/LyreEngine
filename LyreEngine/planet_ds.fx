@@ -10,6 +10,9 @@ cbuffer Lighting : register(b1) {
 }
 
 Texture2DArray Terrain : register(t0);
+
+// TODO
+// Texture2D SlerpLookup : register(t1);
 SamplerState Tex2DSampler : register(s0);
 
 struct DS_OUTPUT {
@@ -27,6 +30,11 @@ struct HSCF_OUTPUT {
 	float inside[2] : SV_InsideTessFactor;
 };
 
+float3 slerp(float3 a, float3 b, float x) {
+	float angle = acos(dot(normalize(a), normalize(b)));
+	return a * sin((1.f - x) * angle) / sin(angle) + b * sin(x * angle) / sin(angle);
+}
+
 [domain("quad")]
 DS_OUTPUT main(HSCF_OUTPUT input,
 			   float2 uv : SV_DomainLocation,
@@ -38,10 +46,10 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 
 	DS_OUTPUT output;
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
-	output.normal = normalize(lerp(lerp(patch[0].pos, patch[1].pos, uv.x),
-								   lerp(patch[3].pos, patch[2].pos, uv.x),
-								   uv.y));
-	output.pos = PlanetPos + output.normal*(Radius + terrain.w);
+	output.normal = normalize(slerp(slerp(patch[0].pos, patch[1].pos, uv.x),
+									slerp(patch[3].pos, patch[2].pos, uv.x),
+									uv.y));
+	output.pos = PlanetPos + output.normal*(Radius/* + terrain.w*/);
 
 	output.normal = normalize(output.normal - (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
 
@@ -49,10 +57,10 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 		output.color = COLOR_OCEAN; //ocean
 	}
 	else if (terrain.w < 0.f) {
-		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.02f)/0.02f); //ocean -> sand
+		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.02f) / 0.02f); //ocean -> sand
 	}
 	else if (terrain.w < 0.04f) {
-		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w)/0.04f); //sand -> rocks
+		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w) / 0.04f); //sand -> rocks
 	}
 	else {
 		output.color = COLOR_ROCK; //rocks

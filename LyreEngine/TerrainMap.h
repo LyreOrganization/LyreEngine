@@ -51,6 +51,6 @@ private:
 public:
 	TerrainMap(const TerrainMap& base, unsigned regionIdx);
 	TerrainMap(const Description& desc, MapLoader* pMapLoader);
-	void loadTerrain(std::vector<DirectX::XMFLOAT4>& terrain) const;
+	void loadTerrain(std::vector<DirectX::XMFLOAT4>& terrain, const std::array<bool, 4>& trueEdges = { true, true, true, true }) const;
 	bool isComplete() const;
 };

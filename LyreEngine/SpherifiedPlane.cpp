@@ -17,30 +17,36 @@ namespace {
 	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
 }
 
-void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<DWORD>& indices) {
+void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<DWORD>& indices, std::vector<NeighbourPatchDivision>& neighboursInfo) {
 	if (m_pTerrainMap == nullptr)
 		return;
 
 	if (m_divided) {
 		for (const auto& child : m_children) {
-			child->loadTopology(terrain, indices);
+			child->loadTopology(terrain, indices, neighboursInfo);
 		}
 	}
 	else {
+		std::array<bool, 4> trueEdges;
+
 		for (int i = 0; i < 4; i++) {
 			indices.push_back(m_points[i]);
 		}
 		for (int i = 0; i < 4; i++) {
-			if (m_neighbours[i] != nullptr) {
+			if (trueEdges[i] = (m_neighbours[i] != nullptr)) {
+				neighboursInfo.push_back(m_neighbours[i]->m_divided ?
+										 NeighbourPatchDivision::MoreDivided :
+										 NeighbourPatchDivision::EquallyDivided);
 				indices.push_back(m_neighbours[i]->m_middle);
 			}
 			else {
+				neighboursInfo.push_back(NeighbourPatchDivision::LessDivided);
 				indices.push_back(m_pParent->m_neighbours[i]->m_middle);
 			}
 		}
 		indices.push_back(m_middle);
 
-		m_pTerrainMap->loadTerrain(terrain);
+		m_pTerrainMap->loadTerrain(terrain, trueEdges);
 	}
 }
 
@@ -59,7 +65,7 @@ bool SpherifiedPlane::tryDivide(int depth) {
 		// We can't divide if any of our neighbours missing, so we try to 
 		// divede respective parent's neighbour to create our own one.
 		for (int i = 0; i < 4; i++) {
-			if (m_neighbours[i] == nullptr && !m_pParent->m_neighbours[i]->tryDivide()) { 
+			if (m_neighbours[i] == nullptr && !m_pParent->m_neighbours[i]->tryDivide()) {
 				return false;
 			}
 		}

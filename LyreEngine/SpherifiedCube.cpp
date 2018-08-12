@@ -73,7 +73,7 @@ void SpherifiedCube::buildCube() {
 
 	auto pPlane = m_cube[5].get();
 	this_thread::sleep_for(chrono::milliseconds(2000));
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 4; i++) {
 		pPlane->tryDivide();
 		pPlane = pPlane->m_children[i % 4].get();
 		this_thread::sleep_for(chrono::milliseconds(1500 + i * 50));
@@ -112,7 +112,7 @@ void SpherifiedCube::applyTopology() {
 	indices.clear();
 	terrain.clear();
 	for (const auto& plane : m_cube) {
-		plane->loadTopology(terrain, indices);
+		plane->loadTopology(terrain, indices, neighboursInfo);
 	}
 }
 

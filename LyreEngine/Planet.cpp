@@ -41,16 +41,16 @@ HRESULT Planet::initGeometryShader() {
 	vector<UINT> buffersStrides = { sizeof(Geometry), sizeof(Normal) * 2 };
 
 	m_renderConfig.addSOEntry(
-		{ 0, "POSITION", 0, 0, 4, 0 }
+	{ 0, "POSITION", 0, 0, 4, 0 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 0, "COLOR", 0, 0, 4, 0 }
+	{ 0, "COLOR", 0, 0, 4, 0 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 1, "POSITION", 0, 0, 4, 1 }
+	{ 1, "POSITION", 0, 0, 4, 1 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 1, "POSITION", 1, 0, 4, 1 }
+	{ 1, "POSITION", 1, 0, 4, 1 }
 	);
 
 	m_renderConfig.loadGSwithSO(L"planet_gs.cso", buffersStrides, D3D11_SO_NO_RASTERIZED_STREAM);
@@ -63,10 +63,10 @@ HRESULT Planet::initGeometryPipeline() {
 	std::vector<char> shaderBytecode = m_geometryPipeline.config.loadShader(Shader::VS, L"planet_geometry_vs.cso");
 	///Vertex buffer format
 	m_geometryPipeline.geometry.addVertexElement(
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_geometryPipeline.geometry.addVertexElement(
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_geometryPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
 	m_geometryPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -83,7 +83,7 @@ HRESULT Planet::initNormalsPipeline() {
 
 	///Vertex buffer format
 	m_normalsPipeline.geometry.addVertexElement(
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_normalsPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
 	m_normalsPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -98,7 +98,7 @@ HRESULT Planet::initGeometryAndVS() {
 	std::vector<char> shaderBytecode = m_renderConfig.loadShader(Shader::VS, L"planet_vs.cso");
 
 	m_geometry.addVertexElement(
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	/*auto& vertexElement = m_geometry.createVertexElement();
 	vertexElement.SemanticName = "CONTROL_POINT_WORLD_POSITION";
@@ -137,6 +137,7 @@ HRESULT Planet::init() {
 		return hr;
 
 	size_t patchesAmount = m_sphere.indices.size() / 9;
+
 	D3D11_TEXTURE2D_DESC texArrayDesc;
 	{
 		ZeroStruct(texArrayDesc);
@@ -154,12 +155,42 @@ HRESULT Planet::init() {
 	if (FAILED(hr))
 		return hr;
 	for (int i = 0; i < patchesAmount; i++) {
-		LyreEngine::getContext()->UpdateSubresource(texArray, i, nullptr, 
+		LyreEngine::getContext()->UpdateSubresource(texArray, i, nullptr,
 													&m_sphere.terrain[HEIGHTMAP_RESOLUTION*HEIGHTMAP_RESOLUTION*i],
 													HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain),
 													HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain));
 	}
 	hr = LyreEngine::getDevice()->CreateShaderResourceView(texArray, nullptr, &m_iTerrainSRV);
+	if (FAILED(hr))
+		return hr;
+
+	D3D11_BUFFER_DESC bufferDesc;
+	{
+		ZeroStruct(bufferDesc);
+		bufferDesc.ByteWidth = VecBufferSize(m_sphere.neighboursInfo);
+		bufferDesc.StructureByteStride = VecElementSize(m_sphere.neighboursInfo)*4;
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	}
+	CComPtr<ID3D11Buffer> buffer = nullptr;
+	D3D11_SUBRESOURCE_DATA initData;
+	{
+		ZeroStruct(initData);
+		initData.pSysMem = m_sphere.neighboursInfo.data();
+	}
+	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &buffer);
+	if (FAILED(hr))
+		return hr;
+	//LyreEngine::getContext()->UpdateSubresource(buffer, 0, nullptr, m_sphere.neighboursInfo.data(), 0, 0);
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	{
+		ZeroStruct(srvDesc);
+		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
+	}
+	hr = LyreEngine::getDevice()->CreateShaderResourceView(buffer, &srvDesc, &m_iPatchNeighboursDivisionSRV);
 	if (FAILED(hr))
 		return hr;
 
@@ -174,6 +205,7 @@ void Planet::render() {
 	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getLodCB(), 0);
 	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getCameraCB(), 1);
 	m_renderConfig.setConstantBuffer(Shader::HS, m_planetCb.getBuffer(), 2);
+	m_renderConfig.setSRV(Shader::HS, m_iPatchNeighboursDivisionSRV, 0);
 
 	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 0);
 	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);

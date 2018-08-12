@@ -41,6 +41,8 @@ void MapLoader::start() {
 			unique_lock<shared_mutex> mapLocker(pMap->m_membersLock); // writer
 			if (pMap->m_desc.currentOctaveDepth <= 0) continue;
 
+			for (auto& edge : pMap->m_edgesBackup) edge = vector<XMFLOAT4>(HEIGHTMAP_RESOLUTION);
+
 			for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
 				for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
 					gridPosition = pMap->sampleSphere(
@@ -51,11 +53,26 @@ void MapLoader::start() {
 					originalPosition = XMLoadFloat3(&gridPosition);
 					normal = XMVector3Normalize(originalPosition);
 
+					XMStoreFloat3(&gridPosition, originalPosition * pMap->m_desc.octave);
 					gridPosition.x += pMap->m_desc.shift;
 					gridPosition.y += pMap->m_desc.shift;
 					gridPosition.z += pMap->m_desc.shift;
-					XMStoreFloat3(&gridPosition, originalPosition * pMap->m_desc.octave);
+
 					perlin = m_terrainGenerator.perlinNoise(gridPosition);
+
+					// Backup edges
+					if (i == 0) {
+						pMap->m_edgesBackup[0][j] = pMap->m_heightMap[j];
+					}
+					else if (i == HEIGHTMAP_RESOLUTION - 1) {
+						pMap->m_edgesBackup[2][j] = pMap->m_heightMap[j + (HEIGHTMAP_RESOLUTION - 1) * HEIGHTMAP_RESOLUTION];
+					}
+					if (j == 0) {
+						pMap->m_edgesBackup[3][i] = pMap->m_heightMap[i * HEIGHTMAP_RESOLUTION];
+					}
+					else if (j == HEIGHTMAP_RESOLUTION - 1) {
+						pMap->m_edgesBackup[1][i] = pMap->m_heightMap[(i + 1) * HEIGHTMAP_RESOLUTION - 1];
+					}
 
 					XMStoreFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION],
 								  XMLoadFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION]) +

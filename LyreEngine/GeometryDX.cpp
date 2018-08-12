@@ -13,6 +13,7 @@ void GeometryDX::_loadVertices(const void* data, UINT size, UINT stride, UINT sl
 	}
 	D3D11_SUBRESOURCE_DATA initData;
 	{
+		ZeroStruct(initData);
 		initData.pSysMem = data;
 	}
 	HRESULT hr = LyreEngine::getDevice()->CreateBuffer(&desc, &initData, &m_vertexBuffers[slot]);
@@ -53,6 +54,7 @@ void GeometryDX::loadIndices(const std::vector<DWORD>& indices) {
 	}
 	D3D11_SUBRESOURCE_DATA initData;
 	{
+		ZeroStruct(initData);
 		initData.pSysMem = indices.data();
 	}
 	HRESULT hr = m_pDevice->CreateBuffer(&desc, &initData, &m_indexBuffer);

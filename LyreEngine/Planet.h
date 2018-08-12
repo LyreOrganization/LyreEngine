@@ -42,6 +42,7 @@ private:
 	};
 	ConstantBufferDX<PlanetCB>			m_planetCb;
 
+	CComPtr<ID3D11ShaderResourceView>	m_iPatchNeighboursDivisionSRV = nullptr;
 	CComPtr<ID3D11ShaderResourceView>	m_iTerrainSRV = nullptr;
 
 	HRESULT setupStreamOutputBuffers();

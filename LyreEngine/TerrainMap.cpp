@@ -102,11 +102,28 @@ XMFLOAT3 TerrainMap::sampleSphere(float u, float v) const {
 	return result;
 }
 
-void TerrainMap::loadTerrain(std::vector<XMFLOAT4>& terrain) const {
+void TerrainMap::loadTerrain(std::vector<XMFLOAT4>& terrain, const std::array<bool, 4>& trueEdges) const {
 	shared_lock<shared_mutex> locker(m_membersLock);
 
-	// TODO: seamless LOD
+	int terrainStartIdx = terrain.size();
 	terrain.insert(terrain.end(), m_heightMap.begin(), m_heightMap.end());
+
+	if (!trueEdges[0]) {
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++)
+			terrain[terrainStartIdx + i] = m_edgesBackup[0][i];
+	}
+	if (!trueEdges[2]) {
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++)
+			terrain[terrainStartIdx + (HEIGHTMAP_RESOLUTION - 1) * HEIGHTMAP_RESOLUTION + i] = m_edgesBackup[2][i];
+	}
+	if (!trueEdges[3]) {
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++)
+			terrain[terrainStartIdx + i * HEIGHTMAP_RESOLUTION] = m_edgesBackup[3][i];
+	}
+	if (!trueEdges[1]) {
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++)
+			terrain[terrainStartIdx + (i + 1) * HEIGHTMAP_RESOLUTION - 1] = m_edgesBackup[1][i];
+	}
 }
 
 bool TerrainMap::isComplete() const {
