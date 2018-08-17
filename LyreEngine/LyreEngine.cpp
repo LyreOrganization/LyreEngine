@@ -62,7 +62,8 @@ namespace {
 	CComPtr<ID3D11Buffer>				g_iLightingConstantBuffer = nullptr;
 	CComPtr<ID3D11Buffer>				g_iLodConstantBuffer = nullptr;
 
-	CComPtr<ID3D11SamplerState>			g_iTex2DSampler;
+	CComPtr<ID3D11SamplerState>			g_iLinearSampler;
+	CComPtr<ID3D11SamplerState>			g_iPointSampler;
 
 	std::unique_ptr<Planet>				g_pPlanet;
 
@@ -294,7 +295,20 @@ namespace {
 			tex2DSamplerDesc.MinLOD = 0.f;
 			tex2DSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 		}
-		hr = LyreEngine::getDevice()->CreateSamplerState(&tex2DSamplerDesc, &g_iTex2DSampler);
+		hr = LyreEngine::getDevice()->CreateSamplerState(&tex2DSamplerDesc, &g_iLinearSampler);
+		if (FAILED(hr))
+			return hr;
+
+		D3D11_SAMPLER_DESC tex1DSamplerDesc;
+		{
+			ZeroStruct(tex1DSamplerDesc);
+			tex1DSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			tex1DSamplerDesc.AddressU = tex1DSamplerDesc.AddressV = tex1DSamplerDesc.AddressW =
+				D3D11_TEXTURE_ADDRESS_CLAMP;
+			tex1DSamplerDesc.MinLOD = 0.f;
+			tex1DSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		}
+		hr = LyreEngine::getDevice()->CreateSamplerState(&tex1DSamplerDesc, &g_iPointSampler);
 		if (FAILED(hr))
 			return hr;
 
@@ -483,9 +497,9 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 
 	LodConstantBuffer cbLod;
 	cbLod.minDistance = 1.f;
-	cbLod.maxDistance = 32.f;
-	cbLod.minLOD = 1.f;
-	cbLod.maxLOD = 63.f;
+	cbLod.maxDistance = 100.f;
+	cbLod.minLOD = 4.f;
+	cbLod.maxLOD = 8.f;
 	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 
 	float sky = 1.f;
@@ -573,8 +587,12 @@ ID3D11Buffer* LyreEngine::getLodCB() {
 	return g_iLodConstantBuffer;
 }
 
-ID3D11SamplerState * LyreEngine::getSampler2D() {
-	return g_iTex2DSampler;
+ID3D11SamplerState * LyreEngine::getSamplerLinear() {
+	return g_iLinearSampler;
+}
+
+ID3D11SamplerState * LyreEngine::getSamplerPoint() {
+	return g_iPointSampler;
 }
 
 Camera* LyreEngine::getCamera() {

@@ -6,7 +6,7 @@ class TerrainMap;
 
 class SpherifiedPlane final {
 	friend class SpherifiedCube;
-	
+
 public:
 	enum NeighbourPatchDivision : UINT {
 		EquallyDivided = 0,
@@ -27,11 +27,15 @@ private:
 	DWORD m_middle;
 
 	std::unique_ptr<TerrainMap> m_pTerrainMap;
-	
+
 	bool m_divided;
+	int m_level;
 	std::array<std::unique_ptr<SpherifiedPlane>, 4> m_children;
 
-	void loadTopology(std::vector<DirectX::XMFLOAT4>& terrain, std::vector<DWORD>& indices, std::vector<NeighbourPatchDivision>& neighboursInfo);
+	void loadTopology(std::vector<DirectX::XMFLOAT4>& terrain,
+					  std::vector<DWORD>& indices,
+					  std::vector<NeighbourPatchDivision>& neighboursInfo,
+					  std::vector<int>& divisionInfo);
 
 	bool tryDivide(int depth = 1);
 	bool tryUndivide();

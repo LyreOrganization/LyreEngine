@@ -17,17 +17,20 @@ namespace {
 	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
 }
 
-void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<DWORD>& indices, std::vector<NeighbourPatchDivision>& neighboursInfo) {
+void SpherifiedPlane::loadTopology(vector<XMFLOAT4>& terrain, 
+								   vector<DWORD>& indices, 
+								   vector<NeighbourPatchDivision>& neighboursInfo, 
+								   vector<int>& divisionInfo) {
 	if (m_pTerrainMap == nullptr)
 		return;
 
 	if (m_divided) {
 		for (const auto& child : m_children) {
-			child->loadTopology(terrain, indices, neighboursInfo);
+			child->loadTopology(terrain, indices, neighboursInfo, divisionInfo);
 		}
 	}
 	else {
-		std::array<bool, 4> trueEdges;
+		array<bool, 4> trueEdges;
 
 		for (int i = 0; i < 4; i++) {
 			indices.push_back(m_points[i]);
@@ -46,6 +49,8 @@ void SpherifiedPlane::loadTopology(std::vector<XMFLOAT4>& terrain, std::vector<D
 		}
 		indices.push_back(m_middle);
 
+		divisionInfo.push_back(m_level);
+
 		m_pTerrainMap->loadTerrain(terrain, trueEdges);
 	}
 }
@@ -54,6 +59,7 @@ SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, Spherifi
 	: m_pSphere(sphere), m_points(points), m_pParent(parent), m_pTerrainMap(nullptr) {
 
 	m_middle = m_pSphere->createMidpoint(m_points);
+	m_level = parent ? parent->m_level + 1 : 0;
 }
 
 bool SpherifiedPlane::tryDivide(int depth) {

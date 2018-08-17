@@ -4,6 +4,7 @@
 #include "GeometryDX.h"
 #include "ConstantBufferDX.h"
 #include "PipelineConfigDX.h"
+#include "LookupTable.h"
 
 #define MAX_CBUFFERS_AMOUNT D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT
 #define MAX_SAMPLERS_AMOUNT D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT
@@ -12,12 +13,12 @@
 
 class Planet final {
 private:
-	static const size_t SLERP_LOOKUP_RESOLUTION = 1024;
+	static const size_t SLERP_LOOKUP_RESOLUTION = 4096;
 	static const size_t SLERP_LOOKUP_STEPS = 10;
 	//first step - angle=asin(1/sqrt(3)) (initial cube)
 	//each step divides angle by two
 	//last step - slerp=lerp
-	static std::array<std::array<float, SLERP_LOOKUP_RESOLUTION>, SLERP_LOOKUP_STEPS> s_slerpLookup;
+	static LookupTable2D<DirectX::XMFLOAT2, int, float> s_slerpLookup;
 
 	PipelineConfigDX					m_renderConfig;
 
@@ -43,6 +44,10 @@ private:
 	ConstantBufferDX<PlanetCB>			m_planetCb;
 
 	CComPtr<ID3D11ShaderResourceView>	m_iPatchNeighboursDivisionSRV = nullptr;
+	CComPtr<ID3D11ShaderResourceView>	m_iPatchDivisionLevelSRV = nullptr;
+
+	CComPtr<ID3D11ShaderResourceView>	m_iSlerpLookupSRV = nullptr;
+
 	CComPtr<ID3D11ShaderResourceView>	m_iTerrainSRV = nullptr;
 
 	HRESULT setupStreamOutputBuffers();

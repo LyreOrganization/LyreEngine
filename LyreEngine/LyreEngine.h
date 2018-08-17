@@ -12,7 +12,8 @@ namespace LyreEngine
 	ID3D11Buffer* getViewProjCB();
 	ID3D11Buffer* getLightingCB();
 	ID3D11Buffer* getLodCB();
-	ID3D11SamplerState* getSampler2D();
+	ID3D11SamplerState* getSamplerLinear();
+	ID3D11SamplerState* getSamplerPoint();
 	Camera* getCamera();
 	void getClientWH(UINT & width, UINT & height);
 	HRESULT readShaderFromFile(const WCHAR* szFileName, std::vector<char> &shaderBytecode);

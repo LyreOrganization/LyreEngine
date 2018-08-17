@@ -92,13 +92,15 @@ void TerrainMap::nextOctave() {
 
 XMFLOAT3 TerrainMap::sampleSphere(float u, float v) const {
 	XMFLOAT3 result;
+	float angle = acosf(XMVectorGetX(XMVector3Dot(
+		XMVector3Normalize(XMLoadFloat3(&m_desc.quad[1])), 
+		XMVector3Normalize(XMLoadFloat3(&m_desc.quad[0])))));
 	float radius = XMVectorGetX(XMVector3Length(XMLoadFloat3(&m_desc.quad[0])));
-	XMStoreFloat3(&result, XMVector3ClampLength(
-		(XMLoadFloat3(&m_desc.quad[1])*u +
-		 XMLoadFloat3(&m_desc.quad[0])*(1 - u))*(1 - v) +
-		 (XMLoadFloat3(&m_desc.quad[2])*u +
-		  XMLoadFloat3(&m_desc.quad[3])*(1 - u))*v,
-		radius, radius));
+	XMStoreFloat3(&result, XMVector3Normalize(
+		(XMLoadFloat3(&m_desc.quad[1])*sin(u*angle) / sin(angle) +
+		 XMLoadFloat3(&m_desc.quad[0])*sin((1-u)*angle) / sin(angle)) * sin((1 - v)*angle) / sin(angle) +
+		 (XMLoadFloat3(&m_desc.quad[2])*sin(u*angle) / sin(angle) +
+		  XMLoadFloat3(&m_desc.quad[3])*sin((1 - u)*angle) / sin(angle)) * sin(v*angle) / sin(angle))*radius);
 	return result;
 }
 

@@ -132,6 +132,7 @@
     <ClCompile Include="log.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="LookupTable.cpp" />
     <ClCompile Include="PipelineConfigDX.cpp" />
     <ClCompile Include="FreeCamera.cpp" />
     <ClCompile Include="ControlsKeyLayout.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="log.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="LookupTable.h" />
     <ClInclude Include="PipelineConfigDX.h" />
     <ClInclude Include="FreeCamera.h" />
     <ClInclude Include="ControlsKeyLayout.h" />

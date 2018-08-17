@@ -59,6 +59,9 @@
     <Filter Include="Helper\Log">
       <UniqueIdentifier>{999187d4-6de1-4808-ad8f-0c23b74c3f9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Helper\Lookup">
+      <UniqueIdentifier>{cacc78ff-bb94-46e0-b7ad-41eb3e4fe069}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -117,6 +120,9 @@
     </ClCompile>
     <ClCompile Include="helper.cpp">
       <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="LookupTable.cpp">
+      <Filter>Helper\Lookup</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="helper.h">
       <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="LookupTable.h">
+      <Filter>Helper\Lookup</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

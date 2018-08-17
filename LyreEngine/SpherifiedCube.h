@@ -12,6 +12,7 @@ public:
 	std::vector<DWORD> indices;
 	std::vector<DirectX::XMFLOAT4> terrain;
 	std::vector<SpherifiedPlane::NeighbourPatchDivision> neighboursInfo;
+	std::vector<int> divisionInfo;
 
 private:
 	float m_radius;

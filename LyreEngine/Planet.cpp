@@ -21,6 +21,11 @@ namespace {
 	};
 }
 
+LookupTable2D<XMFLOAT2, int, float> Planet::s_slerpLookup([](int level, float x) {
+	float angle = asinf(1.f / sqrtf(3.f)) / static_cast<float>(1 << level);
+	return XMFLOAT2(sin((1.f - x)*angle) / sin(angle), sin(x*angle) / sin(angle));
+}, { 0, SLERP_LOOKUP_STEPS - 1, SLERP_LOOKUP_STEPS - 1 }, { 0.f, 1.f, SLERP_LOOKUP_RESOLUTION - 1 });
+
 Planet::Planet(float radius, unsigned seed) : m_sphere(radius, seed) {}
 
 HRESULT Planet::setupStreamOutputBuffers() {
@@ -164,11 +169,12 @@ HRESULT Planet::init() {
 	if (FAILED(hr))
 		return hr;
 
+	// Neighbours' division
 	D3D11_BUFFER_DESC bufferDesc;
 	{
 		ZeroStruct(bufferDesc);
 		bufferDesc.ByteWidth = VecBufferSize(m_sphere.neighboursInfo);
-		bufferDesc.StructureByteStride = VecElementSize(m_sphere.neighboursInfo)*4;
+		bufferDesc.StructureByteStride = VecElementSize(m_sphere.neighboursInfo) * 4;
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
@@ -182,7 +188,6 @@ HRESULT Planet::init() {
 	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &buffer);
 	if (FAILED(hr))
 		return hr;
-	//LyreEngine::getContext()->UpdateSubresource(buffer, 0, nullptr, m_sphere.neighboursInfo.data(), 0, 0);
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	{
 		ZeroStruct(srvDesc);
@@ -191,6 +196,55 @@ HRESULT Planet::init() {
 		srvDesc.Buffer.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
 	}
 	hr = LyreEngine::getDevice()->CreateShaderResourceView(buffer, &srvDesc, &m_iPatchNeighboursDivisionSRV);
+	if (FAILED(hr))
+		return hr;
+	// Division level
+	{
+		ZeroStruct(bufferDesc);
+		bufferDesc.ByteWidth = VecBufferSize(m_sphere.divisionInfo);
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	}
+	buffer = nullptr;
+	{
+		ZeroStruct(initData);
+		initData.pSysMem = m_sphere.divisionInfo.data();
+	}
+	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &buffer);
+	if (FAILED(hr))
+		return hr;
+	{
+		ZeroStruct(srvDesc);
+		srvDesc.Format = DXGI_FORMAT_R32_SINT;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.NumElements = bufferDesc.ByteWidth / VecElementSize(m_sphere.divisionInfo);
+	}
+	hr = LyreEngine::getDevice()->CreateShaderResourceView(buffer, &srvDesc, &m_iPatchDivisionLevelSRV);
+	if (FAILED(hr))
+		return hr;
+
+	//Lookup
+	D3D11_TEXTURE1D_DESC slerpTexArrayDesc;
+	{
+		ZeroStruct(slerpTexArrayDesc);
+		slerpTexArrayDesc.Width = SLERP_LOOKUP_RESOLUTION;
+		slerpTexArrayDesc.MipLevels = 1;
+		slerpTexArrayDesc.ArraySize = SLERP_LOOKUP_STEPS;
+		slerpTexArrayDesc.Format = DXGI_FORMAT_R32G32_FLOAT;
+		slerpTexArrayDesc.Usage = D3D11_USAGE_DEFAULT;
+		slerpTexArrayDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	}
+	CComPtr<ID3D11Texture1D> slerpTexArray = nullptr;
+	hr = LyreEngine::getDevice()->CreateTexture1D(&slerpTexArrayDesc, nullptr, &slerpTexArray);
+	for (int i = 0; i < SLERP_LOOKUP_STEPS; i++) {
+		LyreEngine::getContext()->UpdateSubresource(slerpTexArray, i, nullptr,
+													s_slerpLookup.buffer() + (SLERP_LOOKUP_RESOLUTION*i),
+													SLERP_LOOKUP_RESOLUTION * sizeof(*s_slerpLookup.buffer()),
+													SLERP_LOOKUP_RESOLUTION * sizeof(*s_slerpLookup.buffer()));
+	}
+	if (FAILED(hr))
+		return hr;
+	hr = LyreEngine::getDevice()->CreateShaderResourceView(slerpTexArray, nullptr, &m_iSlerpLookupSRV);
 	if (FAILED(hr))
 		return hr;
 
@@ -209,8 +263,11 @@ void Planet::render() {
 
 	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 0);
 	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);
-	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSampler2D(), 0);
+	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerLinear(), 0);
+	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerPoint(), 1);
 	m_renderConfig.setSRV(Shader::DS, m_iTerrainSRV, 0);
+	m_renderConfig.setSRV(Shader::DS, m_iSlerpLookupSRV, 1);
+	m_renderConfig.setSRV(Shader::HS, m_iPatchDivisionLevelSRV, 2);
 
 	m_geometry.bind();
 	m_renderConfig.bind();

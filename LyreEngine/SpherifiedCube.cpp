@@ -112,7 +112,7 @@ void SpherifiedCube::applyTopology() {
 	indices.clear();
 	terrain.clear();
 	for (const auto& plane : m_cube) {
-		plane->loadTopology(terrain, indices, neighboursInfo);
+		plane->loadTopology(terrain, indices, neighboursInfo, divisionInfo);
 	}
 }
 

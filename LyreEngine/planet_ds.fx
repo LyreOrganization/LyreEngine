@@ -11,9 +11,12 @@ cbuffer Lighting : register(b1) {
 
 Texture2DArray Terrain : register(t0);
 
-// TODO
-// Texture2D SlerpLookup : register(t1);
+Texture1DArray SlerpLookup : register(t1);
+
+Buffer<int> DivisionLevels : register(t2);
+
 SamplerState Tex2DSampler : register(s0);
+SamplerState Tex1DSampler : register(s1);
 
 struct DS_OUTPUT {
 	float3 pos : POSITION;
@@ -29,6 +32,11 @@ struct HSCF_OUTPUT {
 	float edge[4] : SV_TessFactor;
 	float inside[2] : SV_InsideTessFactor;
 };
+
+float3 slerpLookup(float3 a, float3 b, float x) {
+	float2 slerpCoefs = SlerpLookup.SampleLevel(Tex2DSampler, float2(x, (float)level), 0.f);
+	return a * slerpCoefs.x + b * slerpCoefs.y;
+}
 
 float3 slerp(float3 a, float3 b, float x) {
 	float angle = acos(dot(normalize(a), normalize(b)));
@@ -46,8 +54,10 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 
 	DS_OUTPUT output;
 	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
-	output.normal = normalize(slerp(slerp(patch[0].pos, patch[1].pos, uv.x),
-									slerp(patch[3].pos, patch[2].pos, uv.x),
+	int level = DivisionLevels[PatchID];
+	output.normal = normalize(slerp(level,
+									slerpLookup(level, patch[0].pos, patch[1].pos, uv.x),
+									slerpLookup(level, patch[3].pos, patch[2].pos, uv.x),
 									uv.y));
 	output.pos = PlanetPos + output.normal*(Radius/* + terrain.w*/);
 
