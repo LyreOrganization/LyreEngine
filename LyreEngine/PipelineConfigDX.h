@@ -80,7 +80,7 @@ public:
 
 	void setConstantBuffer(Shader shader, ID3D11Buffer* cb, UINT slot);
 	void setSampler(Shader shader, ID3D11SamplerState* sampler, UINT slot);
-	void setSRV(Shader shader, ID3D11ShaderResourceView* srv,UINT slot);
+	void setSRV(Shader shader, ID3D11ShaderResourceView* srv, UINT slot);
 
 	D3D11_SO_DECLARATION_ENTRY& createSOEntry();
 	void addSOEntry(D3D11_SO_DECLARATION_ENTRY);

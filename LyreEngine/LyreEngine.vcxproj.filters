@@ -50,6 +50,12 @@
     <Filter Include="Shaders\Compute">
       <UniqueIdentifier>{8f99865e-75b1-49c3-a0fe-e7495e662ea5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DirectXAPI\Geometry">
+      <UniqueIdentifier>{3512256d-16fb-434a-beee-c7205fc8260c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Atmosphere">
+      <UniqueIdentifier>{f9200d73-5a8a-4adb-9b65-16d033680695}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -103,6 +109,13 @@
     <ClCompile Include="ComputePipelineConfigDX.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
+    <ClCompile Include="UVSphere.cpp">
+      <Filter>DirectXAPI\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="Atmosphere.cpp">
+      <Filter>Planet</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -159,6 +172,13 @@
     <ClInclude Include="ComputePipelineConfigDX.h">
       <Filter>DirectXAPI</Filter>
     </ClInclude>
+    <ClInclude Include="UVSphere.h">
+      <Filter>DirectXAPI\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="Atmosphere.h">
+      <Filter>Planet</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc">
@@ -192,6 +212,12 @@
     </FxCompile>
     <FxCompile Include="planet_cs.fx">
       <Filter>Shaders\Compute</Filter>
+    </FxCompile>
+    <FxCompile Include="atmosphere_vs.fx">
+      <Filter>Shaders\Atmosphere</Filter>
+    </FxCompile>
+    <FxCompile Include="atmosphere_ps.fx">
+      <Filter>Shaders\Atmosphere</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

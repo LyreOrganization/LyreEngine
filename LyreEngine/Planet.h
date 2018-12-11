@@ -60,4 +60,6 @@ public:
 	void render();
 	void renderGeometry();
 	void renderNormals();
+
+	float getRadius() const { return m_sphere.getRadius(); }
 };

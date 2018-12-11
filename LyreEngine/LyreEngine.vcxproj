@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Atmosphere.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ComputePipelineConfigDX.cpp" />
     <ClCompile Include="ControlsAction.cpp" />
@@ -139,9 +140,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TargetCamera.cpp" />
+    <ClCompile Include="Utils.cpp" />
     <ClCompile Include="UtilsDX.cpp" />
+    <ClCompile Include="UVSphere.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Atmosphere.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ComputePipelineConfigDX.h" />
     <ClInclude Include="ControlsAction.h" />
@@ -161,12 +165,24 @@
     <ClInclude Include="SpherifiedPlane.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TargetCamera.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="UtilsDX.h" />
+    <ClInclude Include="UVSphere.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="atmosphere_ps.fx">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="atmosphere_vs.fx">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VS</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="planet_cs.fx">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

@@ -5,6 +5,7 @@
 #include "resource.h"
 
 #include "Planet.h"
+#include "Atmosphere.h"
 #include "FreeCamera.h"
 #include "TargetCamera.h"
 #include "Controls.h"
@@ -64,12 +65,13 @@ namespace {
 	CComPtr<ID3D11SamplerState>			g_iTex2DSampler;
 
 	std::unique_ptr<Planet>				g_pPlanet;
+	std::unique_ptr<Atmosphere>			g_pAtmosphere;
 
 	std::unique_ptr<Camera>				g_pCamera;
 
 	float								g_lightAngle;
 
-	HRESULT init() {
+	HRESULT initDX() {
 		HRESULT hr;
 
 		UINT width, height;
@@ -105,8 +107,8 @@ namespace {
 		for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
 			g_driverType = driverTypes[driverTypeIndex];
 			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, D3D11_CREATE_DEVICE_DEBUG, featureLevels,
-											   numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc,
-											   &g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
+				numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc,
+				&g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
 			if (SUCCEEDED(hr))
 				break;
 		}
@@ -237,6 +239,15 @@ namespace {
 		}
 		g_iContext->RSSetViewports(1, &vp);
 
+		return S_OK;
+	}
+
+	HRESULT init() {
+		HRESULT hr = initDX();
+
+		if (FAILED(hr))
+			return hr;
+
 		D3D11_BUFFER_DESC bufferDesc;
 
 		//View constant buffer
@@ -302,6 +313,10 @@ namespace {
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
+
+		// Atmosphere
+		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.2f, 50);
+		g_pAtmosphere->init();
 
 		//Camera
 		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
@@ -494,6 +509,7 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	g_iContext->ClearDepthStencilView(g_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	g_pPlanet->render();
+	g_pAtmosphere->render();
 
 	g_iSwapChain->Present(0, 0);
 }

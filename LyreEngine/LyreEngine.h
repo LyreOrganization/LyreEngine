@@ -1,7 +1,6 @@
 #pragma once
 
-class Planet;
-class Camera;
+#include "Camera.h"
 
 namespace LyreEngine
 {

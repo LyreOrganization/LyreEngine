@@ -89,6 +89,12 @@ ID3D11Buffer * GeometryDX::getVertexBuffer(UINT slot) {
 	return m_vertexBuffers[slot];
 }
 
+UINT GeometryDX::getIndicesSize() {
+	D3D11_BUFFER_DESC desc;
+	m_indexBuffer->GetDesc(&desc);
+	return desc.ByteWidth / sizeof(DWORD);
+}
+
 void GeometryDX::bind() {
 	m_pContext->IASetInputLayout(m_layout);
 	m_pContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);

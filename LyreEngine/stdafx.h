@@ -1,5 +1,6 @@
 #pragma once
 
+// System headers
 #include <D3DX11.h>
 #include <D3D11.h>
 #include <DirectXMath.h>
@@ -18,6 +19,9 @@
 #include <optional>
 #include <algorithm>
 #include <random>
+
+// Custom headers
+#include "Utils.h"
 
 
 #define ZeroStruct(structure)		(ZeroMemory(&structure, sizeof(structure)))

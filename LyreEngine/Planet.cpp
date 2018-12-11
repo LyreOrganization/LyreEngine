@@ -225,7 +225,7 @@ void Planet::render() {
 
 	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getLodCB(), 0);
 
-	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 0);
+	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb, 0);
 	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);
 	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSampler2D(), 0);
 	m_renderConfig.setSRV(Shader::DS, m_iTerrainSRV, 0);

@@ -35,6 +35,7 @@ public:
 
 	void setTopology(D3D11_PRIMITIVE_TOPOLOGY);
 	ID3D11Buffer* getVertexBuffer(UINT slot);
+	UINT getIndicesSize();
 
 	void bind();
 	void unbind();
