@@ -111,6 +111,11 @@ void setupCommonActions() {
 void setupKeyboardLayout() {
 	Controls::KeyLayout keys;
 
+	Controls::KeyMapping atmosphereKeys;
+	{
+		atmosphereKeys[WindowsLetterIdx('F')] = "SwitchVisibility";
+	}
+
 	Controls::KeyMapping cameraKeys;
 	{
 		cameraKeys[WindowsLetterIdx('R')] = "ToggleWireframe";
@@ -145,6 +150,7 @@ void setupKeyboardLayout() {
 	Controls::KeyMapping commonKeys;
 	commonKeys[VK_ESCAPE] = "Exit";
 
+	keys["Atmosphere"] = atmosphereKeys;
 	keys["Camera"] = cameraKeys;
 	keys["FreeCamera"] = freeCameraKeys;
 	keys["TargetCamera"] = targetCameraKeys;

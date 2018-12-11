@@ -317,6 +317,16 @@ namespace {
 		// Atmosphere
 		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.2f, 50);
 		g_pAtmosphere->init();
+		// Atmosphrer controls
+		{
+			Controls::ActionGroup atmosphere("Atmosphere");
+
+			atmosphere.action("SwitchVisibility").onTriggered([]() {
+				g_pAtmosphere->visible ^= true;
+			});
+
+			Controls::addActionGroup(atmosphere);
+		}
 
 		//Camera
 		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },

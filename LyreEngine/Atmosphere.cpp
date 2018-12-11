@@ -117,6 +117,8 @@ void Atmosphere::init() {
 }
 
 void Atmosphere::render() {
+	if (!visible) return;
+
 	UINT w, h;
 	LyreEngine::getClientWH(w, h);
 	m_atmosphereCb.data.viewProj = LyreEngine::getCamera()->calculateViewProjMatrix(static_cast<float>(w) / h);

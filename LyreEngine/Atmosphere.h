@@ -10,6 +10,8 @@ public:
 	void init();
 	void render();
 
+	bool visible = true;
+
 private:
 	static const float AverageDensityHeight;
 	static const int OutScatteringRes;
