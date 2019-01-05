@@ -28,8 +28,8 @@ public:
 	~GeometryDX();
 
 	template<class VertexStruct>
-	void loadVertices(const std::vector<VertexStruct>& vertices, UINT slot) {
-		_loadVertices(vertices.data(), vertices.size(), sizeof(VertexStruct), slot);
+	void loadVertices(const std::vector<VertexStruct>& vertices, UINT slot = 0) {
+		_loadVertices(vertices.data(), static_cast<UINT>(vertices.size()), sizeof(VertexStruct), slot);
 	}
 	void loadVertexBuffer(ID3D11Buffer* buffer, UINT stride, UINT slot);
 	void loadIndices(const std::vector<DWORD>& indices);

@@ -20,9 +20,8 @@ private:
 	//last step - slerp=lerp
 	static LookupTable2D<DirectX::XMFLOAT2, int, float> s_slerpLookup;
 
-	PipelineConfigDX					m_renderConfig;
-
 	//Pipelines
+
 	struct {
 		GeometryDX						geometry;
 		PipelineConfigDX				config;
@@ -33,18 +32,22 @@ private:
 		PipelineConfigDX				config;
 	} m_normalsPipeline;
 
-	//Geometry
 	GeometryDX							m_geometry;
+	PipelineConfigDX					m_renderConfig;
+
 
 	//ConstantBuffers
+
+	struct CubeFacesCB {
+		DirectX::XMFLOAT4X4 planeRotations[6];
+	};
+	ConstantBufferDX<CubeFacesCB>			m_cubeFacesCb;
+
 	struct PlanetCB {
 		DirectX::XMFLOAT3 planetPos;
 		float radius;
 	};
 	ConstantBufferDX<PlanetCB>			m_planetCb;
-
-	CComPtr<ID3D11ShaderResourceView>	m_iPatchNeighboursDivisionSRV = nullptr;
-	CComPtr<ID3D11ShaderResourceView>	m_iPatchDivisionLevelSRV = nullptr;
 
 	CComPtr<ID3D11ShaderResourceView>	m_iSlerpLookupSRV = nullptr;
 

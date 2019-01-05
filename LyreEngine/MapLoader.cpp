@@ -4,6 +4,7 @@
 
 #include "TerrainMap.h"
 #include "PerlinGrid.h"
+#include "SpherifiedPlane.h"
 
 using namespace std;
 using namespace DirectX;
@@ -17,13 +18,13 @@ MapLoader::~MapLoader() {
 		m_bStop = true;
 	}
 	m_cvOnPush.notify_all();
-	m_tLoader.join();
+	if (m_tLoader.joinable()) m_tLoader.join();
 }
 
 void MapLoader::start() {
 	m_tLoader = thread([this]() {
 		XMFLOAT3 gridPosition;
-		XMVECTOR originalPosition, normal;
+		XMVECTOR originalPosition;
 		XMFLOAT4 perlin;
 
 		while (true) {
@@ -45,13 +46,9 @@ void MapLoader::start() {
 
 			for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
 				for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
-					gridPosition = pMap->sampleSphere(
-						j / static_cast<float>(HEIGHTMAP_RESOLUTION - 1),
-						i / static_cast<float>(HEIGHTMAP_RESOLUTION - 1)
-					);
+					gridPosition = pMap->sampleSphere(j, i);
 
 					originalPosition = XMLoadFloat3(&gridPosition);
-					normal = XMVector3Normalize(originalPosition);
 
 					XMStoreFloat3(&gridPosition, originalPosition * pMap->m_desc.octave);
 					gridPosition.x += pMap->m_desc.shift;

@@ -8,6 +8,8 @@
 // a variable resolution data field. Children copy map region from parent adding new
 // higher-resolution details to it.
 
+class SpherifiedPlane;
+
 class TerrainMap final {
 	friend class MapLoader;
 
@@ -17,7 +19,6 @@ public:
 		float octave;
 		float shift;
 		int currentOctaveDepth;
-		DirectX::XMFLOAT3 quad[4];
 	};
 
 private:
@@ -30,11 +31,12 @@ private:
 
 	//configuration for MapLoader
 	Description m_desc;
+	SpherifiedPlane* m_pPlane;
 	//call when ready to generate new octave
 	void nextOctave();
 
 	//get vector from sphere center to surface 
-	DirectX::XMFLOAT3 sampleSphere(float u, float v) const;
+	DirectX::XMFLOAT3 sampleSphere(__int32 xIndex, __int32 yIndex) const;
 
 	mutable std::shared_mutex m_membersLock;
 
@@ -46,11 +48,9 @@ private:
 	//Not needed in any other cases, so it is marked as mutable.
 	mutable std::array<HeightMapType, 4> m_heightMapScaledRegions;
 
-	bool bDeleteMark;
-
 public:
 	TerrainMap(const TerrainMap& base, unsigned regionIdx);
-	TerrainMap(const Description& desc, MapLoader* pMapLoader);
+	TerrainMap(SpherifiedPlane* plane, const Description& desc, MapLoader* pMapLoader);
 	void loadTerrain(std::vector<DirectX::XMFLOAT4>& terrain, const std::array<bool, 4>& trueEdges = { true, true, true, true }) const;
 	bool isComplete() const;
 };

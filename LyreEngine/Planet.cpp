@@ -29,7 +29,7 @@ LookupTable2D<XMFLOAT2, int, float> Planet::s_slerpLookup([](int level, float x)
 Planet::Planet(float radius, unsigned seed) : m_sphere(radius, seed) {}
 
 HRESULT Planet::setupStreamOutputBuffers() {
-	HRESULT hr;
+	HRESULT hr = S_OK;
 
 	ID3D11Buffer* buffer = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (250) * sizeof(Geometry));
 	m_renderConfig.setSOBuffer(buffer, 0);
@@ -39,7 +39,7 @@ HRESULT Planet::setupStreamOutputBuffers() {
 	m_renderConfig.setSOBuffer(buffer, 1);
 	m_normalsPipeline.geometry.loadVertexBuffer(buffer, sizeof(Normal), 0);
 
-	return S_OK;
+	return hr;
 }
 
 HRESULT Planet::initGeometryShader() {
@@ -103,21 +103,19 @@ HRESULT Planet::initGeometryAndVS() {
 	std::vector<char> shaderBytecode = m_renderConfig.loadShader(Shader::VS, L"planet_vs.cso");
 
 	m_geometry.addVertexElement(
-	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32_SINT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
-	/*auto& vertexElement = m_geometry.createVertexElement();
-	vertexElement.SemanticName = "CONTROL_POINT_WORLD_POSITION";
-	vertexElement.SemanticIndex = 0;
-	vertexElement.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	vertexElement.InputSlot = 0;
-	vertexElement.AlignedByteOffset = 0;
-	vertexElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	vertexElement.InstanceDataStepRate = 0;*/
+	m_geometry.addVertexElement(
+	{ "FACE_AND_FLAGS", 0, DXGI_FORMAT_R32_SINT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
+	m_geometry.addVertexElement(
+	{ "LEVEL", 0, DXGI_FORMAT_R32_SINT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
 
 	m_geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
-	m_geometry.loadVertices(m_sphere.vertices(), 0);
+	m_geometry.loadVertices(m_sphere.planes);
 	m_geometry.loadIndices(m_sphere.indices);
-	m_geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST);
+	m_geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST);
 
 	return S_OK;
 }
@@ -141,14 +139,14 @@ HRESULT Planet::init() {
 		FAILED(hr = initNormalsPipeline()))
 		return hr;
 
-	size_t patchesAmount = m_sphere.indices.size() / 9;
+	size_t patchesAmount = m_sphere.indices.size() / 5;
 
 	D3D11_TEXTURE2D_DESC texArrayDesc;
 	{
 		ZeroStruct(texArrayDesc);
 		texArrayDesc.Width = texArrayDesc.Height = HEIGHTMAP_RESOLUTION;
 		texArrayDesc.MipLevels = 1;
-		texArrayDesc.ArraySize = patchesAmount;
+		texArrayDesc.ArraySize = static_cast<UINT>(patchesAmount);
 		texArrayDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		texArrayDesc.SampleDesc.Count = 1;
 		texArrayDesc.SampleDesc.Quality = 0;
@@ -166,60 +164,6 @@ HRESULT Planet::init() {
 													HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain));
 	}
 	hr = LyreEngine::getDevice()->CreateShaderResourceView(texArray, nullptr, &m_iTerrainSRV);
-	if (FAILED(hr))
-		return hr;
-
-	// Neighbours' division
-	D3D11_BUFFER_DESC bufferDesc;
-	{
-		ZeroStruct(bufferDesc);
-		bufferDesc.ByteWidth = VecBufferSize(m_sphere.neighboursInfo);
-		bufferDesc.StructureByteStride = VecElementSize(m_sphere.neighboursInfo) * 4;
-		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		bufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	}
-	CComPtr<ID3D11Buffer> buffer = nullptr;
-	D3D11_SUBRESOURCE_DATA initData;
-	{
-		ZeroStruct(initData);
-		initData.pSysMem = m_sphere.neighboursInfo.data();
-	}
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &buffer);
-	if (FAILED(hr))
-		return hr;
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	{
-		ZeroStruct(srvDesc);
-		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-		srvDesc.Buffer.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
-	}
-	hr = LyreEngine::getDevice()->CreateShaderResourceView(buffer, &srvDesc, &m_iPatchNeighboursDivisionSRV);
-	if (FAILED(hr))
-		return hr;
-	// Division level
-	{
-		ZeroStruct(bufferDesc);
-		bufferDesc.ByteWidth = VecBufferSize(m_sphere.divisionInfo);
-		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	}
-	buffer = nullptr;
-	{
-		ZeroStruct(initData);
-		initData.pSysMem = m_sphere.divisionInfo.data();
-	}
-	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, &initData, &buffer);
-	if (FAILED(hr))
-		return hr;
-	{
-		ZeroStruct(srvDesc);
-		srvDesc.Format = DXGI_FORMAT_R32_SINT;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-		srvDesc.Buffer.NumElements = bufferDesc.ByteWidth / VecElementSize(m_sphere.divisionInfo);
-	}
-	hr = LyreEngine::getDevice()->CreateShaderResourceView(buffer, &srvDesc, &m_iPatchDivisionLevelSRV);
 	if (FAILED(hr))
 		return hr;
 
@@ -252,22 +196,24 @@ HRESULT Planet::init() {
 }
 
 void Planet::render() {
+	for (int i = 0; i < 6; i++) {
+		m_cubeFacesCb.data.planeRotations[i] = SpherifiedCube::getFaceRotation(i);
+	}
+	m_cubeFacesCb.update();
 	XMStoreFloat3(&m_planetCb.data.planetPos, XMVectorZero());
 	m_planetCb.data.radius = m_sphere.getRadius();
 	m_planetCb.update();
 
-	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getLodCB(), 0);
-	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getCameraCB(), 1);
-	m_renderConfig.setConstantBuffer(Shader::HS, m_planetCb.getBuffer(), 2);
-	m_renderConfig.setSRV(Shader::HS, m_iPatchNeighboursDivisionSRV, 0);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_cubeFacesCb.getBuffer(), 0);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_planetCb.getBuffer(), 1);
+	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getCameraCB(), 2);
+	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getLodCB(), 3);
 
-	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 0);
-	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);
+	m_renderConfig.setConstantBuffer(Shader::DS, m_cubeFacesCb.getBuffer(), 0);
+	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 1);
+	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 2);
 	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerLinear(), 0);
-	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerPoint(), 1);
 	m_renderConfig.setSRV(Shader::DS, m_iTerrainSRV, 0);
-	m_renderConfig.setSRV(Shader::DS, m_iSlerpLookupSRV, 1);
-	m_renderConfig.setSRV(Shader::HS, m_iPatchDivisionLevelSRV, 2);
 
 	m_geometry.bind();
 	m_renderConfig.bind();

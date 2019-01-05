@@ -8,38 +8,60 @@
 using namespace std;
 using namespace DirectX;
 
+namespace {
+	const XMFLOAT4X4 CUBE_FACE_ROTATIONS[] = {
+		{ // up
+			0.f, 0.f, -1.f, 0.f,
+			-1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		},
+		{ // right
+			0.f, -1.f, 0.f, 0.f,
+			0.f, 0.f, -1.f, 0.f,
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		},
+		{ // front
+			-1.f, 0.f, 0.f, 0.f,
+			0.f, -1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		},
+		{ // down
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			0.f, -1.f, 0.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		},
+		{ // back
+			0.f, 1.f, 0.f, 0.f,
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, -1.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		},
+		{ // left
+			0.f, 0.f, 1.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			-1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		}
+		// (if we look from inside!)
+	};
+}
+
 SpherifiedCube::SpherifiedCube(float radius, unsigned seed)
 	: m_radius(radius), m_mapLoader(seed) {
-
 	buildCube();
 }
 
 SpherifiedCube::~SpherifiedCube() {}
 
 void SpherifiedCube::buildCube() {
-	const float CUBE_COORDS = m_radius / sqrt(3.f);
-	m_vertices.assign({
-		// front
-		{ { -CUBE_COORDS, -CUBE_COORDS,  CUBE_COORDS } },
-		{ { CUBE_COORDS, -CUBE_COORDS,  CUBE_COORDS } },
-		{ { CUBE_COORDS,  CUBE_COORDS,  CUBE_COORDS } },
-		{ { -CUBE_COORDS,  CUBE_COORDS,  CUBE_COORDS } },
-		// back
-		{ { -CUBE_COORDS, -CUBE_COORDS, -CUBE_COORDS } },
-		{ { CUBE_COORDS, -CUBE_COORDS, -CUBE_COORDS } },
-		{ { CUBE_COORDS,  CUBE_COORDS, -CUBE_COORDS } },
-		{ { -CUBE_COORDS,  CUBE_COORDS, -CUBE_COORDS } },
-	});
-
-	m_cube = {
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 2, 6, 7, 3 }),	// up
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 2, 1, 5, 6 }),	// right
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 2, 3, 0, 1 }),	// front
-
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 4, 5, 1, 0 }),	// down	
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 4, 7, 6, 5 }),	// back
-		make_unique<SpherifiedPlane>(this, SpherifiedPlane::DWORD4{ 4, 0, 3, 7 }),	// left
-	};
+	// up, right, front, down, back, left
+	for (int i = 0; i < 6; i++) {
+		m_cube[i] = make_unique<SpherifiedPlane>(this, i);
+	}
 
 	// neighbours
 	for (int i = 0; i < 3; i++) {
@@ -61,17 +83,14 @@ void SpherifiedCube::buildCube() {
 	//terrain
 	TerrainMap::Description terrainDesc;
 	for (int i = 0; i < 6; i++) {
-		for (int v = 0; v < 4; v++) {
-			terrainDesc.quad[v] = m_vertices[m_cube[i]->m_points[v]].position;
-		}
-		terrainDesc.octave = 0.25f;
+		terrainDesc.octave = 0.5f;
 		terrainDesc.amplitude = 0.5f;
-		terrainDesc.shift = sqrt(3);
+		terrainDesc.shift = sqrtf(3.f);
 		terrainDesc.currentOctaveDepth = 3;
-		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(terrainDesc, &m_mapLoader);
+		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(m_cube[i].get(), terrainDesc, &m_mapLoader);
 	}
 
-	auto pPlane = m_cube[5].get();
+	auto pPlane = m_cube[4].get();
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	for (int i = 0; i < 4; i++) {
 		pPlane->tryDivide();
@@ -81,42 +100,24 @@ void SpherifiedCube::buildCube() {
 	applyTopology();
 }
 
-DWORD SpherifiedCube::createHalf(DWORD point1, DWORD point2) {
-	DWORD newInd = static_cast<DWORD>(m_vertices.size());
-	m_vertices.push_back(Vertex());
-	XMFLOAT3 sum {
-		m_vertices[point1].position.x + m_vertices[point2].position.x,
-		m_vertices[point1].position.y + m_vertices[point2].position.y,
-		m_vertices[point1].position.z + m_vertices[point2].position.z
-	};
-	XMStoreFloat3(&(m_vertices[newInd].position), XMVector3Normalize(XMLoadFloat3(&sum)) * m_radius);
-	return newInd;
-}
-
-DWORD SpherifiedCube::createMidpoint(const SpherifiedPlane::DWORD4& points) {
-	DWORD newInd = static_cast<DWORD>(m_vertices.size());
-	m_vertices.push_back(Vertex());
-	XMVECTOR sum = XMVectorZero();
-	for (auto& index : points) {
-		sum += XMLoadFloat3(&m_vertices[index].position);
-	}
-	XMStoreFloat3(&(m_vertices[newInd].position), XMVector3Normalize(sum) * m_radius);
-	return newInd;
-}
-
-const vector<SpherifiedCube::Vertex>& SpherifiedCube::vertices() {
-	return m_vertices;
-}
-
 void SpherifiedCube::applyTopology() {
-	indices.clear();
+	planes.clear();
 	terrain.clear();
+	DWORD nextIndexVar = 0;
 	for (const auto& plane : m_cube) {
-		plane->loadTopology(terrain, indices, neighboursInfo, divisionInfo);
+		plane->loadPlane(planes, nextIndexVar);
+	}
+	indices.clear();
+	for (const auto& plane : m_cube) {
+		plane->loadIndicesAndTerrain(indices, terrain);
 	}
 }
 
 float SpherifiedCube::getRadius() const {
 	return m_radius;
+}
+
+const XMFLOAT4X4& SpherifiedCube::getFaceRotation(int faceIdx) {
+	return CUBE_FACE_ROTATIONS[faceIdx];
 }
 

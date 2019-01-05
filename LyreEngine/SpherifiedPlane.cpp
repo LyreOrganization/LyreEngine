@@ -17,50 +17,24 @@ namespace {
 	constexpr DWORD oppositeIdx(DWORD index) { return ((index + 2) % 4); }	// opposite ement index (of 4)
 }
 
-void SpherifiedPlane::loadTopology(vector<XMFLOAT4>& terrain, 
-								   vector<DWORD>& indices, 
-								   vector<NeighbourPatchDivision>& neighboursInfo, 
-								   vector<int>& divisionInfo) {
-	if (m_pTerrainMap == nullptr)
-		return;
+SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, int faceIdx)
+	: m_pSphere(sphere),
+	m_faceIdx(faceIdx),
+	m_level(0),
+	m_planeIndex { 0, 0 },
+	m_pParent(nullptr),
+	m_divided(false) {}
 
-	if (m_divided) {
-		for (const auto& child : m_children) {
-			child->loadTopology(terrain, indices, neighboursInfo, divisionInfo);
-		}
-	}
-	else {
-		array<bool, 4> trueEdges;
-
-		for (int i = 0; i < 4; i++) {
-			indices.push_back(m_points[i]);
-		}
-		for (int i = 0; i < 4; i++) {
-			if (trueEdges[i] = (m_neighbours[i] != nullptr)) {
-				neighboursInfo.push_back(m_neighbours[i]->m_divided ?
-										 NeighbourPatchDivision::MoreDivided :
-										 NeighbourPatchDivision::EquallyDivided);
-				indices.push_back(m_neighbours[i]->m_middle);
-			}
-			else {
-				neighboursInfo.push_back(NeighbourPatchDivision::LessDivided);
-				indices.push_back(m_pParent->m_neighbours[i]->m_middle);
-			}
-		}
-		indices.push_back(m_middle);
-
-		divisionInfo.push_back(m_level);
-
-		m_pTerrainMap->loadTerrain(terrain, trueEdges);
-	}
-}
-
-SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, DWORD4 points, SpherifiedPlane* parent)
-	: m_pSphere(sphere), m_points(points), m_pParent(parent), m_pTerrainMap(nullptr) {
-
-	m_middle = m_pSphere->createMidpoint(m_points);
-	m_level = parent ? parent->m_level + 1 : 0;
-}
+SpherifiedPlane::SpherifiedPlane(SpherifiedCube* sphere, SpherifiedPlane* parent,
+								 XMINT2 childPlaneIndex)
+	: m_pSphere(sphere),
+	m_faceIdx(parent->m_faceIdx),
+	m_level(parent->m_level + 1),
+	m_planeIndex {
+	parent->m_planeIndex.x * 2 + childPlaneIndex.x,
+	parent->m_planeIndex.y * 2 + childPlaneIndex.y },
+	m_pParent(parent),
+	m_divided(false) {}
 
 bool SpherifiedPlane::tryDivide(int depth) {
 	if (depth < 1) return false;
@@ -76,42 +50,11 @@ bool SpherifiedPlane::tryDivide(int depth) {
 			}
 		}
 
-		//creating halfs if they don't exist
-		for (int i = 0; i < 4; i++) {
-			if (!m_halfs[i]) {
-				m_halfs[i] = m_pSphere->createHalf(m_points[i], m_points[nextIdx(i)]);
-				if (m_neighbours[i]->m_neighbours[oppositeIdx(i)] == this) // we are on same cube face
-					m_neighbours[i]->m_halfs[oppositeIdx(i)] = m_halfs[i].value();
-				else
-					m_neighbours[i]->m_halfs[i == 0 ? 3 : (i == 3 ? 0 : i)] = m_halfs[i].value();
-			}
-		}
-
 		//creating children
-		m_children[0] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
-			m_points[0],
-			m_halfs[0].value(),
-			m_middle,
-			m_halfs[3].value()
-		}, this);
-		m_children[1] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
-			m_halfs[0].value(),
-			m_points[1],
-			m_halfs[1].value(),
-			m_middle
-		}, this);
-		m_children[2] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
-			m_middle,
-			m_halfs[1].value(),
-			m_points[2],
-			m_halfs[2].value()
-		}, this);
-		m_children[3] = make_unique<SpherifiedPlane>(m_pSphere, DWORD4 {
-			m_halfs[3].value(),
-			m_middle,
-			m_halfs[2].value(),
-			m_points[3]
-		}, this);
+		m_children[0] = make_unique<SpherifiedPlane>(m_pSphere, this, XMINT2 { 0, 0 });
+		m_children[1] = make_unique<SpherifiedPlane>(m_pSphere, this, XMINT2 { 1, 0 });
+		m_children[2] = make_unique<SpherifiedPlane>(m_pSphere, this, XMINT2 { 1, 1 });
+		m_children[3] = make_unique<SpherifiedPlane>(m_pSphere, this, XMINT2 { 0, 1 });
 
 		//setting neighbours
 		for (int i = 0; i < 4; i++) {
@@ -159,21 +102,53 @@ bool SpherifiedPlane::tryDivide(int depth) {
 	return true;
 }
 
-bool SpherifiedPlane::tryUndivide() {
-	if (!m_divided) return true;
+void SpherifiedPlane::loadPlane(vector<GPUDesc>& planes,
+								DWORD& nextIndex) {
+	if (m_pTerrainMap == nullptr)
+		return;
 
-	bool bChildrenAreLeaves = true;
-
-	for (int i = 0; i < 4; i++) {
-		if (m_children[i]->m_divided && !m_children[i]->tryUndivide()) {
-			bChildrenAreLeaves = false;
+	if (m_divided) {
+		for (const auto& child : m_children) {
+			child->loadPlane(planes, nextIndex);
 		}
 	}
 
-	if (!bChildrenAreLeaves)
-		return bChildrenAreLeaves;
+	GPUDesc planeDesc;
+	// Face index is in first byte.
+	planeDesc.faceAndFlags = m_faceIdx;
+	planeDesc.level = m_level;
+	planeDesc.position = m_planeIndex;
+	for (int i = 0; i < 4; i++) {
+		if (terrainEdgesToLoad[i] = (m_neighbours[i] != nullptr)) {
+			// First 4 bits of second byte are 
+			// set if corresponding neighbour is more divided.
+			if (m_neighbours[i]->m_divided)
+				planeDesc.faceAndFlags |= 1 << (8 + i);
+		}
+	}
 
+	planes.push_back(move(planeDesc));
+	indexToLoad = nextIndex++;
+}
 
+void SpherifiedPlane::loadIndicesAndTerrain(std::vector<DWORD>& indices,
+								  vector<DirectX::XMFLOAT4>& terrain) {
+	if (m_divided) {
+		for (const auto& child : m_children) {
+			child->loadIndicesAndTerrain(indices, terrain);
+		}
+	}
+	else
+	{ 
+		if (indexToLoad == (DWORD)-1) return;
+		indices.push_back(indexToLoad);
+		for (int i = 0; i < 4; i++) {
+			if (m_neighbours[i] == nullptr) 
+				indices.push_back(m_pParent->m_neighbours[i]->indexToLoad);
+			else indices.push_back(m_neighbours[i]->indexToLoad);
+		}
+		m_pTerrainMap->loadTerrain(terrain, terrainEdgesToLoad);
+	}
 }
 
 //void SpherifiedPlane::generateTerrain(int idx, int nOctaves) {
