@@ -1,6 +1,6 @@
 #pragma once
 
-#define HEIGHTMAP_RESOLUTION 64
+#define HEIGHTMAP_RESOLUTION 65 // num planes + 1
 
 // All together terrain maps form six "region quadtrees". The only difference from 
 // region quadtrees described in Wikipedia is that the tree is actually not a trie: 
@@ -41,8 +41,6 @@ private:
 	mutable std::shared_mutex m_membersLock;
 
 	//K-times magnification algorithm (K=2).
-	//Operation is done for all 4 regions all together
-	//to keep algorithm simplicity and code readability.
 	void produceScaledRegions() const;
 	//Child maps will be moved from here on construction.
 	//Not needed in any other cases, so it is marked as mutable.

@@ -44,14 +44,14 @@ XMFLOAT4X4 Camera::calculateViewMatrix() {
 
 DirectX::XMFLOAT4X4 Camera::calculateProjectionMatrix(float aspectWdivH) {
 	XMFLOAT4X4 result;
-	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.5f, 500.f)));
+	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.05f, 200.f)));
 	return result;
 }
 
 DirectX::XMFLOAT4X4 Camera::calculateViewProjMatrix(float aspectWdivH) {
 	XMFLOAT4X4 result;
 	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_view), XMLoadFloat3(&m_up))*
-											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.5f, 500.f)));
+											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.05f, 200.f)));
 	return result;
 }
 

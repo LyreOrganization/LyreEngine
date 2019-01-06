@@ -126,106 +126,33 @@ bool TerrainMap::isComplete() const {
 void TerrainMap::produceScaledRegions() const {
 	m_heightMapScaledRegions.fill(HeightMapType(HEIGHTMAP_RESOLUTION*HEIGHTMAP_RESOLUTION));
 
-	const int HALF_SIZE = HEIGHTMAP_RESOLUTION / 2;
+	for (int regionIdx = 0; regionIdx < 4; regionIdx++) {
+		auto& region = m_heightMapScaledRegions[regionIdx];
 
-	// y, x
-	int i, j;
-	// child idx
-	int ii;
-	// read comments below
-	int idx[4], idxP[4];
+		int firstTexelJ = (regionIdx == 0 || regionIdx == 3 ? 0 : HEIGHTMAP_RESOLUTION / 2);
+		int firstTexelI = (regionIdx == 0 || regionIdx == 1 ? 0 : HEIGHTMAP_RESOLUTION / 2);
 
-	//row-wise
-
-	for (i = 0; i < HALF_SIZE; i++) {
-		for (j = 0; j < HALF_SIZE; j++) {
-
-			// map[x] = average(map[x-1], map[x+1])
-
-			// Indices in child maps:
-			// * in maps 2 and 3 we start from second row;
-			// * in maps 1 and 2 we start from second column but then
-			//   fill previous point (instead of next point for 0 and 3).
-			idx[0] = i * 2 * HEIGHTMAP_RESOLUTION + j * 2;
-			idx[1] = idx[0] + 1;
-			idx[3] = (i * 2 + 1) * HEIGHTMAP_RESOLUTION + j * 2;
-			idx[2] = idx[3] + 1;
-
-			// Corresponding starting points in this map
-			idxP[0] = i * HEIGHTMAP_RESOLUTION + j;
-			idxP[1] = i * HEIGHTMAP_RESOLUTION + (HALF_SIZE + j);
-			idxP[2] = (HALF_SIZE + i) * HEIGHTMAP_RESOLUTION + (HALF_SIZE + j);
-			idxP[3] = (HALF_SIZE + i) * HEIGHTMAP_RESOLUTION + j;
-
-			for (int ii = 1; ii < 3; ii++) {
-				m_heightMapScaledRegions[ii][idx[ii]] =
-					m_heightMap[idxP[ii]];
-				XMStoreFloat4(&m_heightMapScaledRegions[ii][idx[ii] - 1],
-					(XMLoadFloat4(&m_heightMap[idxP[ii]]) +
-					 XMLoadFloat4(&m_heightMap[idxP[ii] - 1])) / 2.f);
+		//row-wise
+		for (int i = 0; i <= HEIGHTMAP_RESOLUTION / 2; i++) {
+			for (int j = 0; j < HEIGHTMAP_RESOLUTION / 2; j++) {
+				region[i * 2 * HEIGHTMAP_RESOLUTION + j * 2] =
+					m_heightMap[(firstTexelI + i)*HEIGHTMAP_RESOLUTION + firstTexelJ + j];
+				XMStoreFloat4(&region[i * 2 * HEIGHTMAP_RESOLUTION + j * 2 + 1],
+					(XMLoadFloat4(&region[i * 2 * HEIGHTMAP_RESOLUTION + j * 2]) +
+					 XMLoadFloat4(&m_heightMap[(firstTexelI + i)*HEIGHTMAP_RESOLUTION + firstTexelJ + j + 1])) / 2.f);
 			}
+			//right edge texel
+			region[i * 2 * HEIGHTMAP_RESOLUTION + HEIGHTMAP_RESOLUTION - 1] =
+				m_heightMap[(firstTexelI + i)*HEIGHTMAP_RESOLUTION + firstTexelJ + HEIGHTMAP_RESOLUTION / 2];
+		}
 
-			for (int ii = 3; ii != 1; ii = (ii + 1) % 4) {
-				m_heightMapScaledRegions[ii][idx[ii]] =
-					m_heightMap[idxP[ii]];
-				XMStoreFloat4(&m_heightMapScaledRegions[ii][idx[ii] + 1],
-					(XMLoadFloat4(&m_heightMap[idxP[ii]]) +
-					 XMLoadFloat4(&m_heightMap[idxP[ii] + 1])) / 2.f);
+		//column-wise
+		for (int i = 0; i < HEIGHTMAP_RESOLUTION / 2; i++) {
+			for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
+				XMStoreFloat4(&region[(i * 2 + 1) * HEIGHTMAP_RESOLUTION + j],
+					(XMLoadFloat4(&region[i * 2 * HEIGHTMAP_RESOLUTION + j]) +
+					 XMLoadFloat4(&region[(i * 2 + 2) * HEIGHTMAP_RESOLUTION + j])) / 2.f);
 			}
 		}
-	}
-
-	//column-wise
-
-	for (i = 0; i < HALF_SIZE - 1; i++) {
-		for (j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
-
-			// map[y] = average(map[y-1], map[y+1])
-
-			// just cache
-			for (ii = 0; ii < 4; ii++) {
-				idx[ii] = (i * 2 + ii) * HEIGHTMAP_RESOLUTION + j;
-			}
-
-			// For child maps 0 and 1 start from second row.
-			for (ii = 0; ii < 2; ii++) {
-				XMStoreFloat4(&m_heightMapScaledRegions[ii][idx[1]],
-					(XMLoadFloat4(&m_heightMapScaledRegions[ii][idx[0]]) +
-					 XMLoadFloat4(&m_heightMapScaledRegions[ii][idx[2]])) / 2.f);
-			}
-			// For child maps 2 and 3 start from third row.
-			for (ii = 2; ii < 4; ii++) {
-				XMStoreFloat4(&m_heightMapScaledRegions[ii][idx[2]],
-					(XMLoadFloat4(&m_heightMapScaledRegions[ii][idx[1]]) +
-					 XMLoadFloat4(&m_heightMapScaledRegions[ii][idx[3]])) / 2.f);
-			}
-		}
-	}
-
-	//cut-line row
-	for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
-
-		// map[y] = average(map[y-1], map[y+1]); y E { yMin, yMax }
-
-		// First do it for upper plane:
-		// * idx0 - in last row;
-		// * idx1 - in (last - 1) row;
-		// * idxP1 - second row in lower plane.
-		idx[0] = (HEIGHTMAP_RESOLUTION - 1) * HEIGHTMAP_RESOLUTION + j;
-		idx[1] = (HEIGHTMAP_RESOLUTION - 2) * HEIGHTMAP_RESOLUTION + j;
-		idxP[1] = 1 * HEIGHTMAP_RESOLUTION + j;
-		// (idxP[0] = j, esli sho)
-
-		XMStoreFloat4(&m_heightMapScaledRegions[0][idx[0]],
-			(XMLoadFloat4(&m_heightMapScaledRegions[0][idx[1]]) +
-			 XMLoadFloat4(&m_heightMapScaledRegions[3][idxP[1]])) / 2.f);
-
-		m_heightMapScaledRegions[3][j] = m_heightMapScaledRegions[0][idx[0]];
-
-		XMStoreFloat4(&m_heightMapScaledRegions[1][idx[0]],
-			(XMLoadFloat4(&m_heightMapScaledRegions[1][idx[1]]) +
-			 XMLoadFloat4(&m_heightMapScaledRegions[2][idxP[1]])) / 2.f);
-
-		m_heightMapScaledRegions[2][j] = m_heightMapScaledRegions[1][idx[0]];
 	}
 }

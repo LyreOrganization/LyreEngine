@@ -49,7 +49,7 @@ void GeometryDX::loadIndices(const std::vector<DWORD>& indices) {
 	{
 		ZeroStruct(desc);
 		desc.Usage = D3D11_USAGE_IMMUTABLE;
-		desc.ByteWidth = indices.size() * sizeof(DWORD);
+		desc.ByteWidth = static_cast<UINT>(indices.size()) * sizeof(DWORD);
 		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	}
 	D3D11_SUBRESOURCE_DATA initData;
@@ -75,7 +75,7 @@ void GeometryDX::addVertexElement(D3D11_INPUT_ELEMENT_DESC element) {
 void GeometryDX::loadLayout(const void* shaderByteCode, SIZE_T shaderByteCodeLength) {
 	HRESULT hr = m_pDevice->CreateInputLayout(
 		m_elements.data(), 
-		m_elements.size(), 
+		static_cast<UINT>(m_elements.size()),
 		shaderByteCode, 
 		shaderByteCodeLength,
 		&m_layout
@@ -98,9 +98,8 @@ void GeometryDX::bind() {
 	m_pContext->IASetInputLayout(m_layout);
 	m_pContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	m_pContext->IASetPrimitiveTopology(m_topology);
-	m_pContext->IASetVertexBuffers(
-		0, 
-		m_vertexBuffers.size(), 
+	m_pContext->IASetVertexBuffers(0, 
+		static_cast<UINT>(m_vertexBuffers.size()),
 		m_vertexBuffers.data(), 
 		m_strides.data(), 
 		offsets.data()

@@ -121,8 +121,10 @@ void PipelineConfigDX::loadGSwithSO(const WCHAR* fileName, const std::vector<UIN
 
 	hr = LyreEngine::getDevice()->CreateGeometryShaderWithStreamOutput(
 		shaderBytecode.data(), shaderBytecode.size(),
-		m_GSData.SO.entries.data(), m_GSData.SO.entries.size(),
-		strides.data(), strides.size(),
+		m_GSData.SO.entries.data(), 
+		static_cast<UINT>(m_GSData.SO.entries.size()),
+		strides.data(), 
+		static_cast<UINT>(strides.size()),
 		rasterizedStream,
 		nullptr,
 		&m_iGS

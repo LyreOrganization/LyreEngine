@@ -17,16 +17,21 @@ struct HSCF_OUTPUT {
 	float inside[2]  :  SV_InsideTessFactor;
 };
 
+int NearestPowerOfTwo_4to64(float value) {
+	[flatten] if (value < 2.f) return 0.f;
+	return 1 << (int)round(log2(min(max(value, 4.f), 64.f)));
+}
+
 // TODO: profile and debug different versions of this
 float ComputeEdgeLod(HS_INPUT patchPlane, HS_INPUT neighbourPlane, int edgeIndex, out int edgeLod) {
 	// if neighbour is less divided
 	[flatten] if (neighbourPlane.level < patchPlane.level) {
-		edgeLod = (((int)round(neighbourPlane.lod) >> 2) << 1);
+		edgeLod = NearestPowerOfTwo_4to64(neighbourPlane.lod) >> 1;
 		return (float)edgeLod;
 	}
 	// if neighbour is more divided (check 2nd byte flags)
 	if (patchPlane.faceAndFlags & (1 << (8 + edgeIndex))) {
-		edgeLod = (((int)round(patchPlane.lod) >> 2) << 2);
+		edgeLod = NearestPowerOfTwo_4to64(patchPlane.lod);
 		return (float)edgeLod;
 	}
 	edgeLod = -1.f;

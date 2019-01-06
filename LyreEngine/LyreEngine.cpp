@@ -313,14 +313,14 @@ namespace {
 			return hr;
 
 		//Planet
-		const float PLANET_RADIUS = 5.f * sqrt(3.f);
+		const float PLANET_RADIUS = 100.f;
 		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 0);
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { 0.f, 0.f, 20.f },
+		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { 0.f, 0.f, 200.f },
 											  XMFLOAT3 { 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
 		//Setup common Camera actions
 		{
@@ -365,25 +365,25 @@ namespace {
 			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAhead(0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(0.0002f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAhead(-0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAside(0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAside(-0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(-0.0001f*ticksPerFrame);
 				}
 			});
 
@@ -496,10 +496,10 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;
-	cbLod.minDistance = 5.f;
-	cbLod.maxDistance = 200.f;
+	cbLod.minDistance = 0.05f;
+	cbLod.maxDistance = 400.f;
 	cbLod.minLOD = 4.f;
-	cbLod.maxLOD = 60.f;
+	cbLod.maxLOD = 64.f;
 	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 
 	float sky = 1.f;

@@ -15,7 +15,8 @@ cbuffer Lighting : register(b2) {
 
 Texture2DArray Terrain : register(t0);
 
-SamplerState Tex2DSampler : register(s0);
+SamplerState PointSampler : register(s0);
+SamplerState LinearSampler : register(s1);
 
 struct HS_OUTPUT {
 	int2 pos : POSITION;
@@ -73,9 +74,6 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	
 	uv.y = 1.f - uv.y; // convert to our uv coord system
 
-	DS_OUTPUT output;
-	float4 terrain = Terrain.SampleLevel(Tex2DSampler, float3(uv, (float)PatchID), 0.f);
-
 	int edgeLod = -1;
 	[flatten] if (abs(uv.x) < UV_EPS) //left edge
 		edgeLod = lods.edgeDivision[3];
@@ -86,6 +84,14 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	[flatten] if (abs(uv.y - 1.f) < UV_EPS) //bottom edge
 		edgeLod = lods.edgeDivision[2];
 
+	DS_OUTPUT output;
+	float4 terrain;
+
+	[flatten] if (edgeLod > 0) 
+		terrain = Terrain.SampleLevel(PointSampler, float3(uv, (float)PatchID), 0.f);
+	else
+		terrain = Terrain.SampleLevel(LinearSampler, float3(uv, (float)PatchID), 0.f);
+
 	[branch] if (edgeLod > 0) output.normal = UVToGlobalOnLodEdge(patch[0], uv, edgeLod);
 	else output.normal = UVToGlobal(patch[0], uv);
 
@@ -93,18 +99,14 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 
 	output.normal = normalize(output.normal - (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
 
-	if (terrain.w < -0.02f) {
-		output.color = COLOR_OCEAN; //ocean
-	}
-	else if (terrain.w < 0.f) {
-		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.02f) / 0.02f); //ocean -> sand
-	}
-	else if (terrain.w < 0.04f) {
-		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w) / 0.04f); //sand -> rocks
-	}
-	else {
-		output.color = COLOR_ROCK; //rocks
-	}
+	if (terrain.w < -0.001f) //ocean
+		output.color = COLOR_OCEAN; 
+	else if (terrain.w < 0.f) //ocean -> sand
+		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.001f) / 0.001f);
+	else if (terrain.w < 0.004f) //sand -> rocks
+		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w) / 0.004f);
+	else //rocks
+		output.color = COLOR_ROCK;
 
 	output.color *= Diffuse.xyz * (Power * clamp(dot(output.normal, Direction), 0.f, 1.f) + (1.f - Power));
 	return output;
