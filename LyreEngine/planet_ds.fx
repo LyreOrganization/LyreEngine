@@ -83,18 +83,22 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	else output.normal = UVToGlobal(patch[0], uv);
 
 	output.pos = PlanetPos + output.normal*(Radius + terrain.w);
-
-	output.normal = normalize(output.normal + (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
+	// calculate normal
+	float3 gradientRejection = terrain.xyz - dot(terrain.xyz, output.normal) * output.normal;
+	output.normal = normalize(output.normal - gradientRejection);
 
 	if (terrain.w < -0.001f) //ocean
 		output.color = COLOR_OCEAN; 
 	else if (terrain.w < 0.f) //ocean -> sand
 		output.color = lerp(COLOR_OCEAN, COLOR_SAND, (terrain.w + 0.001f) / 0.001f);
-	else if (terrain.w < 0.004f) //sand -> rocks
-		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w) / 0.004f);
+	else if (terrain.w < 0.008f) //sand -> rocks
+		output.color = lerp(COLOR_SAND, COLOR_ROCK, (terrain.w) / 0.008f);
 	else //rocks
 		output.color = COLOR_ROCK;
 
-	output.color *= Diffuse.xyz * (Power * clamp(dot(output.normal, Direction), 0.f, 1.f) + (1.f - Power));
+	float lightCos = clamp(1.f - sqrt(1.f - dot(output.normal, Direction)),
+					 0.5f - Power / 2.f,
+					 0.5f + Power / 2.f);
+	output.color *= Diffuse.xyz * Power * lightCos;
 	return output;
 }

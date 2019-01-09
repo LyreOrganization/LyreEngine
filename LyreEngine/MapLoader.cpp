@@ -56,10 +56,6 @@ void MapLoader::start() {
 					gridPosition.z += pMap->m_desc.shift;
 
 					perlin = m_terrainGenerator.perlinNoise(gridPosition);
-					perlin.w *= pMap->m_desc.amplitude;
-					// Calculate normal to surface
-					XMVECTOR perlinVec = XMLoadFloat4(&perlin);
-					XMStoreFloat4(&perlin, perlinVec + perlinVec * originalPosition * (pMap->m_desc.amplitude - 1.f));
 
 					// Backup edges
 					if (i == 0) {
@@ -77,7 +73,7 @@ void MapLoader::start() {
 
 					XMStoreFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION],
 								  XMLoadFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION]) +
-								  XMLoadFloat4(&perlin));
+								  XMLoadFloat4(&perlin) * pMap->m_desc.amplitude);
 				}
 			}
 
