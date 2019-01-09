@@ -84,16 +84,20 @@ void SpherifiedCube::buildCube() {
 	TerrainMap::Description terrainDesc;
 	for (int i = 0; i < 6; i++) {
 		terrainDesc.octave = 1.f;
-		terrainDesc.amplitude = 1.f;
+		terrainDesc.amplitude = 10.f;
 		terrainDesc.shift = sqrtf(3.f);
-		terrainDesc.currentOctaveDepth = 5;
+		terrainDesc.currentOctaveDepth = 3;
 		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(m_cube[i].get(), terrainDesc, &m_mapLoader);
 	}
 
 	auto pPlane = m_cube[2].get();
 	int p[] = { 0, 1, 2, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1 };
 	this_thread::sleep_for(chrono::milliseconds(1500));
-	for (int i = 0; i < 15; i++) {
+	for (auto& a : m_cube) a->tryDivide();
+	this_thread::sleep_for(chrono::milliseconds(1500));
+	for (auto& a : m_cube) a->tryDivide(2);
+	this_thread::sleep_for(chrono::milliseconds(2500));
+	for (int i = 0; i < 8; i++) {
 		pPlane->tryDivide();
 		pPlane = pPlane->m_children[p[i]].get();
 		while (!pPlane->m_pTerrainMap->isComplete())

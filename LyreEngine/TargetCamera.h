@@ -17,4 +17,5 @@ public:
 	void rotateAroundVertically(float angle);
 	void spin(float angle);
 	void tilt(float angle);
+	virtual DirectX::XMFLOAT4X4 calculateViewProjMatrix(float aspectWdivH);
 };

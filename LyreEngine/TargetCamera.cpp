@@ -86,3 +86,12 @@ void TargetCamera::tilt(float angle) {
 	XMStoreFloat3(&m_view, vNewView);
 	XMStoreFloat3(&m_up, vNewUp);
 }
+
+DirectX::XMFLOAT4X4 TargetCamera::calculateViewProjMatrix(float aspectWdivH) {
+	XMFLOAT4X4 result;
+	float maxDist = XMVectorGetX(XMVector3Length(XMLoadFloat3(&m_position) - XMLoadFloat3(&m_target)));
+	maxDist += maxDist > m_radius ? m_radius : - m_radius;
+	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_view), XMLoadFloat3(&m_up))*
+											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, maxDist / 100000.f, maxDist)));
+	return result;
+}

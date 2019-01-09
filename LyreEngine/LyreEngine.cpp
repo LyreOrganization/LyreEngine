@@ -335,7 +335,7 @@ namespace {
 			camera.action("SwitchToTargetCamera").onTriggered([PLANET_RADIUS]() {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera == nullptr) {
-					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
+					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, PLANET_RADIUS - 2.f);
 				}
 			});
 			camera.action("ToggleWireframe").onTriggered([]() {
@@ -420,13 +420,13 @@ namespace {
 			camera.action("Approach").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->approach(0.1f*ticksPerFrame);
+					pTargetCamera->approach(0.02f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveFurther").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->approach(-0.1f*ticksPerFrame);
+					pTargetCamera->approach(-0.05f*ticksPerFrame);
 				}
 			});
 			camera.action("SpinCW").on([](DWORD ticksPerFrame) {

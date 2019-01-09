@@ -1,6 +1,4 @@
-cbuffer CubeFaces : register(b0) {
-	matrix PlaneRotations[6];
-}
+#include <sphere_mapping_b0.fx>
 
 cbuffer Planet : register(b1) {
 	float3 PlanetPos;
@@ -32,17 +30,6 @@ struct VS_OUTPUT {
 	float lod : LOD;
 };
 
-float3 MapFaceUVToSphere(float2 uv, int face) {
-	uv = uv * 2.f - 1.f;
-	float2 uvSqr = uv*uv;
-	// rotate plane to its real position
-	return mul(PlaneRotations[face], float4(
-		uv.x*sqrt(1.f - (uvSqr.y + 1.f) / 2.f + uvSqr.y / 3.f),
-		uv.y*sqrt(1.f - (uvSqr.x + 1.f) / 2.f + uvSqr.x / 3.f),
-		sqrt(1.f - (uvSqr.x + uvSqr.y) / 2.f + uvSqr.x * uvSqr.y / 3.f),
-		1.f)).xyz;
-}
-
 float3 GetPlaneMidpointPos(VS_INPUT plane) {
 	return MapFaceUVToSphere(
 		// multiply by 2 and add 1 to get midpoint of plane
@@ -52,11 +39,11 @@ float3 GetPlaneMidpointPos(VS_INPUT plane) {
 		plane.faceAndFlags & 0xff);
 }
 
-float ComputePatchLOD(float3 midPoint) {
+float ComputePatchLOD(float3 midPoint, int level) {
 	float dist = length(PlanetPos + midPoint*Radius - Position);
 	[flatten] if (dist > MaxDistance) return 0.f;
-	float d = 1.f - (clamp(dist, MinDistance, MaxDistance) - MinDistance) / (MaxDistance - MinDistance);
-	return lerp(MinLOD, MaxLOD, pow(2.f, 7.f * d) / (float)(1 << 7));
+	dist = clamp(dist, MinDistance, MaxDistance);
+	return lerp(MinLOD, MaxLOD, 500.f / (dist * (float)(1 << level)));
 }
 
 VS_OUTPUT VS(VS_INPUT input) {
@@ -64,6 +51,6 @@ VS_OUTPUT VS(VS_INPUT input) {
 	output.pos = input.pos;
 	output.faceAndFlags = input.faceAndFlags;
 	output.level = input.level;
-	output.lod = ComputePatchLOD(GetPlaneMidpointPos(input));
+	output.lod = ComputePatchLOD(GetPlaneMidpointPos(input), input.level);
 	return output;
 }

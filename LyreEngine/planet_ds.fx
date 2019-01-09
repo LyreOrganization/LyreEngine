@@ -1,6 +1,4 @@
-cbuffer CubeFaces : register(b0) {
-	matrix PlaneRotations[6];
-}
+#include <sphere_mapping_b0.fx>
 
 cbuffer Planet : register(b1) {
 	float3 PlanetPos;
@@ -36,17 +34,6 @@ struct DS_OUTPUT {
 	float3 normal : NORMAL;
 };
 
-float3 MapFaceUVToSphere(float2 uv, int face) {
-	uv = uv * 2.f - 1.f;
-	float2 uvSqr = uv*uv;
-	// rotate plane to its real position
-	return mul(PlaneRotations[face], float4(
-		uv.x*sqrt(1.f - (uvSqr.y + 1.f) / 2.f + uvSqr.y / 3.f),
-		uv.y*sqrt(1.f - (uvSqr.x + 1.f) / 2.f + uvSqr.x / 3.f),
-		sqrt(1.f - (uvSqr.x + uvSqr.y) / 2.f + uvSqr.x * uvSqr.y / 3.f),
-		1.f)).xyz;
-}
-
 float3 UVToGlobal(HS_OUTPUT plane, float2 uv) {
 	return MapFaceUVToSphere(
 		((float2)plane.pos + uv) / 
@@ -56,7 +43,7 @@ float3 UVToGlobal(HS_OUTPUT plane, float2 uv) {
 float3 UVToGlobalOnLodEdge(HS_OUTPUT plane, float2 uv, float lod) {
 	return MapFaceUVToSphere(
 		// Round everything, as neighbour plane has different lod, so the
-		// computations are different, but we don't wont tiny holes on lod edges.
+		// computations are different, but we don't want tiny holes on lod edges.
 		round(((float2)plane.pos + uv) * lod) / 
 		round((float)(1 << plane.level) * lod), plane.face);
 }
@@ -97,7 +84,7 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 
 	output.pos = PlanetPos + output.normal*(Radius + terrain.w);
 
-	output.normal = normalize(output.normal - (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
+	output.normal = normalize(output.normal + (terrain.xyz - dot(terrain.xyz, output.normal) * output.normal));
 
 	if (terrain.w < -0.001f) //ocean
 		output.color = COLOR_OCEAN; 

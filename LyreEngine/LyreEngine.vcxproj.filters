@@ -62,6 +62,9 @@
     <Filter Include="Helper\Lookup">
       <UniqueIdentifier>{cacc78ff-bb94-46e0-b7ad-41eb3e4fe069}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Includes">
+      <UniqueIdentifier>{1c1735cf-7ac4-4b68-8670-f4d33402f1d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -229,6 +232,9 @@
   <ItemGroup>
     <None Include="keys.layout">
       <Filter>Controls\KeyLayouts</Filter>
+    </None>
+    <None Include="sphere_mapping_b0.fx">
+      <Filter>Shaders\Includes</Filter>
     </None>
   </ItemGroup>
 </Project>

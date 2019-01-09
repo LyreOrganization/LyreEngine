@@ -21,7 +21,7 @@ public:
 	DirectX::XMFLOAT3 getPosition();
 	DirectX::XMFLOAT4X4 calculateViewMatrix();
 	DirectX::XMFLOAT4X4 calculateProjectionMatrix(float aspectWdivH);
-	DirectX::XMFLOAT4X4 calculateViewProjMatrix(float aspectWdivH);
+	virtual DirectX::XMFLOAT4X4 calculateViewProjMatrix(float aspectWdivH);
 
 	bool setFOV(float fov = DirectX::XM_PIDIV4);
 };
