@@ -86,7 +86,7 @@ namespace {
 		UINT numDriverTypes = ARRAYSIZE(driverTypes);
 		D3D_FEATURE_LEVEL featureLevels[] =
 		{
-			D3D_FEATURE_LEVEL_11_0
+			D3D_FEATURE_LEVEL_11_1
 		};
 		UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 		DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -315,7 +315,7 @@ namespace {
 			throw runtime_error("Planet init failed!");
 
 		// Atmosphere
-		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.2f, 50);
+		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.5f, 5);
 		g_pAtmosphere->init();
 		// Atmosphrer controls
 		{
@@ -591,6 +591,11 @@ ID3D11Buffer* LyreEngine::getProjectionCB() {
 
 ID3D11Buffer* LyreEngine::getLightingCB() {
 	return g_iLightingConstantBuffer;
+}
+
+XMFLOAT3 LyreEngine::getLightingDirection()
+{
+	return { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
 }
 
 ID3D11Buffer* LyreEngine::getLodCB() {

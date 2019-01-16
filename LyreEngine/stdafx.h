@@ -1,8 +1,8 @@
 #pragma once
 
 // System headers
-#include <D3DX11.h>
 #include <D3D11.h>
+#include <D3D11_1.h>
 #include <DirectXMath.h>
 #include <windows.h>
 #include <atlbase.h>

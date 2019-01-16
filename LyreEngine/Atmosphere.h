@@ -27,15 +27,42 @@ private:
 	float m_radius;
 	float m_planetRadius;
 	float m_height;
+	float m_scaleFactor;
 	int m_quality;
 
 	UVSphere m_skyDome;
 	PipelineConfigDX m_renderConfig;
 
-	struct AtmosphereCb {
+	struct ViewCb {
 		DirectX::XMFLOAT4X4 viewProj;
 	};
-	ConstantBufferDX<AtmosphereCb> m_atmosphereCb;
+	struct VectorsCb {
+		DirectX::XMFLOAT3 lightDirection;
+		float dummy1;
+		DirectX::XMFLOAT3 cameraPosition;
+		float dummy2;
+		DirectX::XMFLOAT3 invWaveLength;
+		float dummy3;
+	};
+	struct ScalarsCb {
+		float cameraHeight2;
+		float radius;
+		float radius2;
+		float planetRadius;
+		float planetRadius2;
+		float scaleFactor;
+		int sampleAmount;
+		float dummy;
+	};
+	ConstantBufferDX<ViewCb> m_viewCb;
+	ConstantBufferDX<VectorsCb> m_vectorsCb;
+	ConstantBufferDX<ScalarsCb> m_scalarsCb;
+
+	struct LightCb {
+		DirectX::XMFLOAT3 lightDirection;
+		float dummy;
+	};
+	ConstantBufferDX<LightCb> m_lightCb;
 
 	float getOpticalDepth(float height, float angle);
 	CComPtr<ID3D11Texture2D> precomputeOpticalDepth();

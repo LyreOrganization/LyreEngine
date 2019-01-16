@@ -10,6 +10,7 @@ namespace LyreEngine
 	ID3D11Buffer* getViewCB();
 	ID3D11Buffer* getProjectionCB();
 	ID3D11Buffer* getLightingCB();
+	DirectX::XMFLOAT3 getLightingDirection();
 	ID3D11Buffer* getLodCB();
 	ID3D11SamplerState* getSampler2D();
 	Camera* getCamera();

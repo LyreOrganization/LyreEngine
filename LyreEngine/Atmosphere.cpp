@@ -5,7 +5,7 @@
 using namespace std;
 using namespace DirectX;
 
-const float Atmosphere::AverageDensityHeight	= 0.25f;
+const float Atmosphere::AverageDensityHeight	= 0.15f;
 const int	Atmosphere::OutScatteringRes		= 512;
 const int	Atmosphere::SamplesAmount			= 50;
 
@@ -13,8 +13,9 @@ Atmosphere::Atmosphere(float planetRadius, float height, int quality) :
 	m_radius(planetRadius + height),
 	m_height(height),
 	m_planetRadius(planetRadius),
+	m_scaleFactor(1.f / height),
 	m_quality(quality),
-	m_skyDome(m_radius, 20, 20, true)
+	m_skyDome(m_radius, 100, 100, true)
 {}
 
 float Atmosphere::getOpticalDepth(float height, float angle) {
@@ -25,10 +26,8 @@ float Atmosphere::getOpticalDepth(float height, float angle) {
 	float rayLength;
 	
 	// some magic happening here
-	float scaleFactor = 1.f / m_height;
-
-	float b = m_radius * scaleFactor;
-	float scaledPlanetRadius = m_planetRadius * scaleFactor;
+	float b = m_radius * m_scaleFactor;
+	float scaledPlanetRadius = m_planetRadius * m_scaleFactor;
 	float c = scaledPlanetRadius + height;
 	float beta = angle * XM_PI;
 	float h_a = c * sinf(beta);
@@ -49,7 +48,7 @@ float Atmosphere::getOpticalDepth(float height, float angle) {
 	float sampleLength = rayLength / SamplesAmount; // Change to m_quality
 	float opticalDepth = 0.f;
 	for (float sample = sampleLength; sample < rayLength; sample += sampleLength) {
-		float sampleHeight = (Utils::solveTriangleBySAS(c, sample, beta) - scaledPlanetRadius);
+		float sampleHeight = Utils::solveTriangleBySAS(c, sample, beta) - scaledPlanetRadius;
 		// actual integral sum
 		opticalDepth += expf(-sampleHeight / AverageDensityHeight) * sampleLength;
 	}
@@ -121,9 +120,36 @@ void Atmosphere::render() {
 
 	UINT w, h;
 	LyreEngine::getClientWH(w, h);
-	m_atmosphereCb.data.viewProj = LyreEngine::getCamera()->calculateViewProjMatrix(static_cast<float>(w) / h);
-	m_atmosphereCb.update();
-	m_renderConfig.setConstantBuffer(Shader::VS, m_atmosphereCb, 0);
+
+	m_viewCb.data.viewProj = LyreEngine::getCamera()->calculateViewProjMatrix(static_cast<float>(w) / h);
+	m_vectorsCb.data.lightDirection = LyreEngine::getLightingDirection();
+	
+	XMFLOAT3 height;
+	XMStoreFloat3(&height, XMVector3LengthSq(XMLoadFloat3(&LyreEngine::getCamera()->getPosition())));
+	m_vectorsCb.data.cameraPosition = LyreEngine::getCamera()->getPosition();
+	m_vectorsCb.data.invWaveLength = XMFLOAT3(1.f / powf(0.650f, 4.0), 1.f / powf(0.570f, 4.0), 1.f / powf(0.475f, 4.0));
+
+	m_scalarsCb.data.cameraHeight2 = height.x;
+	m_scalarsCb.data.radius = m_radius;
+	m_scalarsCb.data.radius2 = m_radius * m_radius;
+	m_scalarsCb.data.planetRadius = m_planetRadius;
+	m_scalarsCb.data.planetRadius2 = m_planetRadius * m_planetRadius;
+	m_scalarsCb.data.scaleFactor = m_scaleFactor;
+	m_scalarsCb.data.sampleAmount = 30;
+
+	m_viewCb.update();
+	m_vectorsCb.update();
+	m_scalarsCb.update();
+
+	m_lightCb.data.lightDirection = LyreEngine::getLightingDirection();
+	m_lightCb.update();
+
+	m_renderConfig.setConstantBuffer(Shader::VS, m_viewCb, 0);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_vectorsCb, 1);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_scalarsCb, 2);
+	m_renderConfig.setSampler(Shader::VS, LyreEngine::getSampler2D(), 0);
+
+	m_renderConfig.setConstantBuffer(Shader::PS, m_lightCb, 0);
 
 	m_skyDome.bind();
 	m_renderConfig.bind();
