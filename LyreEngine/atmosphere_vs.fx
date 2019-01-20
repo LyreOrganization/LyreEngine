@@ -23,8 +23,8 @@ cbuffer Scalars : register(b2) {
 }
 
 #define PI 3.14159f
-#define Kr4Pi 0.314159f //0.0314159f
-#define KrESun 0.275f //0.0375f
+#define Kr4Pi 0.14159f
+#define KrESun 0.175f
 
 Texture2D<float4> OpticalDepth : register(t0);
 SamplerState Tex2DSampler : register(s0);
@@ -43,8 +43,9 @@ float isIntersecting(float3 pos, float3 ray, float distance2, float radius2) {
 	float B = 2.0 * dot(pos, ray);
 	float C = distance2 - radius2;
 	float det = B*B - 4.0 * C;
-	if (det >= 0.f) {
-		return 0.5 * (-B - sqrt(det)) >= 0.f;
+	if (det > 0.f) {
+		float near = 0.5 * (-B - sqrt(det));
+		return near > 0.f;
 	}
 	return false;
 }
@@ -69,10 +70,20 @@ VS_OUTPUT VS(VS_INPUT input) {
 	float3 ray = input.pos.xyz - CameraPosition;
 	float far = length(ray);
 	ray /= far;
+
+	if (isIntersecting(CameraPosition, ray, CameraHeight2, PlanetRadius2)) {
+
+		VS_OUTPUT output = (VS_OUTPUT)0;
+
+		output.pos = mul(float4(input.pos, 1.f), ViewProjMatrix);
+		output.color = float4(0.f, 0.f, 0.f, 0.f);
+		output.direction = float4(CameraPosition - input.pos.xyz, 1.f);
+
+		return output;
+	}
 	
 	float near = getNearIntersection(CameraPosition, ray, CameraHeight2, Radius2);
 	float3 start = CameraPosition + ray * near;
-
 	far -= near;
 
 	float sampleLength = far / SampleAmount;
@@ -87,7 +98,7 @@ VS_OUTPUT VS(VS_INPUT input) {
 
 		float samplePointLength2 = samplePointLength * samplePointLength;
 
-		if (isIntersecting(samplePoint, -LightDirection, samplePointLength2, PlanetRadius2)) {
+		if (!isIntersecting(samplePoint, -LightDirection, samplePointLength2, PlanetRadius2)) {
 			float samplePointAngleToSun = acos(dot(samplePoint, LightDirection) / samplePointLength) / PI;
 			float samplePointAngleToCamera = acos(dot(samplePoint, ray) / samplePointLength) / PI;
 

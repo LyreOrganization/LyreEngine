@@ -62,4 +62,6 @@ public:
 	void renderNormals();
 
 	float getRadius() const { return m_sphere.getRadius(); }
+
+	bool visible = true;
 };

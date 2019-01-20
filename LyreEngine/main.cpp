@@ -115,6 +115,10 @@ void setupKeyboardLayout() {
 	{
 		atmosphereKeys[WindowsLetterIdx('F')] = "SwitchVisibility";
 	}
+	Controls::KeyMapping planetKeys;
+	{
+		planetKeys[WindowsLetterIdx('C')] = "SwitchVisibility";
+	}
 
 	Controls::KeyMapping cameraKeys;
 	{
@@ -151,6 +155,7 @@ void setupKeyboardLayout() {
 	commonKeys[VK_ESCAPE] = "Exit";
 
 	keys["Atmosphere"] = atmosphereKeys;
+	keys["Planet"] = planetKeys;
 	keys["Camera"] = cameraKeys;
 	keys["FreeCamera"] = freeCameraKeys;
 	keys["TargetCamera"] = targetCameraKeys;

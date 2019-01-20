@@ -5,7 +5,7 @@
 using namespace std;
 using namespace DirectX;
 
-const float Atmosphere::AverageDensityHeight	= 0.15f;
+const float Atmosphere::AverageDensityHeight	= 0.1f;
 const int	Atmosphere::OutScatteringRes		= 512;
 const int	Atmosphere::SamplesAmount			= 50;
 
@@ -15,7 +15,7 @@ Atmosphere::Atmosphere(float planetRadius, float height, int quality) :
 	m_planetRadius(planetRadius),
 	m_scaleFactor(1.f / height),
 	m_quality(quality),
-	m_skyDome(m_radius, 100, 100, true)
+	m_skyDome(m_radius, 150, 150, true)
 {}
 
 float Atmosphere::getOpticalDepth(float height, float angle) {

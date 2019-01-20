@@ -39,12 +39,12 @@ DS_OUTPUT main(HSCF_OUTPUT input,
 			lerp(patch[0].pos, patch[1].pos, uv.x),
 			lerp(patch[3].pos, patch[2].pos, uv.x),
 			uv.y
-		).xyz - planetViewPos)*(radius + terrain.w);
+		).xyz - planetViewPos)*(radius/* + terrain.w*/);
 	terrain.w = (terrain.w + 1.f)*1.5f;
 	output.color = float3(clamp(terrain.w - 0.2f, 0.f, 1.f),
 						  clamp(terrain.w - 0.3f, 0.f, 1.f),
 						  clamp(terrain.w - 1.f, 0.f, 1.f)) *
-		Diffuse * Power * clamp(dot(terrain.xyz, Direction), 0.f, 1.f);
+		Diffuse * Power * clamp(dot(terrain.xyz, -Direction), 0.f, 1.f);
 	output.normal = terrain.xyz;
 	return output;
 }

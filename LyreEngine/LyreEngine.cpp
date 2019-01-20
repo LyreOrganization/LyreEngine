@@ -313,11 +313,21 @@ namespace {
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
+		// Planet controls
+		{
+			Controls::ActionGroup planet("Planet");
+
+			planet.action("SwitchVisibility").onTriggered([]() {
+				g_pPlanet->visible ^= true;
+			});
+
+			Controls::addActionGroup(planet);
+		}
 
 		// Atmosphere
 		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.5f, 5);
 		g_pAtmosphere->init();
-		// Atmosphrer controls
+		// Atmosphere controls
 		{
 			Controls::ActionGroup atmosphere("Atmosphere");
 

@@ -215,6 +215,8 @@ HRESULT Planet::init() {
 }
 
 void Planet::render() {
+	if (!visible) return;
+
 	XMFLOAT4X4 view = LyreEngine::getCamera()->calculateViewMatrix();
 
 	XMStoreFloat3(&m_planetCb.data.planetViewPos, XMVector4Transform(XMVectorSetW(XMVectorZero(), 1.f), XMMatrixTranspose(XMLoadFloat4x4(&view))));
