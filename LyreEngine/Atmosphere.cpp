@@ -19,10 +19,6 @@ Atmosphere::Atmosphere(float planetRadius, float height, int quality) :
 {}
 
 float Atmosphere::getOpticalDepth(float height, float angle) {
-	if (height == 0.f) {
-		return 0.f;
-	}
-
 	float rayLength;
 	
 	// some magic happening here
@@ -32,14 +28,7 @@ float Atmosphere::getOpticalDepth(float height, float angle) {
 	float beta = angle * XM_PI;
 	float h_a = c * sinf(beta);
 
-	bool isRay = false;
-	if (angle < 0.5f && h_a <= scaledPlanetRadius) {
-		isRay = Utils::solveTriangleBySSA(&rayLength, scaledPlanetRadius, c, beta, true);
-	}
-	else {
-		isRay = Utils::solveTriangleBySSA(&rayLength, b, c, beta);
-	}
-	if (!isRay) {
+	if (!Utils::solveTriangleBySSA(&rayLength, b, c, beta)) {
 		return 0.f;
 	}
 

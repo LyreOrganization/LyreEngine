@@ -70,17 +70,6 @@ VS_OUTPUT VS(VS_INPUT input) {
 	float3 ray = input.pos.xyz - CameraPosition;
 	float far = length(ray);
 	ray /= far;
-
-	if (isIntersecting(CameraPosition, ray, CameraHeight2, PlanetRadius2)) {
-
-		VS_OUTPUT output = (VS_OUTPUT)0;
-
-		output.pos = mul(float4(input.pos, 1.f), ViewProjMatrix);
-		output.color = float4(0.f, 0.f, 0.f, 0.f);
-		output.direction = float4(CameraPosition - input.pos.xyz, 1.f);
-
-		return output;
-	}
 	
 	float near = getNearIntersection(CameraPosition, ray, CameraHeight2, Radius2);
 	float3 start = CameraPosition + ray * near;
