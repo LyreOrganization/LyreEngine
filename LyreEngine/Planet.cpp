@@ -123,7 +123,9 @@ HRESULT Planet::initGeometryAndVS() {
 HRESULT Planet::precomputeHeightMap() {
 	HRESULT hr;
 
-	size_t patchesAmount = m_sphere.indices.size() / 9;
+	SphereTopology* topology = m_sphere.getTopology();
+	size_t patchesAmount = topology->indices.size() / 5;
+	m_sphere.releseTopology();
 	D3D11_TEXTURE1D_DESC desc;
 	{
 		ZeroStruct(desc);
@@ -220,9 +222,9 @@ HRESULT Planet::init() {
 	if (FAILED(hr))
 		return hr;
 
-	hr = precomputeHeightMap();
+	/*hr = precomputeHeightMap();
 	if (FAILED(hr))
-		return hr;
+		return hr;*/
 
 	return S_OK;
 }

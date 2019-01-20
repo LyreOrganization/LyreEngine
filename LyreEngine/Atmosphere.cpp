@@ -136,7 +136,7 @@ void Atmosphere::render() {
 	m_renderConfig.setConstantBuffer(Shader::VS, m_viewCb, 0);
 	m_renderConfig.setConstantBuffer(Shader::VS, m_vectorsCb, 1);
 	m_renderConfig.setConstantBuffer(Shader::VS, m_scalarsCb, 2);
-	m_renderConfig.setSampler(Shader::VS, LyreEngine::getSampler2D(), 0);
+	m_renderConfig.setSampler(Shader::VS, LyreEngine::getSamplerLinear(), 0);
 
 	m_renderConfig.setConstantBuffer(Shader::PS, m_lightCb, 0);
 

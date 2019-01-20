@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "GeometryDX.h"
 
+#include "LyreEngine.h"
+
 void GeometryDX::_loadVertices(UINT size, UINT stride, UINT slot) {
 	m_strides[slot] = stride;
 

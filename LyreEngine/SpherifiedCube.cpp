@@ -84,7 +84,7 @@ void SpherifiedCube::buildCube() {
 	TerrainMap::Description terrainDesc;
 	for (int i = 0; i < 6; i++) {
 		terrainDesc.octave = 1.f;
-		terrainDesc.amplitude = 50.f;
+		terrainDesc.amplitude = 10.f;
 		terrainDesc.shift = sqrtf(3.f);
 		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(m_cube[i].get(), terrainDesc, &m_mapLoader);
 	}

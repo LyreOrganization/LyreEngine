@@ -82,7 +82,9 @@ UVSphere::UVSphere(float radius, int stacks, int slices, bool reverseFacing) {
 		{ "VERTEX", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 
-	loadVertices(vertices, 0);
-	loadIndices(indices);
+	loadVertices<XMFLOAT3>(vertices.size(), 0);
+	updateVertices(vertices, 0);
+	loadIndices(indices.size());
+	updateIndices(indices);
 	setTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }

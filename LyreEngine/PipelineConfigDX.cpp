@@ -2,9 +2,7 @@
 #include "PipelineConfigDX.h"
 #include "LyreEngine.h"
 
-PipelineConfigDX::PipelineConfigDX():
-	m_pDevice(LyreEngine::getDevice()),
-	m_pContext(LyreEngine::getContext())
+PipelineConfigDX::PipelineConfigDX(): Super()
 {
 	UAV.uavs.fill(nullptr);
 	UAV.counts.fill(0);
