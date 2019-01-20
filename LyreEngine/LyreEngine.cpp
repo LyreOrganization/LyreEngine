@@ -15,12 +15,13 @@ using namespace DirectX;
 
 namespace {
 
-	struct ViewConstantBuffer {
-		XMFLOAT4X4 view;
+	struct CameraConstantBuffer {
+		XMFLOAT3 position;
+		float _dummy_;
 	};
 
-	struct ProjectionConstantBuffer {
-		XMFLOAT4X4 projection;
+	struct ViewProjConstantBuffer {
+		XMFLOAT4X4 viewProj;
 	};
 
 	struct LightingConstantBuffer {
@@ -57,12 +58,13 @@ namespace {
 	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateWireframe = nullptr;
 	CComPtr<ID3D11RasterizerState>		g_iRasterizerStateSolid = nullptr;
 
-	CComPtr<ID3D11Buffer>				g_iViewConstantBuffer = nullptr;
-	CComPtr<ID3D11Buffer>				g_iProjectionConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iCameraConstantBuffer = nullptr;
+	CComPtr<ID3D11Buffer>				g_iViewProjConstantBuffer = nullptr;
 	CComPtr<ID3D11Buffer>				g_iLightingConstantBuffer = nullptr;
 	CComPtr<ID3D11Buffer>				g_iLodConstantBuffer = nullptr;
 
-	CComPtr<ID3D11SamplerState>			g_iTex2DSampler;
+	CComPtr<ID3D11SamplerState>			g_iLinearSampler;
+	CComPtr<ID3D11SamplerState>			g_iPointSampler;
 
 	std::unique_ptr<Planet>				g_pPlanet;
 	std::unique_ptr<Atmosphere>			g_pAtmosphere;
@@ -106,9 +108,10 @@ namespace {
 		}
 		for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
 			g_driverType = driverTypes[driverTypeIndex];
-			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, D3D11_CREATE_DEVICE_DEBUG, featureLevels,
-				numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc,
-				&g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
+			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, 
+											   D3D11_CREATE_DEVICE_DEBUGGABLE & D3D11_CREATE_DEVICE_DEBUG, 
+											   featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
+											   &swapChainDesc, &g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
 			if (SUCCEEDED(hr))
 				break;
 		}
@@ -254,10 +257,10 @@ namespace {
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(ViewConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(CameraConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iViewConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iCameraConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -265,10 +268,10 @@ namespace {
 		{
 			ZeroStruct(bufferDesc);
 			bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-			bufferDesc.ByteWidth = sizeof(ProjectionConstantBuffer);
+			bufferDesc.ByteWidth = sizeof(ViewProjConstantBuffer);
 			bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		}
-		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iProjectionConstantBuffer);
+		hr = g_iDevice->CreateBuffer(&bufferDesc, nullptr, &g_iViewProjConstantBuffer);
 		if (FAILED(hr))
 			return hr;
 
@@ -304,12 +307,26 @@ namespace {
 			tex2DSamplerDesc.MinLOD = 0.f;
 			tex2DSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 		}
-		hr = LyreEngine::getDevice()->CreateSamplerState(&tex2DSamplerDesc, &g_iTex2DSampler);
+		hr = LyreEngine::getDevice()->CreateSamplerState(&tex2DSamplerDesc, &g_iLinearSampler);
+		if (FAILED(hr))
+			return hr;
+
+		D3D11_SAMPLER_DESC tex1DSamplerDesc;
+		{
+			ZeroStruct(tex1DSamplerDesc);
+			tex1DSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+			tex1DSamplerDesc.AddressU = tex1DSamplerDesc.AddressV = tex1DSamplerDesc.AddressW =
+				D3D11_TEXTURE_ADDRESS_CLAMP;
+			tex1DSamplerDesc.MinLOD = 0.f;
+			tex1DSamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		}
+		hr = LyreEngine::getDevice()->CreateSamplerState(&tex1DSamplerDesc, &g_iPointSampler);
 		if (FAILED(hr))
 			return hr;
 
 		//Planet
-		g_pPlanet = make_unique<Planet>(sqrt(3.f));
+		const float PLANET_RADIUS = 1000.f;
+		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 0);
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
@@ -339,8 +356,8 @@ namespace {
 		}
 
 		//Camera
-		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { -4.f, 0.f, 0.f },
-											  XMFLOAT3 { 0.f, 0.f, 0.f }, sqrt(3.f));
+		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { 0.f, 0.f, PLANET_RADIUS * 2.f },
+											  XMFLOAT3 { 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
 		//Setup common Camera actions
 		{
 			Controls::ActionGroup camera("Camera");
@@ -351,10 +368,10 @@ namespace {
 					g_pCamera = make_unique<FreeCamera>(*g_pCamera);
 				}
 			});
-			camera.action("SwitchToTargetCamera").onTriggered([]() {
+			camera.action("SwitchToTargetCamera").onTriggered([PLANET_RADIUS]() {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera == nullptr) {
-					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, sqrt(3.f));
+					g_pCamera = make_unique<TargetCamera>(*g_pCamera, XMFLOAT3{ 0.f, 0.f, 0.f }, PLANET_RADIUS - 2.f);
 				}
 			});
 			camera.action("ToggleWireframe").onTriggered([]() {
@@ -384,25 +401,25 @@ namespace {
 			camera.action("MoveForward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAhead(0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(0.0002f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveBackward").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAhead(-0.001f*ticksPerFrame);
+					pFreeCamera->moveAhead(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveRight").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAside(0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveLeft").on([](DWORD ticksPerFrame) {
 				FreeCamera* pFreeCamera = dynamic_cast<FreeCamera*>(g_pCamera.get());
 				if (pFreeCamera != nullptr) {
-					pFreeCamera->moveAside(-0.001f*ticksPerFrame);
+					pFreeCamera->moveAside(-0.0001f*ticksPerFrame);
 				}
 			});
 
@@ -421,25 +438,25 @@ namespace {
 			camera.action("RotateDown").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundHorizontally(-0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundHorizontally(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("RotateRight").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundVertically(0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundVertically(0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("RotateLeft").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->rotateAroundVertically(-0.0002f*ticksPerFrame);
+					pTargetCamera->rotateAroundVertically(-0.0001f*ticksPerFrame);
 				}
 			});
 			camera.action("Approach").on([](DWORD ticksPerFrame) {
 				TargetCamera* pTargetCamera = dynamic_cast<TargetCamera*>(g_pCamera.get());
 				if (pTargetCamera != nullptr) {
-					pTargetCamera->approach(0.05f*ticksPerFrame);
+					pTargetCamera->approach(0.02f*ticksPerFrame);
 				}
 			});
 			camera.action("MoveFurther").on([](DWORD ticksPerFrame) {
@@ -500,28 +517,28 @@ namespace {
 }
 
 void LyreEngine::render(DWORD ticksPerFrame) {
-	ViewConstantBuffer cbView;
-	cbView.view = g_pCamera->calculateViewMatrix();
-	g_iContext->UpdateSubresource(g_iViewConstantBuffer, 0, nullptr, &cbView, 0, 0);
+	CameraConstantBuffer cbCamera;
+	cbCamera.position = g_pCamera->getPosition();
+	g_iContext->UpdateSubresource(g_iCameraConstantBuffer, 0, nullptr, &cbCamera, 0, 0);
 
-	ProjectionConstantBuffer cbProjection;
-	cbProjection.projection = g_pCamera->calculateProjectionMatrix(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
-	g_iContext->UpdateSubresource(g_iProjectionConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
+	ViewProjConstantBuffer cbProjection;
+	cbProjection.viewProj = g_pCamera->calculateViewProjMatrix(WND_WIDTH / static_cast<FLOAT>(WND_HEIGHT));
+	g_iContext->UpdateSubresource(g_iViewProjConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
 	LightingConstantBuffer cbLight;
-	cbLight.diffuse = { 1.0f, 0.9f, 0.7f, 1.f };
+	cbLight.diffuse = { 1.0f, 0.95f, 0.9f, 1.f };
 	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
 	cbLight.power = 0.8f;
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;
-	cbLod.minDistance = 1.f;
-	cbLod.maxDistance = 32.f;
-	cbLod.minLOD = 1.f;
-	cbLod.maxLOD = 63.f;
+	cbLod.minDistance = 0.00f;
+	cbLod.maxDistance = 4000.f;
+	cbLod.minLOD = 32.f;
+	cbLod.maxLOD = 64.f;
 	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 
-	float sky = 0;
+	float sky = 1.f;
 	XMFLOAT3 eye = g_pCamera->getPosition();
 	//XMStoreFloat(&sky, XMVector3Dot(XMVector3Normalize(XMLoadFloat3(&eye)), XMLoadFloat3(&cbLight.direction)));
 	float clearColor[4] = { 0.3f*sky, 0.5f*sky, 0.9f*sky, 1.0f };
@@ -591,12 +608,12 @@ ID3D11DeviceContext* LyreEngine::getContext() {
 	return g_iContext;
 }
 
-ID3D11Buffer* LyreEngine::getViewCB() {
-	return g_iViewConstantBuffer;
+ID3D11Buffer* LyreEngine::getCameraCB() {
+	return g_iCameraConstantBuffer;
 }
 
-ID3D11Buffer* LyreEngine::getProjectionCB() {
-	return g_iProjectionConstantBuffer;
+ID3D11Buffer* LyreEngine::getViewProjCB() {
+	return g_iViewProjConstantBuffer;
 }
 
 ID3D11Buffer* LyreEngine::getLightingCB() {
@@ -612,8 +629,12 @@ ID3D11Buffer* LyreEngine::getLodCB() {
 	return g_iLodConstantBuffer;
 }
 
-ID3D11SamplerState * LyreEngine::getSampler2D() {
-	return g_iTex2DSampler;
+ID3D11SamplerState * LyreEngine::getSamplerLinear() {
+	return g_iLinearSampler;
+}
+
+ID3D11SamplerState * LyreEngine::getSamplerPoint() {
+	return g_iPointSampler;
 }
 
 Camera* LyreEngine::getCamera() {

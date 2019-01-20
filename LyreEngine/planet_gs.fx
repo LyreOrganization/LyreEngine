@@ -1,7 +1,3 @@
-cbuffer Viewer : register(b0) {
-	matrix ViewMatrix;
-}
-
 struct GS_INPUT {
 	float3 pos : POSITION;
 	float3 color : COLOR;
@@ -31,11 +27,11 @@ void GS(
 		geometry.Append(element);
 	}
 
-	float distance = length(input[0].pos) / 10.f;
+	float distance = 0.05f;
 	if (distance < 0.1f) {
 		Normal normal;
 		normal.pos0 = float4(input[0].pos, 1.f);
-		normal.pos1 = float4(input[0].pos + clamp(0.04f - distance, 0.f, 0.02f)*mul(float4(input[0].normal, 0.f), ViewMatrix).xyz, 1.f);
+		normal.pos1 = float4(input[0].pos + 0.5*input[0].normal, 1.f);
 		normals.Append(normal);
 	}
 }

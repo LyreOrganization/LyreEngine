@@ -1,5 +1,5 @@
-cbuffer Projection : register(b0) {
-	matrix ProjMatrix;
+cbuffer ViewProj : register(b0) {
+	matrix ViewProjMatrix;
 };
 
 struct VS_INPUT {
@@ -14,7 +14,7 @@ struct VS_OUTPUT {
 
 VS_OUTPUT VS(VS_INPUT input) {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.pos = mul(input.pos, ProjMatrix);
+	output.pos = mul(input.pos, ViewProjMatrix);
 	output.color = input.color;
 	return output;
 }

@@ -32,9 +32,6 @@
     <Filter Include="Controls\ActionGroup">
       <UniqueIdentifier>{f13452a3-0d0c-4746-b255-443510a1045a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Normals">
-      <UniqueIdentifier>{8c441f64-f4fe-420f-a808-7b2381b68966}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Geometry">
       <UniqueIdentifier>{7be43f3e-b472-42f4-9d81-5eb48debc7c1}</UniqueIdentifier>
     </Filter>
@@ -46,6 +43,30 @@
     </Filter>
     <Filter Include="DirectXAPI">
       <UniqueIdentifier>{7513d264-c102-4344-8b9d-acfa36414fd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Planet\Maps">
+      <UniqueIdentifier>{86ec5f20-3cb3-40c1-a08d-1534a16ec9e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Planet\Maps\MapLoader">
+      <UniqueIdentifier>{5d4362c8-804e-4afb-8f74-dbac19bc4a00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper">
+      <UniqueIdentifier>{eca53773-0d49-4d53-9e6b-a225dd22958c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper\Log">
+      <UniqueIdentifier>{999187d4-6de1-4808-ad8f-0c23b74c3f9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helper\Lookup">
+      <UniqueIdentifier>{cacc78ff-bb94-46e0-b7ad-41eb3e4fe069}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Includes">
+      <UniqueIdentifier>{1c1735cf-7ac4-4b68-8670-f4d33402f1d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Planet\LodAdapter">
+      <UniqueIdentifier>{57789e42-3b77-42b0-b5ec-4b4f79462b5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Normals">
+      <UniqueIdentifier>{8c441f64-f4fe-420f-a808-7b2381b68966}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders\Compute">
       <UniqueIdentifier>{8f99865e-75b1-49c3-a0fe-e7495e662ea5}</UniqueIdentifier>
@@ -103,6 +124,24 @@
     <ClCompile Include="UtilsDX.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
+    <ClCompile Include="MapLoader.cpp">
+      <Filter>Planet\Maps\MapLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainMap.cpp">
+      <Filter>Planet\Maps</Filter>
+    </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>Helper\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="helper.cpp">
+      <Filter>Helper</Filter>
+    </ClCompile>
+    <ClCompile Include="LookupTable.cpp">
+      <Filter>Helper\Lookup</Filter>
+    </ClCompile>
+    <ClCompile Include="LodAdapter.cpp">
+      <Filter>Planet\LodAdapter</Filter>
+    </ClCompile>
     <ClCompile Include="DeviceReference.cpp">
       <Filter>DirectXAPI</Filter>
     </ClCompile>
@@ -129,9 +168,6 @@
     </ClInclude>
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
-    </ClInclude>
-    <ClInclude Include="PerlinGrid.h">
-      <Filter>ProceduralNoise</Filter>
     </ClInclude>
     <ClInclude Include="Controls.h">
       <Filter>Controls</Filter>
@@ -165,6 +201,27 @@
     </ClInclude>
     <ClInclude Include="UtilsDX.h">
       <Filter>DirectXAPI</Filter>
+    </ClInclude>
+    <ClInclude Include="MapLoader.h">
+      <Filter>Planet\Maps\MapLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainMap.h">
+      <Filter>Planet\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>Helper\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="helper.h">
+      <Filter>Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="LookupTable.h">
+      <Filter>Helper\Lookup</Filter>
+    </ClInclude>
+    <ClInclude Include="LodAdapter.h">
+      <Filter>Planet\LodAdapter</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinGrid.h">
+      <Filter>ProceduralNoise</Filter>
     </ClInclude>
     <ClInclude Include="DeviceReference.h">
       <Filter>DirectXAPI</Filter>
@@ -228,6 +285,9 @@
   <ItemGroup>
     <None Include="keys.layout">
       <Filter>Controls\KeyLayouts</Filter>
+    </None>
+    <None Include="sphere_mapping_b0.fx">
+      <Filter>Shaders\Includes</Filter>
     </None>
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 
 namespace Controls {
 
-	class Action {
+	class Action final {
 
 		friend class ActionGroup;
 

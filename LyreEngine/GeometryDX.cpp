@@ -1,24 +1,31 @@
 #include "stdafx.h"
 #include "GeometryDX.h"
 
-void GeometryDX::_loadVertices(const void* data, UINT size, UINT stride, UINT slot) {
+void GeometryDX::_loadVertices(UINT size, UINT stride, UINT slot) {
 	m_strides[slot] = stride;
 
 	D3D11_BUFFER_DESC desc;
 	{
 		ZeroStruct(desc);
-		desc.Usage = D3D11_USAGE_IMMUTABLE;
+		desc.Usage = D3D11_USAGE_DEFAULT;
 		desc.ByteWidth = size * stride;
 		desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	}
-	D3D11_SUBRESOURCE_DATA initData;
-	{
-		initData.pSysMem = data;
-	}
-	HRESULT hr = m_pDevice->CreateBuffer(&desc, &initData, &m_vertexBuffers[slot]);
+	HRESULT hr = LyreEngine::getDevice()->CreateBuffer(&desc, nullptr, &m_vertexBuffers[slot]);
 	if (FAILED(hr)) {
 		throw std::runtime_error("GeometryDX.loadVertices: device->CreateBuffer() failed.");
 	}
+}
+
+void GeometryDX::_updateVertices(const void* data, UINT size, UINT slot) {
+	D3D11_BOX box;
+	{
+		ZeroStruct(box);
+		box.right = size * m_strides[slot];
+		box.bottom = 1;
+		box.back = 1;
+	}
+	LyreEngine::getContext()->UpdateSubresource(m_vertexBuffers[slot], 0, &box, data, box.right, 0);
 }
 
 GeometryDX::GeometryDX() {
@@ -40,22 +47,29 @@ void GeometryDX::loadVertexBuffer(ID3D11Buffer* buffer, UINT stride, UINT slot) 
 	m_strides[slot] = stride;
 }
 
-void GeometryDX::loadIndices(const std::vector<DWORD>& indices) {
+void GeometryDX::loadIndices(int amount) {
 	D3D11_BUFFER_DESC desc;
 	{
 		ZeroStruct(desc);
-		desc.Usage = D3D11_USAGE_IMMUTABLE;
-		desc.ByteWidth = indices.size() * sizeof(DWORD);
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.ByteWidth = static_cast<UINT>(amount) * sizeof(DWORD);
 		desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	}
-	D3D11_SUBRESOURCE_DATA initData;
-	{
-		initData.pSysMem = indices.data();
-	}
-	HRESULT hr = m_pDevice->CreateBuffer(&desc, &initData, &m_indexBuffer);
+	HRESULT hr = m_pDevice->CreateBuffer(&desc, nullptr, &m_indexBuffer);
 	if (FAILED(hr)) {
 		throw std::runtime_error("GeometryDX.loadIndices: device->CreateBuffer() failed.");
 	}
+}
+
+void GeometryDX::updateIndices(const std::vector<DWORD>& indices) {
+	D3D11_BOX box;
+	{
+		ZeroStruct(box);
+		box.right = static_cast<UINT>(indices.size()) * sizeof(DWORD);
+		box.bottom = 1;
+		box.back = 1;
+	}
+	LyreEngine::getContext()->UpdateSubresource(m_indexBuffer, 0, &box, indices.data(), box.right, 0);
 }
 
 D3D11_INPUT_ELEMENT_DESC& GeometryDX::createVertexElement() {
@@ -70,7 +84,7 @@ void GeometryDX::addVertexElement(D3D11_INPUT_ELEMENT_DESC element) {
 void GeometryDX::loadLayout(const void* shaderByteCode, SIZE_T shaderByteCodeLength) {
 	HRESULT hr = m_pDevice->CreateInputLayout(
 		m_elements.data(), 
-		m_elements.size(), 
+		static_cast<UINT>(m_elements.size()),
 		shaderByteCode, 
 		shaderByteCodeLength,
 		&m_layout
@@ -99,9 +113,8 @@ void GeometryDX::bind() {
 	m_pContext->IASetInputLayout(m_layout);
 	m_pContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	m_pContext->IASetPrimitiveTopology(m_topology);
-	m_pContext->IASetVertexBuffers(
-		0, 
-		m_vertexBuffers.size(), 
+	m_pContext->IASetVertexBuffers(0, 
+		static_cast<UINT>(m_vertexBuffers.size()),
 		m_vertexBuffers.data(), 
 		m_strides.data(), 
 		offsets.data()

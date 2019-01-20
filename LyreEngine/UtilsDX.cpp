@@ -2,12 +2,13 @@
 #include "UtilsDX.h"
 #include "LyreEngine.h"
 
-ID3D11Buffer* UtilsDX::createStreamOutputBuffer(UINT size) {
+ID3D11Buffer* UtilsDX::createStreamOutputBuffer(UINT size, bool drawAuto) {
 	ID3D11Buffer* buffer;
 	D3D11_BUFFER_DESC bufferDesc;
 	{
 		ZeroStruct(bufferDesc);
-		bufferDesc.BindFlags = D3D11_BIND_STREAM_OUTPUT | D3D11_BIND_VERTEX_BUFFER;
+		bufferDesc.BindFlags = D3D11_BIND_STREAM_OUTPUT | 
+			(drawAuto ? D3D11_BIND_VERTEX_BUFFER : 0);
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.ByteWidth = size;
 	}

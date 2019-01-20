@@ -15,8 +15,6 @@ FreeCamera::FreeCamera(const XMFLOAT3& position,
 FreeCamera::FreeCamera(const Camera& camera)
 	: Camera(camera) {}
 
-FreeCamera::~FreeCamera() {}
-
 void FreeCamera::tilt(float angle) {
 	XMVECTOR quaternion = XMQuaternionRotationAxis(getRight(), angle);
 	XMStoreFloat3(&m_view, XMVector3Rotate(XMLoadFloat3(&m_view), quaternion));

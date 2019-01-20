@@ -1,8 +1,7 @@
 #pragma once
 
-// System headers
-#include <D3D11.h>
-#include <D3D11_1.h>
+#include <d3d11.h>
+#include <d3d11_1.h>
 #include <DirectXMath.h>
 #include <windows.h>
 #include <atlbase.h>
@@ -11,14 +10,22 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <math.h>
 #include <vector>
 #include <string>
 #include <array>
+#include <map>
 #include <unordered_map>
+#include <queue>
 #include <optional>
 #include <algorithm>
 #include <random>
+#include <mutex>
+#include <atomic>
+#include <shared_mutex>
+#include <chrono>
+#include <time.h>
 
 // Custom headers
 #include "Utils.h"

@@ -3,7 +3,7 @@
 #include "Planet.h"
 
 #include "LyreEngine.h"
-#include "SpherifiedPlane.h"
+#include "TerrainMap.h"
 #include "FreeCamera.h"
 #include "UtilsDX.h"
 
@@ -21,36 +21,41 @@ namespace {
 	};
 }
 
-Planet::Planet(float radius) : m_sphere(radius) {}
+#define MAX_PATCHES D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION 
+
+Planet::Planet(float radius, unsigned seed) 
+	: m_sphere(radius, seed), m_lodAdapter(&m_sphere) {
+	m_lodAdapter.start();
+}
 
 HRESULT Planet::setupStreamOutputBuffers() {
-	HRESULT hr;
+	HRESULT hr = S_OK;
 
-	CComPtr<ID3D11Buffer> geometry = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Geometry));
-	m_renderConfig.setSOBuffer(geometry, 0);
-	m_geometryPipeline.geometry.loadVertexBuffer(geometry, sizeof(Geometry), 0);
+	ID3D11Buffer* buffer = UtilsDX::createStreamOutputBuffer(64 * 64 * MAX_PATCHES * sizeof(Geometry));
+	m_renderConfig.setSOBuffer(buffer, 0);
+	m_geometryPipeline.geometry.loadVertexBuffer(buffer, sizeof(Geometry), 0);
 
-	CComPtr<ID3D11Buffer> normals = UtilsDX::createStreamOutputBuffer((63 * 63 * 2 * 3) * (6 * 4 * 4) * sizeof(Normal) * 2);
-	m_renderConfig.setSOBuffer(normals, 1);
-	m_normalsPipeline.geometry.loadVertexBuffer(normals, sizeof(Normal), 0);
+	buffer = UtilsDX::createStreamOutputBuffer(64 * 64 * MAX_PATCHES * sizeof(Normal) * 2);
+	m_renderConfig.setSOBuffer(buffer, 1);
+	m_normalsPipeline.geometry.loadVertexBuffer(buffer, sizeof(Normal), 0);
 
-	return S_OK;
+	return hr;
 }
 
 HRESULT Planet::initGeometryShader() {
 	vector<UINT> buffersStrides = { sizeof(Geometry), sizeof(Normal) * 2 };
 
 	m_renderConfig.addSOEntry(
-		{ 0, "POSITION", 0, 0, 4, 0 }
+	{ 0, "POSITION", 0, 0, 4, 0 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 0, "COLOR", 0, 0, 4, 0 }
+	{ 0, "COLOR", 0, 0, 4, 0 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 1, "POSITION", 0, 0, 4, 1 }
+	{ 1, "POSITION", 0, 0, 4, 1 }
 	);
 	m_renderConfig.addSOEntry(
-		{ 1, "POSITION", 1, 0, 4, 1 }
+	{ 1, "POSITION", 1, 0, 4, 1 }
 	);
 
 	m_renderConfig.loadGSwithSO(L"planet_gs.cso", buffersStrides, D3D11_SO_NO_RASTERIZED_STREAM);
@@ -63,10 +68,10 @@ HRESULT Planet::initGeometryPipeline() {
 	std::vector<char> shaderBytecode = m_geometryPipeline.config.loadShader(Shader::VS, L"planet_geometry_vs.cso");
 	///Vertex buffer format
 	m_geometryPipeline.geometry.addVertexElement(
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_geometryPipeline.geometry.addVertexElement(
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_geometryPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
 	m_geometryPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -83,7 +88,7 @@ HRESULT Planet::initNormalsPipeline() {
 
 	///Vertex buffer format
 	m_normalsPipeline.geometry.addVertexElement(
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 	m_normalsPipeline.geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
 	m_normalsPipeline.geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -98,25 +103,19 @@ HRESULT Planet::initGeometryAndVS() {
 	std::vector<char> shaderBytecode = m_renderConfig.loadShader(Shader::VS, L"planet_vs.cso");
 
 	m_geometry.addVertexElement(
-		{"CONTROL_POINT_WORLD_POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32_SINT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
-	/*auto& vertexElement = m_geometry.createVertexElement();
-	vertexElement.SemanticName = "CONTROL_POINT_WORLD_POSITION";
-	vertexElement.SemanticIndex = 0;
-	vertexElement.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	vertexElement.InputSlot = 0;
-	vertexElement.AlignedByteOffset = 0;
-	vertexElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	vertexElement.InstanceDataStepRate = 0;*/
-
-	m_sphere.divide(0);
-	m_sphere.distort();
-	m_sphere.applyTopology();
+	m_geometry.addVertexElement(
+	{ "FACE_AND_FLAGS", 0, DXGI_FORMAT_R32_SINT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
+	m_geometry.addVertexElement(
+	{ "LEVEL", 0, DXGI_FORMAT_R32_SINT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	);
 
 	m_geometry.loadLayout(shaderBytecode.data(), shaderBytecode.size());
-	m_geometry.loadVertices(m_sphere.vertices(), 0);
-	m_geometry.loadIndices(m_sphere.indices);
-	m_geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST);
+	m_geometry.loadVertices<SpherifiedPlane::GPUDesc>(MAX_PATCHES * 4);
+	m_geometry.loadIndices(MAX_PATCHES * 5);
+	m_geometry.setTopology(D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST);
 
 	return S_OK;
 }
@@ -180,30 +179,44 @@ HRESULT Planet::init() {
 		FAILED(hr = initNormalsPipeline()))
 		return hr;
 
-	size_t patchesAmount = m_sphere.indices.size() / 9;
 	D3D11_TEXTURE2D_DESC texArrayDesc;
 	{
 		ZeroStruct(texArrayDesc);
-		texArrayDesc.Width = texArrayDesc.Height = HEIGHTMAP_RESOLUTION;
+		texArrayDesc.Width = texArrayDesc.Height = static_cast<UINT>(TerrainMap::RESOLUTION);;
 		texArrayDesc.MipLevels = 1;
-		texArrayDesc.ArraySize = patchesAmount;
+		texArrayDesc.ArraySize = static_cast<UINT>(MAX_PATCHES);
 		texArrayDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		texArrayDesc.SampleDesc.Count = 1;
 		texArrayDesc.SampleDesc.Quality = 0;
 		texArrayDesc.Usage = D3D11_USAGE_DEFAULT;
 		texArrayDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	}
-	CComPtr<ID3D11Texture2D> texArray = nullptr;
-	hr = LyreEngine::getDevice()->CreateTexture2D(&texArrayDesc, nullptr, &texArray);
+	hr = LyreEngine::getDevice()->CreateTexture2D(&texArrayDesc, nullptr, &m_iTerrainTexArray);
 	if (FAILED(hr))
 		return hr;
-	for (int i = 0; i < patchesAmount; i++) {
-		LyreEngine::getContext()->UpdateSubresource(texArray, i, nullptr, 
-													&m_sphere.terrain[HEIGHTMAP_RESOLUTION*HEIGHTMAP_RESOLUTION*i],
-													HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain),
-													HEIGHTMAP_RESOLUTION * HEIGHTMAP_RESOLUTION * VecElementSize(m_sphere.terrain));
+	hr = LyreEngine::getDevice()->CreateShaderResourceView(m_iTerrainTexArray, nullptr, &m_iTerrainSRV);
+	if (FAILED(hr))
+		return hr;
+
+	D3D11_BUFFER_DESC bufferDesc;
+	{
+		ZeroStruct(bufferDesc);
+		bufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+		bufferDesc.ByteWidth = MAX_PATCHES * sizeof(float);
+		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	}
-	hr = LyreEngine::getDevice()->CreateShaderResourceView(texArray, nullptr, &m_iTerrainSRV);
+	CComPtr<ID3D11Buffer> buffer = nullptr;
+	hr = LyreEngine::getDevice()->CreateBuffer(&bufferDesc, nullptr, &buffer);
+	if (FAILED(hr))
+		return hr;
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+	{
+		ZeroStruct(uavDesc);
+		uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+		uavDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		uavDesc.Buffer.NumElements = MAX_PATCHES;
+	}
+	hr = LyreEngine::getDevice()->CreateUnorderedAccessView(buffer, &uavDesc, &m_iLodDiffUAV);
 	if (FAILED(hr))
 		return hr;
 
@@ -215,40 +228,68 @@ HRESULT Planet::init() {
 }
 
 void Planet::render() {
-	if (!visible) return;
+	static const UINT RES = static_cast<UINT>(TerrainMap::RESOLUTION);
 
-	XMFLOAT4X4 view = LyreEngine::getCamera()->calculateViewMatrix();
+	static int numPatches = 0;
+	
+	auto topologyDeleter = [this](SphereTopology* p) { 
+		if (p != nullptr) m_sphere.releseTopology(); 
+	};
+	unique_ptr<SphereTopology, decltype(topologyDeleter)> pNewTopology(
+		m_sphere.getTopology(), topologyDeleter);
+	if (pNewTopology) {
+		numPatches = static_cast<int>(pNewTopology->indices.size()) / 5;
+		if (numPatches == 0) return;
+		m_geometry.updateVertices(pNewTopology->planes);
+		m_geometry.updateIndices(pNewTopology->indices);
+		for (int i = 0; i < numPatches; i++) {
+			LyreEngine::getContext()->UpdateSubresource(m_iTerrainTexArray, i, nullptr,
+														&pNewTopology->terrain[RES*RES*i],
+														RES * VecElementSize(pNewTopology->terrain),
+														RES * RES * VecElementSize(pNewTopology->terrain));
+		}
+	}
+	if (numPatches == 0) return;
 
-	XMStoreFloat3(&m_planetCb.data.planetViewPos, XMVector4Transform(XMVectorSetW(XMVectorZero(), 1.f), XMMatrixTranspose(XMLoadFloat4x4(&view))));
+	for (int i = 0; i < 6; i++) {
+		m_cubeFacesCb.data.planeRotations[i] = SpherifiedCube::getFaceRotation(i);
+	}
+	m_cubeFacesCb.update();
+	XMStoreFloat3(&m_planetCb.data.planetPos, XMVectorZero());
 	m_planetCb.data.radius = m_sphere.getRadius();
 	m_planetCb.update();
 
-	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getViewCB(), 0);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_cubeFacesCb.getBuffer(), 0);
+	m_renderConfig.setConstantBuffer(Shader::VS, m_planetCb.getBuffer(), 1);
+	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getCameraCB(), 2);
+	m_renderConfig.setConstantBuffer(Shader::VS, LyreEngine::getLodCB(), 3);
 
-	m_renderConfig.setConstantBuffer(Shader::HS, LyreEngine::getLodCB(), 0);
-
-	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb, 0);
-	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 1);
-	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSampler2D(), 0);
+	m_renderConfig.setConstantBuffer(Shader::DS, m_cubeFacesCb.getBuffer(), 0);
+	m_renderConfig.setConstantBuffer(Shader::DS, m_planetCb.getBuffer(), 1);
+	m_renderConfig.setConstantBuffer(Shader::DS, LyreEngine::getLightingCB(), 2);
+	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerPoint(), 0);
+	m_renderConfig.setSampler(Shader::DS, LyreEngine::getSamplerLinear(), 1);
 	m_renderConfig.setSRV(Shader::DS, m_iTerrainSRV, 0);
 
-	m_renderConfig.setConstantBuffer(Shader::GS, LyreEngine::getViewCB(), 0);
+	m_renderConfig.setUAV(m_iLodDiffUAV, 0);
 
 	m_geometry.bind();
 	m_renderConfig.bind();
 
-	LyreEngine::getContext()->DrawIndexed(static_cast<UINT>(m_sphere.indices.size()), 0, 0);
+	LyreEngine::getContext()->DrawIndexed(static_cast<UINT>(numPatches) * 5, 0, 0);
 
 	m_renderConfig.unbind();
 
+	if (pNewTopology) m_lodAdapter.readCurrentLods(m_iLodDiffUAV, *pNewTopology);
+
 	renderGeometry();
-	renderNormals();
+	//renderNormals();
 }
 
 void Planet::renderGeometry() {
 	m_geometryPipeline.geometry.bind();
 
-	m_geometryPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getProjectionCB(), 0);
+	m_geometryPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getViewProjCB(), 0);
 	m_geometryPipeline.config.bind();
 
 	LyreEngine::getContext()->DrawAuto();
@@ -257,7 +298,7 @@ void Planet::renderGeometry() {
 void Planet::renderNormals() {
 	m_normalsPipeline.geometry.bind();
 
-	m_normalsPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getProjectionCB(), 0);
+	m_normalsPipeline.config.setConstantBuffer(Shader::VS, LyreEngine::getViewProjCB(), 0);
 	m_normalsPipeline.config.bind();
 
 	LyreEngine::getContext()->DrawAuto();
