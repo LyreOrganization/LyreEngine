@@ -41,8 +41,6 @@ TargetCamera::TargetCamera(const Camera& camera,
 	XMStoreFloat3(&m_up, XMVector3Normalize(vUp));
 }
 
-TargetCamera::~TargetCamera() {}
-
 void TargetCamera::approach(float percentage) {
 	XMVECTOR vTarget = XMLoadFloat3(&m_target) - XMLoadFloat3(&m_position);
 	float moveDistance = (XMVectorGetX(XMVector3Length(vTarget)) - m_radius) * percentage / 100.f;

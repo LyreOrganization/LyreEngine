@@ -11,38 +11,38 @@ using namespace DirectX;
 namespace {
 	const XMFLOAT4X4 CUBE_FACE_ROTATIONS[] = {
 		{ // up
-			0.f, 0.f, -1.f, 0.f,
-			-1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			1.f, 0.f, 0.f, 0.f,
 			0.f, 1.f, 0.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		},
 		{ // right
-			0.f, -1.f, 0.f, 0.f,
-			0.f, 0.f, -1.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
 			1.f, 0.f, 0.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		},
 		{ // front
-			-1.f, 0.f, 0.f, 0.f,
-			0.f, -1.f, 0.f, 0.f,
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
 			0.f, 0.f, 1.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		},
 		{ // down
-			1.f, 0.f, 0.f, 0.f,
-			0.f, 0.f, 1.f, 0.f,
+			-1.f, 0.f, 0.f, 0.f,
+			0.f, 0.f, -1.f, 0.f,
 			0.f, -1.f, 0.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		},
 		{ // back
-			0.f, 1.f, 0.f, 0.f,
-			1.f, 0.f, 0.f, 0.f,
+			0.f, -1.f, 0.f, 0.f,
+			-1.f, 0.f, 0.f, 0.f,
 			0.f, 0.f, -1.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		},
 		{ // left
-			0.f, 0.f, 1.f, 0.f,
-			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, -1.f, 0.f,
+			0.f, -1.f, 0.f, 0.f,
 			-1.f, 0.f, 0.f, 0.f,
 			0.f, 0.f, 0.f, 1.f
 		}
@@ -51,7 +51,7 @@ namespace {
 }
 
 SpherifiedCube::SpherifiedCube(float radius, unsigned seed)
-	: m_radius(radius), m_mapLoader(seed) {
+	: m_radius(radius), m_mapLoader(this, seed) {
 	buildCube();
 }
 
@@ -84,39 +84,39 @@ void SpherifiedCube::buildCube() {
 	TerrainMap::Description terrainDesc;
 	for (int i = 0; i < 6; i++) {
 		terrainDesc.octave = 1.f;
-		terrainDesc.amplitude = 5.f;
+		terrainDesc.amplitude = 50.f;
 		terrainDesc.shift = sqrtf(3.f);
-		terrainDesc.currentOctaveDepth = 3;
 		m_cube[i]->m_pTerrainMap = make_unique<TerrainMap>(m_cube[i].get(), terrainDesc, &m_mapLoader);
 	}
-
-	auto pPlane = m_cube[2].get();
-	int p[] = { 0, 1, 2, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1 };
-	this_thread::sleep_for(chrono::milliseconds(1500));
-	for (auto& a : m_cube) a->tryDivide();
-	this_thread::sleep_for(chrono::milliseconds(1500));
-	for (auto& a : m_cube) a->tryDivide(2);
-	this_thread::sleep_for(chrono::milliseconds(2500));
-	for (int i = 0; i < 8; i++) {
-		pPlane->tryDivide();
-		pPlane = pPlane->m_children[p[i]].get();
-		while (!pPlane->m_pTerrainMap->isComplete())
-			this_thread::sleep_for(chrono::milliseconds(100));
-	}
-	applyTopology();
 }
 
-void SpherifiedCube::applyTopology() {
-	planes.clear();
-	terrain.clear();
+void SpherifiedCube::loadTopology() {
+	unique_lock<shared_mutex> locker(m_topologyLock); // writer
+	for (const auto& plane : m_cube) {
+		plane->prepareToLoad();
+	}
+	m_topology.m_planes.clear();
+	m_topology.m_planes.reserve(2048 * 4);
 	DWORD nextIndexVar = 0;
 	for (const auto& plane : m_cube) {
-		plane->loadPlane(planes, nextIndexVar);
+		plane->loadPlane(m_topology.m_planes, nextIndexVar);
 	}
-	indices.clear();
+	m_topology.m_indices.clear();
+	m_topology.m_indices.reserve(2048 * 5);
+	m_topology.m_terrain.clear();
+	m_topology.m_terrain.reserve(2048 * 64 * 64);
 	for (const auto& plane : m_cube) {
-		plane->loadIndicesAndTerrain(indices, terrain);
+		plane->loadIndicesAndTerrain(m_topology.m_indices, m_topology.m_terrain);
 	}
+}
+
+SphereTopology* SpherifiedCube::getTopology() {
+	if (m_topologyLock.try_lock_shared()) return &m_topology;
+	return nullptr;
+}
+
+void SpherifiedCube::releseTopology() {
+	m_topologyLock.unlock_shared();
 }
 
 float SpherifiedCube::getRadius() const {
@@ -127,3 +127,34 @@ const XMFLOAT4X4& SpherifiedCube::getFaceRotation(int faceIdx) {
 	return CUBE_FACE_ROTATIONS[faceIdx];
 }
 
+SpherifiedPlane* SpherifiedCube::getPlane(const SpherifiedPlane::GPUDesc& desc) {
+	SpherifiedPlane* pPlane = nullptr;
+	SpherifiedPlane* pPlaneNew = m_cube[desc.faceAndFlags & 0xff].get();
+	int childIdx = 0;
+	for (int i = desc.level - 1; i >= 0; i--) {
+		pPlane = pPlaneNew;
+		if ((desc.position.x >> i) % 2) {
+			if ((desc.position.y >> i) % 2) childIdx = 2;
+			else childIdx = 1;
+		}
+		else {
+			if ((desc.position.y >> i) % 2) childIdx = 3;
+			else childIdx = 0;
+		}
+		pPlaneNew = pPlane->m_children[childIdx].get();
+		if (pPlaneNew == nullptr) return pPlane;
+	}
+	return pPlaneNew;
+}
+
+SphereTopology::SphereTopology(SphereTopology&& r)
+	: m_planes(move(r.m_planes)),
+	m_indices(move(r.m_indices)),
+	m_terrain(move(r.m_terrain)) {}
+
+SphereTopology& SphereTopology::operator=(SphereTopology&& r) {
+	m_planes = move(r.m_planes);
+	m_indices = move(r.m_indices);
+	m_terrain = move(r.m_terrain);
+	return *this;
+}

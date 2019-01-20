@@ -4,6 +4,8 @@
 #define MAX_SAMPLERS_AMOUNT D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT
 #define MAX_SRVS_AMOUNT D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT
 #define MAX_SOBUFFERS_AMOUNT D3D11_SO_BUFFER_SLOT_COUNT
+#define UAVS_START_SLOT D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT
+#define MAX_UAVS_AMOUNT (D3D11_1_UAV_SLOT_COUNT - UAVS_START_SLOT)
 
 struct ShaderData {
 	std::array<ID3D11Buffer*, MAX_CBUFFERS_AMOUNT>			cBuffers;
@@ -17,7 +19,7 @@ struct ShaderData {
 	}
 };
 
-struct GShaderData :public ShaderData {
+struct GShaderData final : public ShaderData {
 	struct {
 		std::array<ID3D11Buffer*, MAX_SOBUFFERS_AMOUNT> buffers;
 		std::array<UINT, MAX_SOBUFFERS_AMOUNT>			offsets;
@@ -81,6 +83,11 @@ class PipelineConfigDX {
 	GShaderData						m_GSData;
 	CComPtr<ID3D11PixelShader>		m_iPS = nullptr;
 	ShaderData						m_PSData;
+	
+	struct {
+		std::array<ID3D11UnorderedAccessView*, MAX_UAVS_AMOUNT>	uavs;
+		std::array<UINT, MAX_UAVS_AMOUNT>						counts;
+	} UAV;
 
 public:
 	PipelineConfigDX();
@@ -89,7 +96,8 @@ public:
 
 	void setConstantBuffer(Shader shader, ID3D11Buffer* cb, UINT slot);
 	void setSampler(Shader shader, ID3D11SamplerState* sampler, UINT slot);
-	void setSRV(Shader shader, ID3D11ShaderResourceView* srv,UINT slot);
+	void setSRV(Shader shader, ID3D11ShaderResourceView* srv, UINT slot);
+	void setUAV(ID3D11UnorderedAccessView* uav, UINT slot, UINT initialCount = 0);
 
 	D3D11_SO_DECLARATION_ENTRY& createSOEntry();
 	void addSOEntry(D3D11_SO_DECLARATION_ENTRY);

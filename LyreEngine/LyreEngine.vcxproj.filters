@@ -32,9 +32,6 @@
     <Filter Include="Controls\ActionGroup">
       <UniqueIdentifier>{f13452a3-0d0c-4746-b255-443510a1045a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Normals">
-      <UniqueIdentifier>{8c441f64-f4fe-420f-a808-7b2381b68966}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Geometry">
       <UniqueIdentifier>{7be43f3e-b472-42f4-9d81-5eb48debc7c1}</UniqueIdentifier>
     </Filter>
@@ -64,6 +61,12 @@
     </Filter>
     <Filter Include="Shaders\Includes">
       <UniqueIdentifier>{1c1735cf-7ac4-4b68-8670-f4d33402f1d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Planet\LodAdapter">
+      <UniqueIdentifier>{57789e42-3b77-42b0-b5ec-4b4f79462b5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Normals">
+      <UniqueIdentifier>{8c441f64-f4fe-420f-a808-7b2381b68966}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +130,9 @@
     <ClCompile Include="LookupTable.cpp">
       <Filter>Helper\Lookup</Filter>
     </ClCompile>
+    <ClCompile Include="LodAdapter.cpp">
+      <Filter>Planet\LodAdapter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LyreEngine.h" />
@@ -140,9 +146,6 @@
     </ClInclude>
     <ClInclude Include="Planet.h">
       <Filter>Planet</Filter>
-    </ClInclude>
-    <ClInclude Include="PerlinGrid.h">
-      <Filter>ProceduralNoise</Filter>
     </ClInclude>
     <ClInclude Include="Controls.h">
       <Filter>Controls</Filter>
@@ -191,6 +194,12 @@
     </ClInclude>
     <ClInclude Include="LookupTable.h">
       <Filter>Helper\Lookup</Filter>
+    </ClInclude>
+    <ClInclude Include="LodAdapter.h">
+      <Filter>Planet\LodAdapter</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinGrid.h">
+      <Filter>ProceduralNoise</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

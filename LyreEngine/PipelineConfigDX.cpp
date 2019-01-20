@@ -5,7 +5,10 @@
 PipelineConfigDX::PipelineConfigDX():
 	m_pDevice(LyreEngine::getDevice()),
 	m_pContext(LyreEngine::getContext())
-{}
+{
+	UAV.uavs.fill(nullptr);
+	UAV.counts.fill(0);
+}
 
 std::vector<char> PipelineConfigDX::loadShader(Shader shader, const WCHAR* fileName) {
 	std::vector<char> shaderBytecode;
@@ -96,6 +99,11 @@ void PipelineConfigDX::setSRV(Shader shader, ID3D11ShaderResourceView* srv, UINT
 	}
 }
 
+void PipelineConfigDX::setUAV(ID3D11UnorderedAccessView* uav, UINT slot, UINT initialCount) {
+	UAV.uavs[slot] = uav;
+	UAV.counts[slot] = initialCount;
+}
+
 D3D11_SO_DECLARATION_ENTRY& PipelineConfigDX::createSOEntry() {
 	m_GSData.SO.entries.emplace_back();
 	return m_GSData.SO.entries.back();
@@ -168,6 +176,10 @@ void PipelineConfigDX::bind()
 	m_pContext->PSSetConstantBuffers(0, MAX_CBUFFERS_AMOUNT, m_PSData.cBuffers.data());
 	m_pContext->PSSetSamplers(0, MAX_SAMPLERS_AMOUNT, m_PSData.samplers.data());
 	m_pContext->PSSetShaderResources(0, MAX_SRVS_AMOUNT, m_PSData.srvs.data());
+
+	m_pContext->OMSetRenderTargetsAndUnorderedAccessViews(
+		D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL, NULL, NULL, 
+		UAVS_START_SLOT, MAX_UAVS_AMOUNT, UAV.uavs.data(), UAV.counts.data());
 }
 
 void PipelineConfigDX::unbind() {

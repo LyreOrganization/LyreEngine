@@ -4,7 +4,7 @@
 #include "LyreEngine.h"
 
 template<class BufferStruct>
-class ConstantBufferDX {
+class ConstantBufferDX final {
 
 	//Device
 	ID3D11Device* m_pDevice;

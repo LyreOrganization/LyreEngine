@@ -11,7 +11,7 @@ public:
 	TargetCamera(const DirectX::XMFLOAT3 &position,
 				 const DirectX::XMFLOAT3 &target, float radius);
 	TargetCamera(const Camera& camera, const DirectX::XMFLOAT3 &target, float radius);
-	virtual ~TargetCamera() override;
+	virtual ~TargetCamera() override = default;
 	void approach(float percentage);
 	void rotateAroundHorizontally(float angle);
 	void rotateAroundVertically(float angle);

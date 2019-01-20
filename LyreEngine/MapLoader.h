@@ -3,6 +3,7 @@
 #include "PerlinGrid.h"
 
 class TerrainMap;
+class SpherifiedCube;
 
 class MapLoader final {
 	std::queue<TerrainMap*> m_loadingQueue;
@@ -13,8 +14,10 @@ class MapLoader final {
 	
 	PerlinGrid m_terrainGenerator;
 
+	SpherifiedCube* m_pSphere;
+
 public:
-	MapLoader(unsigned seed);
+	MapLoader(SpherifiedCube* sphere, unsigned seed);
 	~MapLoader();
 	void start();
 	void pushToQueue(TerrainMap* map);

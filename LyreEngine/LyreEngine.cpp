@@ -86,7 +86,7 @@ namespace {
 		UINT numDriverTypes = ARRAYSIZE(driverTypes);
 		D3D_FEATURE_LEVEL featureLevels[] =
 		{
-			D3D_FEATURE_LEVEL_11_0
+			D3D_FEATURE_LEVEL_11_1
 		};
 		UINT numFeatureLevels = ARRAYSIZE(featureLevels);
 		DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -106,9 +106,10 @@ namespace {
 		}
 		for (UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++) {
 			g_driverType = driverTypes[driverTypeIndex];
-			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, D3D11_CREATE_DEVICE_DEBUG, featureLevels,
-											   numFeatureLevels, D3D11_SDK_VERSION, &swapChainDesc,
-											   &g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
+			hr = D3D11CreateDeviceAndSwapChain(nullptr, g_driverType, nullptr, 
+											   D3D11_CREATE_DEVICE_DEBUGGABLE & D3D11_CREATE_DEVICE_DEBUG, 
+											   featureLevels, numFeatureLevels, D3D11_SDK_VERSION,
+											   &swapChainDesc, &g_iSwapChain, &g_iDevice, &g_featureLevel, &g_iContext);
 			if (SUCCEEDED(hr))
 				break;
 		}
@@ -313,14 +314,14 @@ namespace {
 			return hr;
 
 		//Planet
-		const float PLANET_RADIUS = 100.f;
+		const float PLANET_RADIUS = 1000.f;
 		g_pPlanet = make_unique<Planet>(PLANET_RADIUS, 0);
 		hr = g_pPlanet->init();
 		if (FAILED(hr))
 			throw runtime_error("Planet init failed!");
 
 		//Camera
-		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { 0.f, 0.f, 200.f },
+		g_pCamera = make_unique<TargetCamera>(XMFLOAT3 { 0.f, 0.f, PLANET_RADIUS * 2.f },
 											  XMFLOAT3 { 0.f, 0.f, 0.f }, PLANET_RADIUS - 0.5f);
 		//Setup common Camera actions
 		{
@@ -492,13 +493,13 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	LightingConstantBuffer cbLight;
 	cbLight.diffuse = { 1.0f, 0.95f, 0.9f, 1.f };
 	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
-	cbLight.power = 0.9f;
+	cbLight.power = 0.8f;
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;
-	cbLod.minDistance = 0.05f;
-	cbLod.maxDistance = 400.f;
-	cbLod.minLOD = 4.f;
+	cbLod.minDistance = 0.00f;
+	cbLod.maxDistance = 4000.f;
+	cbLod.minLOD = 32.f;
 	cbLod.maxLOD = 64.f;
 	g_iContext->UpdateSubresource(g_iLodConstantBuffer, 0, nullptr, &cbLod, 0, 0);
 

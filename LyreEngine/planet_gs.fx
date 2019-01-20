@@ -31,7 +31,7 @@ void GS(
 	if (distance < 0.1f) {
 		Normal normal;
 		normal.pos0 = float4(input[0].pos, 1.f);
-		normal.pos1 = float4(input[0].pos + 0.05*input[0].normal, 1.f);
+		normal.pos1 = float4(input[0].pos + 0.5*input[0].normal, 1.f);
 		normals.Append(normal);
 	}
 }

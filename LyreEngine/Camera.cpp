@@ -26,8 +26,6 @@ Camera::Camera(const Camera& camera)
 	: m_position(camera.m_position), m_view(camera.m_view), m_up(camera.m_up), 
 	m_fov(camera.m_fov) {}
 
-Camera::~Camera() {}
-
 XMVECTOR Camera::getRight() {
 	return XMVector3Cross(XMLoadFloat3(&m_up), XMLoadFloat3(&m_view));
 }
@@ -44,14 +42,14 @@ XMFLOAT4X4 Camera::calculateViewMatrix() {
 
 DirectX::XMFLOAT4X4 Camera::calculateProjectionMatrix(float aspectWdivH) {
 	XMFLOAT4X4 result;
-	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.05f, 200.f)));
+	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.005f, 2000.f)));
 	return result;
 }
 
 DirectX::XMFLOAT4X4 Camera::calculateViewProjMatrix(float aspectWdivH) {
 	XMFLOAT4X4 result;
 	XMStoreFloat4x4(&result, XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&m_position), XMLoadFloat3(&m_view), XMLoadFloat3(&m_up))*
-											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.05f, 200.f)));
+											   XMMatrixPerspectiveFovLH(m_fov, aspectWdivH, 0.005f, 2000.f)));
 	return result;
 }
 

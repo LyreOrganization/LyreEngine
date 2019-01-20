@@ -10,7 +10,7 @@ public:
 			   const DirectX::XMFLOAT3& view,
 			   const DirectX::XMFLOAT3& up);
 	FreeCamera(const Camera& camera);
-	virtual ~FreeCamera() override;
+	virtual ~FreeCamera() override = default;
 
 	void tilt(float angle);
 	void pan(float angle);

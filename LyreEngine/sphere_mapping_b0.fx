@@ -3,7 +3,7 @@ cbuffer CubeFaces : register(b0) {
 }
 
 float3 MapFaceUVToSphere(float2 uv, int face) {
-	uv = uv * 2.f - 1.f;
+	uv = 1.f - uv * 2.f;
 	float2 uvSqr = uv*uv;
 	// rotate plane to its real position
 	return mul(PlaneRotations[face], float4(

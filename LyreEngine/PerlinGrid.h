@@ -10,6 +10,7 @@ class PerlinGrid final {
 
 public:
 	PerlinGrid(unsigned seed);
-	DirectX::XMFLOAT4 perlinNoise(DirectX::XMFLOAT3 loc);
+	float perlinNoise(DirectX::XMFLOAT3 loc) const;
+	DirectX::XMFLOAT4 perlinNoiseWithDerivative(DirectX::XMFLOAT3 loc) const;
 };
 

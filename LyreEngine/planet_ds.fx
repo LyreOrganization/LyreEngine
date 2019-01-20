@@ -79,13 +79,11 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	else
 		terrain = Terrain.SampleLevel(LinearSampler, float3(uv, (float)PatchID), 0.f);
 
-	[branch] if (edgeLod > 0) output.normal = UVToGlobalOnLodEdge(patch[0], uv, edgeLod);
-	else output.normal = UVToGlobal(patch[0], uv);
+	[branch] if (edgeLod > 0) output.pos = UVToGlobalOnLodEdge(patch[0], uv, edgeLod);
+	else output.pos = UVToGlobal(patch[0], uv);
 
-	output.pos = PlanetPos + output.normal*(Radius + terrain.w);
-	// calculate normal
-	float3 gradientRejection = terrain.xyz - dot(terrain.xyz, output.normal) * output.normal;
-	output.normal = normalize(output.normal - gradientRejection);
+	output.pos = PlanetPos + output.pos*(Radius + terrain.w);
+	output.normal = terrain.xyz;
 
 	if (terrain.w < -0.001f) //ocean
 		output.color = COLOR_OCEAN; 
@@ -96,7 +94,7 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	else //rocks
 		output.color = COLOR_ROCK;
 
-	float lightCos = clamp(1.f - sqrt(1.f - dot(output.normal, Direction)),
+	float lightCos = clamp(dot(output.normal, Direction),
 					 0.5f - Power / 2.f,
 					 0.5f + Power / 2.f);
 	output.color *= Diffuse.xyz * Power * lightCos;

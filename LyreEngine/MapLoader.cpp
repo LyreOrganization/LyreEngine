@@ -4,13 +4,13 @@
 
 #include "TerrainMap.h"
 #include "PerlinGrid.h"
-#include "SpherifiedPlane.h"
+#include "SpherifiedCube.h"
 
 using namespace std;
 using namespace DirectX;
 
-MapLoader::MapLoader(unsigned seed)
-	: m_bStop(false), m_terrainGenerator(seed) {}
+MapLoader::MapLoader(SpherifiedCube* sphere, unsigned seed)
+	: m_pSphere(sphere), m_terrainGenerator(seed), m_bStop(false) {}
 
 MapLoader::~MapLoader() {
 	{
@@ -22,10 +22,11 @@ MapLoader::~MapLoader() {
 }
 
 void MapLoader::start() {
+	static const int RES = TerrainMap::RESOLUTION;
+
 	m_tLoader = thread([this]() {
 		XMFLOAT3 gridPosition;
-		XMVECTOR originalPosition;
-		XMFLOAT4 perlin;
+		float perlin;
 
 		while (true) {
 			unique_lock<mutex> queueLocker(m_membersLock);
@@ -39,51 +40,74 @@ void MapLoader::start() {
 
 			queueLocker.unlock();
 
-			unique_lock<shared_mutex> mapLocker(pMap->m_membersLock); // writer
-			if (pMap->m_desc.currentOctaveDepth <= 0) continue;
+			typedef __declspec(align(16)) struct {
+				DirectX::XMFLOAT3 pos;
+			} TexelPosition;
+			array<TexelPosition, RES * RES> positionsCache;
 
-			for (auto& edge : pMap->m_edgesBackup) edge = vector<XMFLOAT4>(HEIGHTMAP_RESOLUTION);
-
-			for (int i = 0; i < HEIGHTMAP_RESOLUTION; i++) {
-				for (int j = 0; j < HEIGHTMAP_RESOLUTION; j++) {
-					gridPosition = pMap->sampleSphere(j, i);
-
-					originalPosition = XMLoadFloat3(&gridPosition);
-
-					XMStoreFloat3(&gridPosition, originalPosition * pMap->m_desc.octave);
-					gridPosition.x += pMap->m_desc.shift;
-					gridPosition.y += pMap->m_desc.shift;
-					gridPosition.z += pMap->m_desc.shift;
-
-					perlin = m_terrainGenerator.perlinNoise(gridPosition);
-
-					// Backup edges
-					if (i == 0) {
-						pMap->m_edgesBackup[0][j] = pMap->m_heightMap[j];
-					}
-					else if (i == HEIGHTMAP_RESOLUTION - 1) {
-						pMap->m_edgesBackup[2][j] = pMap->m_heightMap[j + (HEIGHTMAP_RESOLUTION - 1) * HEIGHTMAP_RESOLUTION];
-					}
-					if (j == 0) {
-						pMap->m_edgesBackup[3][i] = pMap->m_heightMap[i * HEIGHTMAP_RESOLUTION];
-					}
-					else if (j == HEIGHTMAP_RESOLUTION - 1) {
-						pMap->m_edgesBackup[1][i] = pMap->m_heightMap[(i + 1) * HEIGHTMAP_RESOLUTION - 1];
-					}
-
-					XMStoreFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION],
-								  XMLoadFloat4(&pMap->m_heightMap[j + i * HEIGHTMAP_RESOLUTION]) +
-								  XMLoadFloat4(&perlin) * pMap->m_desc.amplitude);
+			for (int i = 0; i < RES; i++) {
+				for (int j = 0; j < RES; j++) {
+					positionsCache[i * RES + j].pos = pMap->sampleSphere(j, i);
 				}
 			}
 
-			pMap->nextOctave();
+			auto& hMap = pMap->m_heightMap;
+			auto& desc = pMap->m_desc;
 
-			if (pMap->m_desc.currentOctaveDepth > 0) {
-				mapLocker.unlock(); // avoid locking two at the same time
-				queueLocker.lock();
-				m_loadingQueue.push(pMap);
+			while (pMap->m_octavesToGenerate) {
+				for (int i = 0; i < RES * RES; i++) {
+					XMStoreFloat3(&gridPosition, XMVectorReplicate(desc.shift) +
+								  XMLoadFloat3(&positionsCache[i].pos) * pMap->m_desc.octave);
+
+					perlin = m_terrainGenerator.perlinNoise(gridPosition);
+
+					hMap[i].data.height += perlin * pMap->m_desc.amplitude;
+				}
+				pMap->nextOctave();
 			}
+
+			float radius = m_pSphere->getRadius();
+
+			for (int i = 0; i < RES * RES; i++) {
+				XMStoreFloat3(&positionsCache[i].pos,
+							  XMLoadFloat3(&positionsCache[i].pos) *
+							  (radius + hMap[i].data.height));
+			}
+
+			XMVECTOR pos, normal, crossProduct;
+			array<XMVECTOR, 4> edgeVecs;
+			array<bool, 4> edgePresent;
+			for (int i = 0; i < RES; i++) {
+				for (int j = 0; j < RES; j++) {
+					pos = XMLoadFloat3(&positionsCache[i * RES + j].pos);
+					normal = XMVectorZero();
+
+					if (edgePresent[0] = (j > 0)) edgeVecs[0] = 
+						XMLoadFloat3(&positionsCache[i * RES + j - 1].pos) - pos;
+					if (edgePresent[1] = (i > 0)) edgeVecs[1] = 
+						XMLoadFloat3(&positionsCache[(i - 1) * RES + j].pos) - pos;
+					if (edgePresent[2] = (j < RES - 1)) edgeVecs[2] = 
+						XMLoadFloat3(&positionsCache[i * RES + j + 1].pos) - pos;
+					if (edgePresent[3] = (i > RES - 1)) edgeVecs[3] = 
+						XMLoadFloat3(&positionsCache[(i + 1) * RES + j].pos) - pos;
+
+					for (int i = 0; i < 4; i++) {
+						if (!edgePresent[(i+1)%4]) {
+							i++;
+							continue;
+						}
+						if (!edgePresent[i]) continue;
+						crossProduct = XMVector3Cross(edgeVecs[i], edgeVecs[(i + 1) % 4]);
+						normal += XMVector3Normalize(
+							XMVectorGetX(XMVector3Dot(crossProduct, pos)) > 0.f ?
+							crossProduct : -crossProduct);
+					}
+
+					XMStoreFloat3(&hMap[i * RES + j].data.normal, XMVector3Normalize(normal));
+				}
+			}
+
+			pMap->m_bComplete.store(true);
 		}
 	});
 }

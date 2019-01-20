@@ -5,9 +5,17 @@ namespace Controls {
 
 	typedef std::unordered_map<WPARAM, std::string> KeyMapping;
 
-	class KeyLayout final : public std::unordered_map<std::string, KeyMapping> {
+	namespace {
+		typedef std::unordered_map<std::string, KeyMapping> KeyLayoutBase;
+	}
+	
+	class KeyLayout final : private KeyLayoutBase {
 	public:
-		//static KeyLayout loadFromFile(const char*);
+		KeyLayout() = default;
+		KeyLayout(const char* fileName);
+
+		using KeyLayoutBase::operator[];
 	};
 
+	
 }
