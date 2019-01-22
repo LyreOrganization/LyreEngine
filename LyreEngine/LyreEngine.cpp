@@ -342,7 +342,7 @@ namespace {
 		}
 
 		// Atmosphere
-		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 0.5f, 5);
+		g_pAtmosphere = make_unique<Atmosphere>(g_pPlanet->getRadius(), 50.f, 5);
 		g_pAtmosphere->init();
 		// Atmosphere controls
 		{
@@ -541,7 +541,7 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	float sky = 1.f;
 	XMFLOAT3 eye = g_pCamera->getPosition();
 	//XMStoreFloat(&sky, XMVector3Dot(XMVector3Normalize(XMLoadFloat3(&eye)), XMLoadFloat3(&cbLight.direction)));
-	float clearColor[4] = { 0.3f*sky, 0.5f*sky, 0.9f*sky, 1.0f };
+	float clearColor[4] = { 0.f, 0.f, 0.f, 1.f };
 	g_iContext->ClearRenderTargetView(g_iRTV, clearColor);
 	g_iContext->ClearDepthStencilView(g_iDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
