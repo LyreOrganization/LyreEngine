@@ -15,7 +15,7 @@ namespace {
 		return 30.f * x*x*(x - 1.f)*(x - 1.f);
 	}
 
-	inline float gridGrad(int hash, float x, float y, float z) {
+	inline float GridGrad(int hash, float x, float y, float z) {
 		switch (hash & 0xF) {
 		case 0xC:
 		case 0x0: return  x + y;
