@@ -94,7 +94,7 @@ DS_OUTPUT main(HSCF_OUTPUT lods,
 	else //rocks
 		output.color = COLOR_ROCK;
 
-	float lightCos = clamp(dot(output.normal, Direction),
+	float lightCos = clamp(dot(output.normal, -Direction),
 					 0.5f - Power / 2.f,
 					 0.5f + Power / 2.f);
 	output.color *= Diffuse.xyz * Power * lightCos;

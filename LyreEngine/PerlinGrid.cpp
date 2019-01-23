@@ -83,14 +83,14 @@ float PerlinGrid::perlinNoise(DirectX::XMFLOAT3 loc) const {
 	float sy = quinticSmooth(y);
 	float sz = quinticSmooth(z);
 
-	float g000 = gridGrad(AAA, x, y, z);
-	float g100 = gridGrad(BAA, x1, y, z);
-	float g010 = gridGrad(ABA, x, y1, z);
-	float g110 = gridGrad(BBA, x1, y1, z);
-	float g001 = gridGrad(AAB, x, y, z1);
-	float g101 = gridGrad(BAB, x1, y, z1);
-	float g011 = gridGrad(ABB, x, y1, z1);
-	float g111 = gridGrad(BBB, x1, y1, z1);
+	float g000 = GridGrad(AAA, x, y, z);
+	float g100 = GridGrad(BAA, x1, y, z);
+	float g010 = GridGrad(ABA, x, y1, z);
+	float g110 = GridGrad(BBA, x1, y1, z);
+	float g001 = GridGrad(AAB, x, y, z1);
+	float g101 = GridGrad(BAB, x1, y, z1);
+	float g011 = GridGrad(ABB, x, y1, z1);
+	float g111 = GridGrad(BBB, x1, y1, z1);
 
 	float k100 = g100 - g000;
 	float k010 = g010 - g000;
@@ -138,14 +138,14 @@ XMFLOAT4 PerlinGrid::perlinNoiseWithDerivative(XMFLOAT3 loc) const {
 	float sy = quinticSmooth(y);
 	float sz = quinticSmooth(z);
 
-	float g000 = gridGrad(AAA, x, y, z);
-	float g100 = gridGrad(BAA, x1, y, z);
-	float g010 = gridGrad(ABA, x, y1, z);
-	float g110 = gridGrad(BBA, x1, y1, z);
-	float g001 = gridGrad(AAB, x, y, z1);
-	float g101 = gridGrad(BAB, x1, y, z1);
-	float g011 = gridGrad(ABB, x, y1, z1);
-	float g111 = gridGrad(BBB, x1, y1, z1);
+	float g000 = GridGrad(AAA, x, y, z);
+	float g100 = GridGrad(BAA, x1, y, z);
+	float g010 = GridGrad(ABA, x, y1, z);
+	float g110 = GridGrad(BBA, x1, y1, z);
+	float g001 = GridGrad(AAB, x, y, z1);
+	float g101 = GridGrad(BAB, x1, y, z1);
+	float g011 = GridGrad(ABB, x, y1, z1);
+	float g111 = GridGrad(BBB, x1, y1, z1);
 
 	float k100 = g100 - g000;
 	float k010 = g010 - g000;

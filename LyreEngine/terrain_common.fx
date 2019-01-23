@@ -5,10 +5,14 @@ cbuffer Planet : register(b0) {
 	float Radius;
 }
 
-cbuffer SpherifiedPlane : register(b1) {
+cbuffer TerrainMapConfig : register(b1) {
 	int2 Pos;
-	int FaceAndRegion;
+	int Face;
 	int Level;
+	int Region;
+	float StartOctave;
+	float StartAmplitude;
+	float StartShift;
 }
 
 Buffer<int> PerlinPermutations : register(t0);
@@ -20,6 +24,7 @@ SamplerState LinearSampler : register(s1);
 
 #define DEPTH 6
 #define RESOLUTION ((1 << DEPTH) + 1)
+#define HALFRES (1 << (DEPTH - 1))
 
 // Parent
 // RESOLUTION x RESOLUTION x 4 (only height)

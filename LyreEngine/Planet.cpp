@@ -230,6 +230,9 @@ HRESULT Planet::init() {
 }
 
 void Planet::render() {
+	static auto lastUpdateTime = chrono::high_resolution_clock::now();
+	auto nowTime = chrono::high_resolution_clock::now();
+	
 	static const UINT RES = static_cast<UINT>(TerrainMap::RESOLUTION);
 
 	static int numPatches = 0;
@@ -237,9 +240,15 @@ void Planet::render() {
 	auto topologyDeleter = [this](SphereTopology* p) { 
 		if (p != nullptr) m_sphere.releseTopology(); 
 	};
-	unique_ptr<SphereTopology, decltype(topologyDeleter)> pNewTopology(
-		m_sphere.getTopology(), topologyDeleter);
+	unique_ptr<SphereTopology, decltype(topologyDeleter)> 
+		pNewTopology(nullptr, topologyDeleter);
+	if (chrono::duration_cast<chrono::milliseconds>(
+		nowTime - lastUpdateTime) > 1000ms) {
+		pNewTopology.reset(m_sphere.getTopology());
+	}
 	if (pNewTopology) {
+		lastUpdateTime = nowTime;
+
 		numPatches = static_cast<int>(pNewTopology->indices.size()) / 5;
 		if (numPatches == 0) return;
 		m_geometry.updateVertices(pNewTopology->planes);

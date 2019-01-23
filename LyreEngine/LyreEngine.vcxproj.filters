@@ -77,6 +77,9 @@
     <Filter Include="Shaders\Atmosphere">
       <UniqueIdentifier>{f9200d73-5a8a-4adb-9b65-16d033680695}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Compute\TerrainMap">
+      <UniqueIdentifier>{94af4a0d-f89e-4bda-8809-f797b36d48b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LyreEngine.cpp" />
@@ -275,6 +278,27 @@
     </FxCompile>
     <FxCompile Include="atmosphere_ps.fx">
       <Filter>Shaders\Atmosphere</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_noise_rest.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_scale_base_cols.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_scale_base_right_edge.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_scale_base_rows.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_scale_edges.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_base.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_common.fx">
+      <Filter>Shaders\Compute\TerrainMap</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

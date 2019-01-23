@@ -24,12 +24,12 @@ void LodAdapter::start() {
 		bool bUpdate = false;
 		while (true) {
 			unique_lock<mutex> locker(m_membersLock);
-			m_cvOnRead.wait_for(locker, 1000ms, [this, &lastUpdateTime, &bUpdate]() {
+			m_cvOnRead.wait_for(locker, 5000ms, [this, &lastUpdateTime, &bUpdate]() {
 				if (m_bStop) return true;
 
 				auto nowTime = chrono::high_resolution_clock::now();
 				if (chrono::duration_cast<chrono::milliseconds>(
-					nowTime - lastUpdateTime) > 1000ms) {
+					nowTime - lastUpdateTime) > 5000ms) {
 					lastUpdateTime = nowTime;
 					return (bUpdate = true);
 				}
