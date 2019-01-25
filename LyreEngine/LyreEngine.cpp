@@ -526,9 +526,9 @@ void LyreEngine::render(DWORD ticksPerFrame) {
 	g_iContext->UpdateSubresource(g_iViewProjConstantBuffer, 0, nullptr, &cbProjection, 0, 0);
 
 	LightingConstantBuffer cbLight;
-	cbLight.diffuse = { 1.0f, 0.95f, 0.9f, 1.f };
+	cbLight.diffuse = { 1.0f, 0.9f, 0.85f, 1.f };
 	cbLight.direction = { sin(g_lightAngle), 0.f, cos(g_lightAngle) };
-	cbLight.power = 0.8f;
+	cbLight.power = 0.99f;
 	g_iContext->UpdateSubresource(g_iLightingConstantBuffer, 0, nullptr, &cbLight, 0, 0);
 
 	LodConstantBuffer cbLod;

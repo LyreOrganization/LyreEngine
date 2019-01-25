@@ -51,18 +51,11 @@ private:
 		float planetRadius;
 		float planetRadius2;
 		float scaleFactor;
-		int sampleAmount;
-		float dummy;
+		DirectX::XMFLOAT2 dummy;
 	};
 	ConstantBufferDX<ViewCb> m_viewCb;
 	ConstantBufferDX<VectorsCb> m_vectorsCb;
 	ConstantBufferDX<ScalarsCb> m_scalarsCb;
-
-	struct LightCb {
-		DirectX::XMFLOAT3 lightDirection;
-		float dummy;
-	};
-	ConstantBufferDX<LightCb> m_lightCb;
 
 	float getOpticalDepth(float height, float angle);
 	CComPtr<ID3D11Texture2D> precomputeOpticalDepth();

@@ -95,9 +95,9 @@ void Atmosphere::init() {
 		CComPtr<ID3D11ShaderResourceView> srv;
 		LyreEngine::getDevice()->CreateShaderResourceView(opticalDepth, nullptr, &srv);
 
-		m_renderConfig.setSRV(Shader::VS, srv, 0);
-
 		m_renderConfig.loadShader(Shader::PS, L"atmosphere_ps.cso");
+
+		m_renderConfig.setSRV(Shader::PS, srv, 0);
 	}
 	catch (runtime_error) {
 		throw runtime_error("Atmosphere init failed!");
@@ -124,21 +124,15 @@ void Atmosphere::render() {
 	m_scalarsCb.data.planetRadius = m_planetRadius;
 	m_scalarsCb.data.planetRadius2 = m_planetRadius * m_planetRadius;
 	m_scalarsCb.data.scaleFactor = m_scaleFactor;
-	m_scalarsCb.data.sampleAmount = 30;
 
 	m_viewCb.update();
 	m_vectorsCb.update();
 	m_scalarsCb.update();
 
-	m_lightCb.data.lightDirection = LyreEngine::getLightingDirection();
-	m_lightCb.update();
-
 	m_renderConfig.setConstantBuffer(Shader::VS, m_viewCb, 0);
-	m_renderConfig.setConstantBuffer(Shader::VS, m_vectorsCb, 1);
-	m_renderConfig.setConstantBuffer(Shader::VS, m_scalarsCb, 2);
-	m_renderConfig.setSampler(Shader::VS, LyreEngine::getSamplerLinear(), 0);
-
-	m_renderConfig.setConstantBuffer(Shader::PS, m_lightCb, 0);
+	m_renderConfig.setConstantBuffer(Shader::PS, m_vectorsCb, 0);
+	m_renderConfig.setConstantBuffer(Shader::PS, m_scalarsCb, 1);
+	m_renderConfig.setSampler(Shader::PS, LyreEngine::getSamplerLinear(), 0);
 
 	m_skyDome.bind();
 	m_renderConfig.bind();

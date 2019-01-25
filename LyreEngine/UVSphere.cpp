@@ -79,7 +79,7 @@ UVSphere::UVSphere(float radius, int stacks, int slices, bool reverseFacing) {
 	}
 
 	addVertexElement(
-		{ "VERTEX", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	);
 
 	loadVertices<XMFLOAT3>(vertices.size(), 0);
