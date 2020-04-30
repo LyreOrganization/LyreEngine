@@ -1,5 +1,6 @@
 #include "LyrePch.h"
 #include "WindowsWnd.h"
+#include "Core/WindowLifeTimeEvents.h"
 
 #include "resource.h"
 
@@ -80,6 +81,11 @@ namespace Lyre
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+
+			if (msg.message == WM_QUIT)
+			{
+				m_windowEventListener->OnEvent(CWindowClosedEvent{});
+			}
 		}
 	}
 

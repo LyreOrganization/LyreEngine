@@ -2,10 +2,14 @@
 #include "Application.h"
 #include "Window.h"
 
+EVENT_MAP_BEGIN(Lyre::CApplication)
+	ADD_LISTENER(Lyre::CWindowClosedEvent, OnWindowClosed)
+EVENT_MAP_END()
+
 Lyre::CApplication::CApplication()
 	: m_running(true)
 {
-	m_window = CWindow::Create();
+	m_window = CWindow::Create(this);
 }
 
 Lyre::CApplication::~CApplication()
@@ -19,4 +23,10 @@ void Lyre::CApplication::Run()
 	{
 		m_window->OnUpdate();
 	}
+}
+
+bool Lyre::CApplication::OnWindowClosed(CWindowClosedEvent const & event)
+{
+	m_running = false;
+	return true;
 }

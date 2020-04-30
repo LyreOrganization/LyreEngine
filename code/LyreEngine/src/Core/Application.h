@@ -1,10 +1,13 @@
 #pragma once
 
+#include "Event.h"
+#include "WindowLifeTimeEvents.h"
+
 namespace Lyre
 {
 	class CWindow;
 
-	class CApplication
+	class CApplication : public EventListener
 	{
 	public:
 		CApplication();
@@ -16,6 +19,9 @@ namespace Lyre
 		void Run();
 
 		CWindow* GetWindow() const { return m_window; }
+
+		EVENT_MAP(CApplication)
+		bool OnWindowClosed(CWindowClosedEvent const& event);
 
 	private:
 		bool m_running;
