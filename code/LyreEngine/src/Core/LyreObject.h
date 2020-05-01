@@ -19,6 +19,7 @@ namespace Lyre
 	class Object
 	{
 	public:
+		virtual ~Object() = default;
 
 		inline static TypeID ToTypeID()
 		{

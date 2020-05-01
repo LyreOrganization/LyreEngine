@@ -16,9 +16,11 @@ namespace Lyre
 
 		virtual ~CApplication();
 
+		void Init();
 		void Run();
 
-		CWindow* GetWindow() const { return m_window; }
+		CWindow* GetWindow() { return m_window; }
+		CWindow const* GetWindow() const { return m_window; }
 
 		EVENT_MAP(CApplication)
 		bool OnWindowClosed(CWindowClosedEvent const& event);

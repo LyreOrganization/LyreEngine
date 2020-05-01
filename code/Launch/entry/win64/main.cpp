@@ -4,6 +4,7 @@
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	WinApp* app = new WinApp(hInstance, hPrevInstance, lpCmdLine, nCmdShow);
+	app->Init();
 	app->Run();
 	delete app;
 

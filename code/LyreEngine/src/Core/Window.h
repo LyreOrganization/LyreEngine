@@ -31,6 +31,10 @@ namespace Lyre
 		void SetListener(EventListener* listener) { m_windowEventListener = listener; }
 		void SetProperties(SProperties props) { m_props = props; }
 
+		std::wstring GetTitle() const { return m_props.title; }
+		int GetWidth() const { return m_props.width; }
+		int GetHeight() const { return m_props.height; }
+
 		static CWindow* Create(EventListener* listener = nullptr, SProperties props = SProperties{});
 	
 	protected:

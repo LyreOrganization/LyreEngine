@@ -24,8 +24,7 @@ project "LyreEngine"
         "%{prj.location}/src/**.cpp"
     }
 
-	includedirs
-	{
+	includedirs {
 		"%{prj.location}/src"
 	}
 
@@ -34,8 +33,14 @@ project "LyreEngine"
         systemversion "latest"
         
         files {
-            "%{prj.location}/platform/win64/**"
+            "%{prj.location}/platform/win64/**",
+            "%{prj.location}/platform/DirectX/**"
         }
+
+		includedirs {
+			"%{prj.location}/platform/win64",
+			"%{prj.location}/platform/DirectX"
+		}
 
     filter "configurations:Debug"
         defines { "LYRE_DEBUG" }
@@ -60,13 +65,11 @@ project "Launch"
         "%{prj.location}/src/**.cpp"
     }
 
-    includedirs
-    {
+    includedirs {
         "code/LyreEngine/src"
     }
 
-	links
-	{
+	links {
 		"LyreEngine"
 	}
 
@@ -77,9 +80,11 @@ project "Launch"
             "%{prj.location}/entry/win64/**.h",
             "%{prj.location}/entry/win64/**.cpp"
         }
-		includedirs
-		{
+		includedirs {
 			"code/LyreEngine/platform/win64"
+		}
+		links {
+			"d3d11"
 		}
 
     filter "configurations:Debug"

@@ -1,6 +1,7 @@
 #include "LyrePch.h"
 #include "Application.h"
 #include "Window.h"
+#include "Render/Renderer.h"
 
 EVENT_MAP_BEGIN(Lyre::CApplication)
 	ADD_LISTENER(Lyre::CWindowClosedEvent, OnWindowClosed)
@@ -15,6 +16,15 @@ Lyre::CApplication::CApplication()
 Lyre::CApplication::~CApplication()
 {
 	delete m_window;
+}
+
+void Lyre::CApplication::Init()
+{
+	CRenderer::CreateAPIIntance(ERenderAPIType::DirectX_11);
+	bool success = CRenderer::GetAPI()->Init(*this);
+	LYRE_ASSERT(success);
+
+	CRenderer::Present();
 }
 
 void Lyre::CApplication::Run()
