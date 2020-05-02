@@ -49,10 +49,10 @@ namespace Lyre
 	};						\
 
 #define EVENT_MAP(Class)														\
+private:																		\
 	using EventCallback = std::function<bool(Class* instance, Event const&)>;	\
 	using EventMap = std::unordered_map<TypeID, EventCallback>;					\
 																				\
-private:																		\
 	static EventMap const& InitEventMap();										\
 																				\
 public:																			\

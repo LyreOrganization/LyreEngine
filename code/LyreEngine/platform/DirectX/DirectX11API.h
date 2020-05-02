@@ -2,11 +2,22 @@
 
 #include "Render/RenderAPI.h"
 
-#include <d3d11.h>
-#include <atlbase.h>
-
 namespace Lyre
 {
+
+	struct SDirectXInterface
+	{
+		CComPtr<IDXGISwapChain>						swapChain;
+		CComPtr<ID3D11Device>						device;
+		CComPtr<ID3D11DeviceContext>				context;
+		D3D_FEATURE_LEVEL							featureLevel;
+
+		CComPtr<ID3D11RenderTargetView>				renderTargetView;
+		CComPtr<ID3D11DepthStencilView>				depthStencilView;
+
+		CComPtr<ID3D11RasterizerState>				rasterizerStateSolid;
+		CComPtr<ID3D11RasterizerState>				rasterizerStateWireframe;
+	};
 
 	class CDirectX11API final : public CRenderAPI
 	{
@@ -14,19 +25,19 @@ namespace Lyre
 		CDirectX11API();
 
 		bool Init(CApplication const& app) override;
+
+		void Clear(float color[4]) override;
 		void Present() override;
 
+		void DrawIndexed(Ref<CIndexBuffer> indexBuffer) override;
+
+		Ref<CVertexBuffer> CreateVertexBuffer(float* vertices, int size) override;
+		Ref<CIndexBuffer> CreateIndexBuffer(unsigned* indices, int size) override;
+		Ref<CInputLayout> CreateInputLayout(std::initializer_list<SLayoutEntry> layout) override;
+		Ref<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) override;
+
 	private:
-		CComPtr<IDXGISwapChain>						m_swapChain;
-		CComPtr<ID3D11Device>						m_device;
-		CComPtr<ID3D11DeviceContext>				m_context;
-		D3D_FEATURE_LEVEL							m_featureLevel;
-
-		CComPtr<ID3D11RenderTargetView>				m_renderTargetView;
-		CComPtr<ID3D11DepthStencilView>				m_depthStencilView;
-
-		CComPtr<ID3D11RasterizerState>				m_rasterizerStateSolid;
-		CComPtr<ID3D11RasterizerState>				m_rasterizerStateWireframe;
+		SDirectXInterface m_dxInterface;
 	};
 
 }

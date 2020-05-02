@@ -12,4 +12,6 @@
 
 #ifdef LYRE_PLATFORM_WINDOWS
 #include <Windows.h>
+#include <d3d11.h>
+#include <atlbase.h>
 #endif

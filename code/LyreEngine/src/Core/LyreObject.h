@@ -15,6 +15,15 @@ namespace Lyre
 	 *		public:
 	 *			LYRE_OBJECT(SomeClassThatNeedsRTTI, InheritedFromLyreObject)
 	 *		};
+	 *
+	 *		Lyre::Object* obj = new SomeClassThatNeedsRTTI();
+	 *
+	 *		obj->IsTypeOf<Lyre::Object>()							-> true
+	 *		obj->IsTypeOf<InheritedFromLyreObject>()				-> true
+	 *		obj->IsTypeOf<SomeClassThatNeedsRTTI>()					-> true
+	 *
+	 *		obj->GetType() == SomeClassThatNeedsRTTI::ToTypeID()	-> true
+	 *		obj->GetType() == InheritedFromLyreObject::ToTypeID()	-> false
 	 */
 	class Object
 	{

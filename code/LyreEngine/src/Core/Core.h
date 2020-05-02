@@ -26,9 +26,9 @@ namespace Lyre
 	}
 
 #ifdef LYRE_DEBUG
-	#define LYRE_ASSERT(condition) if (!condition) __debugbreak()
+	#define LYRE_ASSERT(condition, ...) if (!condition) __debugbreak()
 #else
-	#define LYRE_ASSERT(condition)
+	#define LYRE_ASSERT(condition, ...)
 #endif
 
 }
