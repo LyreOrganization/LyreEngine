@@ -37,6 +37,6 @@ Lyre::CInputLayout::CInputLayout(std::initializer_list<SLayoutEntry> const& layo
 	{
 		entry.offset = offset;
 		offset += entry.size;
-		m_stride = entry.size;
+		m_stride += entry.size;
 	}
 }

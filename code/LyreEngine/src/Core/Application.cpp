@@ -33,24 +33,43 @@ void Lyre::CApplication::Run()
 
 
 		float vertices[] = {
-			0.0f, 0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			-0.5f, -0.5f, 0.0f
+			0.0f, 0.5f, 0.0f,			1.f, 0.f, 0.f, 1.f,
+			0.5f, -0.5f, 0.0f,			0.f, 1.f, 0.f, 1.f,
+			-0.5f, -0.5f, 0.0f,			0.f, 0.f, 1.f, 1.f
 		};
 
 		unsigned indices[] = { 0, 1, 2 };
 
 		std::string vsSrc = R"(
-			float4 main(float3 pos : POSITION) : SV_Position
+			struct VS_Input
 			{
-				return float4(pos, 1.f);
+				float3 pos : POSITION;
+				float4 color : COLOR;
+			};
+			struct VS_Output
+			{
+				float4 pos : SV_Position;
+				float4 color : COLOR;
+			};
+
+			VS_Output main(VS_Input input)
+			{
+				VS_Output output = (VS_Output)0;
+				output.pos = float4(input.pos, 1.f);
+				output.color = input.color;
+				return output;
 			}
 		)";
 
-			std::string psSrc = R"(
-			float4 main() : SV_Target
+		std::string psSrc = R"(
+			struct PS_Input
 			{
-				return float4(1.f, 0.f, 0.f, 1.f);
+				float4 pos : SV_Position;
+				float4 color : COLOR;
+			};
+			float4 main(in PS_Input input) : SV_Target
+			{
+				return input.color;
 			}
 		)";
 
@@ -58,14 +77,15 @@ void Lyre::CApplication::Run()
 		Ref<CIndexBuffer> indexBuffer = CRenderer::GetAPI()->CreateIndexBuffer(indices, sizeof(indices) / sizeof(int));
 
 		Ref<CInputLayout> layout = CRenderer::GetAPI()->CreateInputLayout({
-			{ EShaderDataType::Float3, "POSITION" }
+			{ EShaderDataType::Float3, "POSITION" },
+			{ EShaderDataType::Float4, "COLOR" }
 		});
 
 		vertexBuffer->SetLayout(layout);
 
 		Ref<CShader> shader = CRenderer::GetAPI()->CreateShader(vsSrc, psSrc);
 
-		float clearColor[] = { 0.3f, 0.5f, 0.9f, 1.0f };
+		float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		CRenderer::GetAPI()->Clear(clearColor);
 		CRenderer::Submit(vertexBuffer, indexBuffer, shader);
 
@@ -73,7 +93,7 @@ void Lyre::CApplication::Run()
 	}
 }
 
-bool Lyre::CApplication::OnWindowClosed(CWindowClosedEvent const & event)
+bool Lyre::CApplication::OnWindowClosed(CWindowClosedEvent const& event)
 {
 	m_running = false;
 	return true;
