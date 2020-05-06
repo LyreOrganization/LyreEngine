@@ -18,26 +18,21 @@ namespace Lyre
 		}
 	}
 
-	CIndexBufferDX11::CIndexBufferDX11(unsigned* indices, int size, SDirectXInterface const* interface)
+	CIndexBufferDX11::CIndexBufferDX11(unsigned* indices, unsigned size, SDirectXInterface const* interface)
 		: CIndexBuffer(size)
+		, CPipelineResourceDX11(interface)
 	{
-		m_interface = interface;
-
 		D3D11_BUFFER_DESC desc;
 		{
+			ZeroStruct(desc);
 			desc.Usage = D3D11_USAGE_DEFAULT;
 			desc.ByteWidth = sizeof(unsigned) * size;
 			desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			desc.CPUAccessFlags = 0;
-			desc.MiscFlags = 0;
 		}
 
 		D3D11_SUBRESOURCE_DATA initData;
-		{
-			initData.pSysMem = indices;
-			initData.SysMemPitch = 0;
-			initData.SysMemSlicePitch = 0;
-		}
+		ZeroStruct(initData);
+		initData.pSysMem = indices;
 
 		HRESULT hr = interface->device->CreateBuffer(&desc, &initData, &m_buffer);
 		LYRE_ASSERT(SUCCEEDED(hr), "Failed to create index buffer.");
@@ -45,8 +40,8 @@ namespace Lyre
 
 	void CIndexBufferDX11::Bind(EDrawTopology topology)
 	{
-		m_interface->context->IASetIndexBuffer(m_buffer, DXGI_FORMAT_R32_UINT, 0);
-		m_interface->context->IASetPrimitiveTopology(toDxTopology(topology));
+		GetDxInterface()->context->IASetIndexBuffer(m_buffer, DXGI_FORMAT_R32_UINT, 0);
+		GetDxInterface()->context->IASetPrimitiveTopology(toDxTopology(topology));
 	}
 
 }

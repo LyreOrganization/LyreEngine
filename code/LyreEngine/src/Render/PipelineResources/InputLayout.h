@@ -1,30 +1,23 @@
 #pragma once
 
+#include "Render/ShaderDataType.h"
+
 namespace Lyre
 {
 
-	enum class EShaderDataType
-	{
-		None = 0,
-		Float,
-		Float2,
-		Float3,
-		Float4,
-		Matrix
-	};
-
-	struct SLayoutEntry
-	{
-		EShaderDataType type;
-		std::string name;
-		int size;
-		int offset;
-
-		SLayoutEntry(EShaderDataType _type, std::string _name);
-	};
-
 	class CInputLayout
 	{
+	public:
+		struct SEntry
+		{
+			EShaderDataType type;
+			std::string name;
+			int size;
+			int offset;
+
+			SEntry(EShaderDataType _type, std::string _name);
+		};
+
 	public:
 		virtual ~CInputLayout() = default;
 
@@ -33,10 +26,10 @@ namespace Lyre
 		inline int GetStride() const { return m_stride; }
 
 	protected:
-		CInputLayout(std::initializer_list<SLayoutEntry> const& layout);
+		CInputLayout(std::initializer_list<SEntry> const& layout);
 
 	protected:
-		std::vector<SLayoutEntry> m_entries;
+		std::vector<SEntry> m_entries;
 		int m_stride;
 	};
 

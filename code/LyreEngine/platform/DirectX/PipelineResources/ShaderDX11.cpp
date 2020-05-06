@@ -2,6 +2,7 @@
 #include "ShaderDX11.h"
 #include "InputLayoutDX11.h"
 #include "VertexBufferDX11.h"
+#include "ConstantBufferDX11.h"
 #include "DirectX11API.h"
 
 #include <d3dcompiler.h>
@@ -58,9 +59,8 @@ namespace Lyre
 {
 
 	CShaderDX11::CShaderDX11(std::string const& vsSrc, std::string const& psSrc, SDirectXInterface const* interface)
+		: CPipelineResourceDX11(interface)
 	{
-		m_interface = interface;
-
 		HRESULT hr = E_FAIL;
 
 		hr = CompileShader(vsSrc, "main", "vs_5_0", &m_vsBlob);
@@ -101,8 +101,18 @@ namespace Lyre
 
 	void CShaderDX11::Bind()
 	{
-		m_interface->context->VSSetShader(m_vs, nullptr, 0);
-		m_interface->context->PSSetShader(m_ps, nullptr, 0);
+		std::vector<ID3D11Buffer*> buffers;
+		for (auto const& constantBuffer : m_constantBuffers)
+		{
+			constantBuffer->Update();
+
+			auto constantBufferDx = static_cast<CConstantBufferDX11*>(constantBuffer.get());
+			buffers.push_back(constantBufferDx->m_buffer.p);
+		}
+		GetDxInterface()->context->VSSetConstantBuffers(0, buffers.size(), buffers.data());
+
+		GetDxInterface()->context->VSSetShader(m_vs, nullptr, 0);
+		GetDxInterface()->context->PSSetShader(m_ps, nullptr, 0);
 	}
 
 }

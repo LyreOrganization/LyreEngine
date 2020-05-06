@@ -1,8 +1,10 @@
 #pragma once
 
+#include "ShaderDataType.h"
 #include "PipelineResources/VertexBuffer.h"
 #include "PipelineResources/IndexBuffer.h"
 #include "PipelineResources/InputLayout.h"
+#include "PipelineResources/ConstantBuffer.h"
 #include "PipelineResources/Shader.h"
 
 namespace Lyre
@@ -30,7 +32,8 @@ namespace Lyre
 
 		virtual std::shared_ptr<CVertexBuffer> CreateVertexBuffer(float* vertices, unsigned size) = 0;
 		virtual std::shared_ptr<CIndexBuffer> CreateIndexBuffer(unsigned* indices, unsigned size) = 0;
-		virtual std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<SLayoutEntry> layout) = 0;
+		virtual std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<CInputLayout::SEntry> layout) = 0;
+		virtual std::shared_ptr<CConstantBuffer> CreateConstantBuffer(std::initializer_list<CConstantBuffer::SEntry> layout) = 0;
 		virtual std::shared_ptr<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) = 0;
 
 		ERenderAPIType GetApiType() const { return m_apiType; }

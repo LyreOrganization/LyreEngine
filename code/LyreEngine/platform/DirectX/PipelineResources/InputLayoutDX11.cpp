@@ -26,11 +26,11 @@ namespace Lyre
 		}
 	}
 
-	CInputLayoutDX11::CInputLayoutDX11(std::initializer_list<SLayoutEntry> const& layout, SDirectXInterface const* interface)
+	CInputLayoutDX11::CInputLayoutDX11(std::initializer_list<SEntry> const& layout, SDirectXInterface const* interface)
 		: CInputLayout(layout)
+		, CPipelineResourceDX11(interface)
+		, m_layout(nullptr)
 	{
-		m_interface = interface;
-
 		for (auto const& entry : m_entries)
 		{
 			D3D11_INPUT_ELEMENT_DESC desc;
@@ -49,13 +49,18 @@ namespace Lyre
 
 	void CInputLayoutDX11::Bind()
 	{
-		m_interface->context->IASetInputLayout(m_layout);
+		GetDxInterface()->context->IASetInputLayout(m_layout);
 	}
 
 	bool CInputLayoutDX11::CreateDxResource(void const* shaderByteCode, size_t length)
 	{
-		HRESULT hr = m_interface->device->CreateInputLayout(m_layoutDesc.data(), m_layoutDesc.size(), shaderByteCode, length, &m_layout);
-		return SUCCEEDED(hr);
+		if (!m_layout)
+		{
+			HRESULT hr = GetDxInterface()->device->CreateInputLayout(m_layoutDesc.data(), m_layoutDesc.size(), shaderByteCode, length, &m_layout);
+			return SUCCEEDED(hr);
+		}
+
+		return true;
 	}
 
 }

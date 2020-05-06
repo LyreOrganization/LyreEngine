@@ -33,7 +33,8 @@ namespace Lyre
 
 		std::shared_ptr<CVertexBuffer> CreateVertexBuffer(float* vertices, unsigned size) override;
 		std::shared_ptr<CIndexBuffer> CreateIndexBuffer(unsigned* indices, unsigned size) override;
-		std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<SLayoutEntry> layout) override;
+		std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<CInputLayout::SEntry> layout) override;
+		std::shared_ptr<CConstantBuffer> CreateConstantBuffer(std::initializer_list<CConstantBuffer::SEntry> layout) override;
 		std::shared_ptr<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) override;
 
 	private:

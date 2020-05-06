@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Render/PipelineResources/InputLayout.h"
+#include <Render/PipelineResources/InputLayout.h>
+#include "PipelineResourceDX11.h"
 
 #pragma push_macro("interface")
 #undef interface
@@ -10,10 +11,12 @@ namespace Lyre
 
 	struct SDirectXInterface;
 
-	class CInputLayoutDX11 final : public CInputLayout
+	class CInputLayoutDX11 final
+		: public CInputLayout
+		, private CPipelineResourceDX11
 	{
 	public:
-		CInputLayoutDX11(std::initializer_list<SLayoutEntry> const& layout, SDirectXInterface const* interface);
+		CInputLayoutDX11(std::initializer_list<SEntry> const& layout, SDirectXInterface const* interface);
 
 		void Bind() override;
 
@@ -22,8 +25,6 @@ namespace Lyre
 	private:
 		CComPtr<ID3D11InputLayout> m_layout;
 		std::vector<D3D11_INPUT_ELEMENT_DESC> m_layoutDesc;
-
-		SDirectXInterface const* m_interface;
 	};
 
 }

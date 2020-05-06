@@ -3,6 +3,7 @@
 #include "PipelineResources/VertexBufferDX11.h"
 #include "PipelineResources/IndexBufferDX11.h"
 #include "PipelineResources/InputLayoutDX11.h"
+#include "PipelineResources/ConstantBufferDX11.h"
 #include "PipelineResources/ShaderDX11.h"
 
 #include "Core/Application.h"
@@ -168,7 +169,7 @@ namespace Lyre
 			ZeroStruct(rasterizerState);
 			rasterizerState.FillMode = D3D11_FILL_SOLID;
 			rasterizerState.CullMode = D3D11_CULL_BACK;
-			rasterizerState.FrontCounterClockwise = false;
+			rasterizerState.FrontCounterClockwise = true;
 			rasterizerState.DepthBias = 0;
 			rasterizerState.SlopeScaledDepthBias = 0.0f;
 			rasterizerState.DepthBiasClamp = 0.0f;
@@ -187,7 +188,7 @@ namespace Lyre
 			ZeroStruct(rasterizerState);
 			rasterizerState.FillMode = D3D11_FILL_WIREFRAME;
 			rasterizerState.CullMode = D3D11_CULL_BACK;
-			rasterizerState.FrontCounterClockwise = false;
+			rasterizerState.FrontCounterClockwise = true;
 			rasterizerState.DepthBias = 0;
 			rasterizerState.SlopeScaledDepthBias = 0.0f;
 			rasterizerState.DepthBiasClamp = 0.0f;
@@ -244,9 +245,14 @@ namespace Lyre
 		return std::make_shared<CIndexBufferDX11>(indices, size, &m_dxInterface);
 	}
 
-	std::shared_ptr<CInputLayout> CDirectX11API::CreateInputLayout(std::initializer_list<SLayoutEntry> layout)
+	std::shared_ptr<CInputLayout> CDirectX11API::CreateInputLayout(std::initializer_list<CInputLayout::SEntry> layout)
 	{
 		return std::make_shared<CInputLayoutDX11>(layout, &m_dxInterface);
+	}
+
+	std::shared_ptr<CConstantBuffer> CDirectX11API::CreateConstantBuffer(std::initializer_list<CConstantBuffer::SEntry> layout)
+	{
+		return std::make_shared<CConstantBufferDX11>(layout, &m_dxInterface);
 	}
 
 	std::shared_ptr<CShader> CDirectX11API::CreateShader(std::string const& vsSrc, std::string const& psSrc)

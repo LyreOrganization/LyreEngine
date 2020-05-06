@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Render/PipelineResources/IndexBuffer.h"
+#include <Render/PipelineResources/IndexBuffer.h>
+#include "PipelineResourceDX11.h"
 
 #pragma push_macro("interface")
 #undef interface
@@ -10,17 +11,18 @@ namespace Lyre
 
 	struct SDirectXInterface;
 
-	class CIndexBufferDX11 final : public CIndexBuffer
+	class CIndexBufferDX11 final
+		: public CIndexBuffer
+		, private CPipelineResourceDX11
 	{
 		friend class CDirectX11API;
 	public:
-		CIndexBufferDX11(unsigned* indices, int size, SDirectXInterface const* interface);
+		CIndexBufferDX11(unsigned* indices, unsigned size, SDirectXInterface const* interface);
 
 		void Bind(EDrawTopology topology) override;
 
 	private:
 		CComPtr<ID3D11Buffer> m_buffer;
-		SDirectXInterface const* m_interface;
 	};
 
 }

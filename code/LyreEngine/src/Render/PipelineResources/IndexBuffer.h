@@ -16,15 +16,15 @@ namespace Lyre
 
 		virtual void Bind(EDrawTopology topology) = 0;
 
-		inline int GetSize() const { return m_size; }
+		inline unsigned GetSize() const { return m_size; }
 
 	protected:
-		CIndexBuffer(int size)
+		CIndexBuffer(unsigned size)
 			: m_size(size)
 		{}
 
 	protected:
-		int m_size;
+		unsigned m_size;
 	};
 
 }

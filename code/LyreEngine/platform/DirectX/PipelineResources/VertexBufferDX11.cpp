@@ -7,27 +7,23 @@
 namespace Lyre
 {
 
-	CVertexBufferDX11::CVertexBufferDX11(float* vertices, int size, SDirectXInterface const* interface)
+	CVertexBufferDX11::CVertexBufferDX11(float* vertices, unsigned size, SDirectXInterface const* interface)
+		: CPipelineResourceDX11(interface)
 	{
-		m_interface = interface;
 
 		D3D11_BUFFER_DESC desc;
 		{
+			ZeroStruct(desc);
 			desc.Usage = D3D11_USAGE_DEFAULT;
 			desc.ByteWidth = sizeof(float) * size;
 			desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-			desc.CPUAccessFlags = 0;
-			desc.MiscFlags = 0;
 		}
 
 		D3D11_SUBRESOURCE_DATA initData;
-		{
-			initData.pSysMem = vertices;
-			initData.SysMemPitch = 0;
-			initData.SysMemSlicePitch = 0;
-		}
+		ZeroStruct(initData);
+		initData.pSysMem = vertices;
 
-		HRESULT hr = m_interface->device->CreateBuffer(&desc, &initData, &m_buffer);
+		HRESULT hr = GetDxInterface()->device->CreateBuffer(&desc, &initData, &m_buffer);
 		LYRE_ASSERT(SUCCEEDED(hr), , "Failed to create vertex buffer.");
 	}
 
@@ -35,7 +31,7 @@ namespace Lyre
 	{
 		UINT stride = m_layout->GetStride();
 		UINT offset = 0;
-		m_interface->context->IASetVertexBuffers(0, 1, &m_buffer.p, &stride, &offset);
+		GetDxInterface()->context->IASetVertexBuffers(0, 1, &m_buffer.p, &stride, &offset);
 	}
 
 }
