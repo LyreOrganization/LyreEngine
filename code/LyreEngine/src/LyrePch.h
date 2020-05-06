@@ -6,6 +6,15 @@
 #include <string>
 #include <functional>
 
+#ifdef LYRE_PLATFORM_WINDOWS
+#define GLM_FORCE_RIGHT_HANDED
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#endif
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+
 #include <Core/Core.h>
 #include <Core/LyreObject.h>
 #include <Core/Event.h>
