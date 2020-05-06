@@ -6,6 +6,9 @@ workspace "LyreEngine"
 
 outputdir = "%{cfg.architecture}_%{cfg.system}_%{cfg.buildcfg}"
 
+dependencies = {}
+dependencies["glm"] = "external/glm";
+
 project "LyreEngine"
     location "code/%{prj.name}"
     kind "StaticLib"
@@ -25,7 +28,8 @@ project "LyreEngine"
     }
 
 	includedirs {
-		"%{prj.location}/src"
+		"%{prj.location}/src",
+		dependencies["glm"]
 	}
 
     filter "system:windows"
