@@ -5,6 +5,9 @@
 namespace Lyre
 {
 
+	class CMesh;
+	class CCamera;
+
 	class CRenderer final
 	{
 	public:
@@ -12,11 +15,7 @@ namespace Lyre
 		static void CreateAPIIntance(ERenderAPIType apiType = ERenderAPIType::None);
 		static CRenderAPI* GetAPI() { return s_RenderAPI.get(); }
 
-		static void Submit(
-			std::shared_ptr<CVertexBuffer> vertexBuffer,
-			std::shared_ptr<CIndexBuffer> indexBuffer,
-			std::shared_ptr<CShader> shader
-		);
+		static void Submit(std::shared_ptr<CMesh> mesh);
 
 		static void Present() { s_RenderAPI->Present(); }
 

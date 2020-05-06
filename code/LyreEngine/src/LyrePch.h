@@ -1,10 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <array>
 #include <vector>
 #include <unordered_map>
 #include <string>
 #include <functional>
+#include <fstream>
 
 #ifdef LYRE_PLATFORM_WINDOWS
 #define GLM_FORCE_RIGHT_HANDED
