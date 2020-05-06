@@ -7,7 +7,7 @@
 namespace Lyre
 {
 
-	CVertexBufferDX11::CVertexBufferDX11(float* vertices, int size, NotOwn<SDirectXInterface> interface)
+	CVertexBufferDX11::CVertexBufferDX11(float* vertices, int size, SDirectXInterface const* interface)
 	{
 		m_interface = interface;
 

@@ -8,8 +8,6 @@
 #include "Core/Application.h"
 #include "WindowsWnd.h"
 
-#define ZeroStruct(structure) ZeroMemory(&structure, sizeof(structure))
-
 namespace Lyre
 {
 
@@ -230,30 +228,30 @@ namespace Lyre
 		m_dxInterface.swapChain->Present(0, 0);
 	}
 
-	void CDirectX11API::DrawIndexed(Ref<CIndexBuffer> indexBuffer)
+	void CDirectX11API::DrawIndexed(std::shared_ptr<CIndexBuffer> indexBuffer)
 	{
 		UINT indexCount = indexBuffer->GetSize();
 		m_dxInterface.context->DrawIndexed(indexCount, 0, 0);
 	}
 
-	Ref<CVertexBuffer> CDirectX11API::CreateVertexBuffer(float* vertices, int size)
+	std::shared_ptr<CVertexBuffer> CDirectX11API::CreateVertexBuffer(float* vertices, unsigned size)
 	{
-		return MakeRef<CVertexBufferDX11>(vertices, size, &m_dxInterface);
+		return std::make_shared<CVertexBufferDX11>(vertices, size, &m_dxInterface);
 	}
 
-	Ref<CIndexBuffer> CDirectX11API::CreateIndexBuffer(unsigned* indices, int size)
+	std::shared_ptr<CIndexBuffer> CDirectX11API::CreateIndexBuffer(unsigned* indices, unsigned size)
 	{
-		return MakeRef<CIndexBufferDX11>(indices, size, &m_dxInterface);
+		return std::make_shared<CIndexBufferDX11>(indices, size, &m_dxInterface);
 	}
 
-	Ref<CInputLayout> CDirectX11API::CreateInputLayout(std::initializer_list<SLayoutEntry> layout)
+	std::shared_ptr<CInputLayout> CDirectX11API::CreateInputLayout(std::initializer_list<SLayoutEntry> layout)
 	{
-		return MakeRef<CInputLayoutDX11>(layout, &m_dxInterface);
+		return std::make_shared<CInputLayoutDX11>(layout, &m_dxInterface);
 	}
 
-	Ref<CShader> CDirectX11API::CreateShader(std::string const& vsSrc, std::string const& psSrc)
+	std::shared_ptr<CShader> CDirectX11API::CreateShader(std::string const& vsSrc, std::string const& psSrc)
 	{
-		return MakeRef<CShaderDX11>(vsSrc, psSrc, &m_dxInterface);
+		return std::make_shared<CShaderDX11>(vsSrc, psSrc, &m_dxInterface);
 	}
 
 }

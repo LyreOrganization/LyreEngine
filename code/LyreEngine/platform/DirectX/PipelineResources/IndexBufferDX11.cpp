@@ -18,7 +18,7 @@ namespace Lyre
 		}
 	}
 
-	CIndexBufferDX11::CIndexBufferDX11(unsigned* indices, int size, NotOwn<SDirectXInterface> interface)
+	CIndexBufferDX11::CIndexBufferDX11(unsigned* indices, int size, SDirectXInterface const* interface)
 		: CIndexBuffer(size)
 	{
 		m_interface = interface;

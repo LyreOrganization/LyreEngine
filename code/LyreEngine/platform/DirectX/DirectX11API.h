@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Render/RenderAPI.h"
+#include <Render/RenderAPI.h>
 
 namespace Lyre
 {
@@ -29,15 +29,18 @@ namespace Lyre
 		void Clear(float color[4]) override;
 		void Present() override;
 
-		void DrawIndexed(Ref<CIndexBuffer> indexBuffer) override;
+		void DrawIndexed(std::shared_ptr<CIndexBuffer> indexBuffer) override;
 
-		Ref<CVertexBuffer> CreateVertexBuffer(float* vertices, int size) override;
-		Ref<CIndexBuffer> CreateIndexBuffer(unsigned* indices, int size) override;
-		Ref<CInputLayout> CreateInputLayout(std::initializer_list<SLayoutEntry> layout) override;
-		Ref<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) override;
+		std::shared_ptr<CVertexBuffer> CreateVertexBuffer(float* vertices, unsigned size) override;
+		std::shared_ptr<CIndexBuffer> CreateIndexBuffer(unsigned* indices, unsigned size) override;
+		std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<SLayoutEntry> layout) override;
+		std::shared_ptr<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) override;
 
 	private:
 		SDirectXInterface m_dxInterface;
 	};
+
+
+#define ZeroStruct(structure) ZeroMemory(&structure, sizeof(structure))
 
 }

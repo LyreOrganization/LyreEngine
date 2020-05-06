@@ -57,7 +57,7 @@ namespace
 namespace Lyre
 {
 
-	CShaderDX11::CShaderDX11(std::string const& vsSrc, std::string const& psSrc, NotOwn<SDirectXInterface> interface)
+	CShaderDX11::CShaderDX11(std::string const& vsSrc, std::string const& psSrc, SDirectXInterface const* interface)
 	{
 		m_interface = interface;
 
@@ -86,9 +86,9 @@ namespace Lyre
 		LYRE_ASSERT(SUCCEEDED(hr), "Cannot create pixel shader.");
 	}
 
-	bool CShaderDX11::BindInputLayout(NotOwn<CVertexBuffer> vertexBuffer)
+	bool CShaderDX11::BindInputLayout(CVertexBuffer* vertexBuffer)
 	{
-		NotOwn<CInputLayoutDX11> inputLayout = static_cast<CInputLayoutDX11*>(vertexBuffer->GetLayout().get());
+		CInputLayoutDX11* inputLayout = static_cast<CInputLayoutDX11*>(vertexBuffer->GetLayout().get());
 
 		if (inputLayout->CreateDxResource(m_vsBlob->GetBufferPointer(), m_vsBlob->GetBufferSize()))
 		{

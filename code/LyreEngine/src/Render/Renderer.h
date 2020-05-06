@@ -10,18 +10,18 @@ namespace Lyre
 	public:
 
 		static void CreateAPIIntance(ERenderAPIType apiType = ERenderAPIType::None);
-		static NotOwn<CRenderAPI> GetAPI() { return s_RenderAPI.get(); }
+		static CRenderAPI* GetAPI() { return s_RenderAPI.get(); }
 
 		static void Submit(
-			Ref<CVertexBuffer> vertexBuffer,
-			Ref<CIndexBuffer> indexBuffer,
-			Ref<CShader> shader
+			std::shared_ptr<CVertexBuffer> vertexBuffer,
+			std::shared_ptr<CIndexBuffer> indexBuffer,
+			std::shared_ptr<CShader> shader
 		);
 
 		static void Present() { s_RenderAPI->Present(); }
 
 	private:
-		static Scope<CRenderAPI> s_RenderAPI;
+		static std::unique_ptr<CRenderAPI> s_RenderAPI;
 	};
 
 }

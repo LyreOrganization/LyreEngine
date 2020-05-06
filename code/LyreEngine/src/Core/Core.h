@@ -3,30 +3,12 @@
 namespace Lyre
 {
 
-	template<class T>
-	using NotOwn = T*;
-
-	template<class T>
-	using Scope = std::unique_ptr<T>;
-
-	template<class T>
-	using Ref = std::shared_ptr<T>;
-
-
-	template<class T, class... Args>
-	inline Scope<T> MakeScope(Args&&... args)
-	{
-		return std::make_unique<T>(std::forward<Args>(args)...);
-	}
-
-	template<class T, class... Args>
-	inline Ref<T> MakeRef(Args&&... args)
-	{
-		return std::make_shared<T>(std::forward<Args>(args)...);
-	}
+	// This alias is a temporary decision, it's not a replacement for std::string
+	// In future, CStringID class supposed to be an id to unique strings hash table
+	using CStringId = std::string;
 
 #ifdef LYRE_DEBUG
-	#define LYRE_ASSERT(condition, ...) if (!condition) __debugbreak()
+	#define LYRE_ASSERT(condition, ...) if (!(condition)) __debugbreak()
 #else
 	#define LYRE_ASSERT(condition, ...)
 #endif

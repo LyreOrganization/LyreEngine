@@ -14,13 +14,13 @@ namespace Lyre
 	{
 		friend class CDirectX11API;
 	public:
-		CVertexBufferDX11(float* vertices, int size, NotOwn<SDirectXInterface> interface);
+		CVertexBufferDX11(float* vertices, int size, SDirectXInterface const* interface);
 
 		void Bind() override;
 
 	private:
 		CComPtr<ID3D11Buffer> m_buffer;
-		NotOwn<SDirectXInterface> m_interface;
+		SDirectXInterface const* m_interface;
 	};
 
 }

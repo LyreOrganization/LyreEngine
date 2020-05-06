@@ -26,7 +26,7 @@ namespace Lyre
 		}
 	}
 
-	CInputLayoutDX11::CInputLayoutDX11(std::initializer_list<SLayoutEntry> const& layout, NotOwn<SDirectXInterface> interface)
+	CInputLayoutDX11::CInputLayoutDX11(std::initializer_list<SLayoutEntry> const& layout, SDirectXInterface const* interface)
 		: CInputLayout(layout)
 	{
 		m_interface = interface;

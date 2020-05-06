@@ -14,13 +14,13 @@ namespace Lyre
 	{
 		friend class CDirectX11API;
 	public:
-		CIndexBufferDX11(unsigned* indices, int size, NotOwn<SDirectXInterface> interface);
+		CIndexBufferDX11(unsigned* indices, int size, SDirectXInterface const* interface);
 
 		void Bind(EDrawTopology topology) override;
 
 	private:
 		CComPtr<ID3D11Buffer> m_buffer;
-		NotOwn<SDirectXInterface> m_interface;
+		SDirectXInterface const* m_interface;
 	};
 
 }

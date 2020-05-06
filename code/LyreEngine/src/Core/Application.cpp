@@ -73,17 +73,17 @@ void Lyre::CApplication::Run()
 			}
 		)";
 
-		Ref<CVertexBuffer> vertexBuffer = CRenderer::GetAPI()->CreateVertexBuffer(vertices, sizeof(vertices) / sizeof(float));
-		Ref<CIndexBuffer> indexBuffer = CRenderer::GetAPI()->CreateIndexBuffer(indices, sizeof(indices) / sizeof(int));
+		std::shared_ptr<CVertexBuffer> vertexBuffer = CRenderer::GetAPI()->CreateVertexBuffer(vertices, sizeof(vertices) / sizeof(float));
+		std::shared_ptr<CIndexBuffer> indexBuffer = CRenderer::GetAPI()->CreateIndexBuffer(indices, sizeof(indices) / sizeof(int));
 
-		Ref<CInputLayout> layout = CRenderer::GetAPI()->CreateInputLayout({
+		std::shared_ptr<CInputLayout> layout = CRenderer::GetAPI()->CreateInputLayout({
 			{ EShaderDataType::Float3, "POSITION" },
 			{ EShaderDataType::Float4, "COLOR" }
 		});
 
 		vertexBuffer->SetLayout(layout);
 
-		Ref<CShader> shader = CRenderer::GetAPI()->CreateShader(vsSrc, psSrc);
+		std::shared_ptr<CShader> shader = CRenderer::GetAPI()->CreateShader(vsSrc, psSrc);
 
 		float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		CRenderer::GetAPI()->Clear(clearColor);

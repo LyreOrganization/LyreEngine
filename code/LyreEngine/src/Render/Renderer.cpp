@@ -4,14 +4,14 @@
 namespace Lyre
 {
 
-	Scope<CRenderAPI> CRenderer::s_RenderAPI = nullptr;
+	std::unique_ptr<CRenderAPI> CRenderer::s_RenderAPI = nullptr;
 
 	void CRenderer::CreateAPIIntance(ERenderAPIType apiType)
 	{
 		s_RenderAPI = CRenderAPI::Create(apiType);
 	}
 
-	void CRenderer::Submit(Ref<CVertexBuffer> vertexBuffer, Ref<CIndexBuffer> indexBuffer, Ref<CShader> shader)
+	void CRenderer::Submit(std::shared_ptr<CVertexBuffer> vertexBuffer, std::shared_ptr<CIndexBuffer> indexBuffer, std::shared_ptr<CShader> shader)
 	{
 		bool succcess = shader->BindInputLayout(vertexBuffer.get());
 		LYRE_ASSERT(succcess, "Input layout binding failed.");

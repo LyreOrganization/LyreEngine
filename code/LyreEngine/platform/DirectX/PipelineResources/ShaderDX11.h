@@ -13,9 +13,9 @@ namespace Lyre
 	class CShaderDX11 final : public CShader
 	{
 	public:
-		CShaderDX11(std::string const& vsSrc, std::string const& psSrc, NotOwn<SDirectXInterface> interface);
+		CShaderDX11(std::string const& vsSrc, std::string const& psSrc, SDirectXInterface const* interface);
 
-		bool BindInputLayout(NotOwn<CVertexBuffer> vertexBuffer) override;
+		bool BindInputLayout(CVertexBuffer* vertexBuffer) override;
 		void Bind() override;
 
 	private:
@@ -25,7 +25,7 @@ namespace Lyre
 		CComPtr<ID3D11VertexShader> m_vs;
 		CComPtr<ID3D11PixelShader> m_ps;
 		
-		NotOwn<SDirectXInterface> m_interface;
+		SDirectXInterface const* m_interface;
 	};
 
 }

@@ -10,7 +10,7 @@ namespace Lyre
 	public:
 		virtual ~CShader() = default;
 
-		virtual bool BindInputLayout(NotOwn<CVertexBuffer> vertexBuffer) = 0;
+		virtual bool BindInputLayout(CVertexBuffer* vertexBuffer) = 0;
 		virtual void Bind() = 0;
 
 	protected:
