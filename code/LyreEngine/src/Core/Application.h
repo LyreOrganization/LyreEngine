@@ -1,11 +1,16 @@
 #pragma once
 
 #include "Event.h"
-#include "WindowLifeTimeEvents.h"
 
 namespace Lyre
 {
 	class CWindow;
+	class CCamera;
+	class CConstantBuffer;
+
+	class CWindowClosedEvent;
+	class CMouseMoveEvent;
+	class CMovementEvent;
 
 	class CApplication : public EventListener
 	{
@@ -24,10 +29,15 @@ namespace Lyre
 
 		EVENT_MAP(CApplication)
 		bool OnWindowClosed(CWindowClosedEvent const& event);
+		bool OnMouseMove(CMouseMoveEvent const& event);
+		bool OnMovement(CMovementEvent const& event);
 
 	private:
 		bool m_running;
 		CWindow* m_window;
+
+		std::shared_ptr<CCamera> m_camera;
+		std::shared_ptr<CConstantBuffer> m_cameraConstants;
 	};
 
 }

@@ -1,8 +1,19 @@
 #include "LyrePch.h"
 #include "WindowsWnd.h"
 #include "Core/WindowLifeTimeEvents.h"
+#include "Core/InputEvents.h"
 
 #include "resource.h"
+
+namespace
+{
+
+	float ahead	= 0.f;
+	float aside	= 0.f;
+
+#define WindowsLetterIdx(letter)	(0x41 + (letter) - 'A')
+
+}
 
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
@@ -13,8 +24,18 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		ValidateRect(hWnd, nullptr);
 		return 0;
 	case WM_KEYDOWN:
+		if (wParam == WindowsLetterIdx('W'))		ahead = 1.f;
+		if (wParam == WindowsLetterIdx('A'))		aside = -1.f;
+		if (wParam == WindowsLetterIdx('S'))		ahead = -1.f;
+		if (wParam == WindowsLetterIdx('D'))		aside = 1.f;
 		break;
 	case WM_KEYUP:
+		if (wParam == WindowsLetterIdx('W') && ahead > 0.f)		ahead = 0.f;
+		if (wParam == WindowsLetterIdx('A') && aside < 0.f)		aside = 0.f;
+		if (wParam == WindowsLetterIdx('S') && ahead < 0.f)		ahead = 0.f;
+		if (wParam == WindowsLetterIdx('D') && aside > 0.f)		aside = 0.f;
+
+		if (wParam == VK_ESCAPE) PostQuitMessage(0);
 		break;
 	}
 	return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -86,6 +107,29 @@ namespace Lyre
 			{
 				m_windowEventListener->OnEvent(CWindowClosedEvent{});
 			}
+		}
+
+		POINT cursorPos;
+		GetCursorPos(&cursorPos);
+		static POINT prevCursorPos{ cursorPos };
+
+		CMouseMoveEvent mouseMove;
+		mouseMove.dx = (prevCursorPos.x - cursorPos.x) * 0.003f;
+		mouseMove.dy = (prevCursorPos.y - cursorPos.y) * 0.003f;
+
+		SetCursorPos(prevCursorPos.x, prevCursorPos.y);
+
+		if (mouseMove.dx != 0.f || mouseMove.dy != 0.f)
+		{
+			m_windowEventListener->OnEvent(mouseMove);
+		}
+
+		if (ahead != 0.f || aside != 0.f)
+		{
+			CMovementEvent movement;
+			movement.ahead = ahead * 0.003f;
+			movement.aside = aside * 0.003f;
+			m_windowEventListener->OnEvent(movement);
 		}
 	}
 

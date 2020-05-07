@@ -22,8 +22,8 @@ namespace Lyre
 		void Pan(float angle);
 		void Roll(float angle);
 
-		void MoveAhead(float dist);
-		void MoveAside(float dist);
+		void MoveAhead(float distance);
+		void MoveAside(float distance);
 
 	private:
 		void updateRight();

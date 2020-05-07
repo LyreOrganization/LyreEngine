@@ -63,19 +63,19 @@ namespace Lyre
 		updateRight();
 	}
 
-	void CCamera::MoveAhead(float dist)
+	void CCamera::MoveAhead(float distance)
 	{
-		m_position += m_view * dist;
+		m_position += m_view * distance;
 	}
 
-	void CCamera::MoveAside(float dist)
+	void CCamera::MoveAside(float distance)
 	{
-		m_position += m_right * dist;
+		m_position += m_right * distance;
 	}
 
 	void CCamera::updateRight()
 	{
-		m_right = glm::normalize(glm::cross(m_up, m_view));
+		m_right = glm::normalize(glm::cross(m_view, m_up));
 	}
 
 }

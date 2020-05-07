@@ -1,6 +1,10 @@
 #include "LyrePch.h"
+
 #include "Application.h"
 #include "Window.h"
+#include "WindowLifeTimeEvents.h"
+#include "InputEvents.h"
+
 #include "Render/Renderer.h"
 #include "Render/Mesh.h"
 #include "Render/Camera.h"
@@ -9,6 +13,8 @@ using namespace std;
 
 EVENT_MAP_BEGIN(Lyre::CApplication)
 	ADD_LISTENER(Lyre::CWindowClosedEvent, OnWindowClosed)
+	ADD_LISTENER(Lyre::CMouseMoveEvent, OnMouseMove)
+	ADD_LISTENER(Lyre::CMovementEvent, OnMovement)
 EVENT_MAP_END()
 
 Lyre::CApplication::CApplication()
@@ -27,18 +33,22 @@ void Lyre::CApplication::Init()
 	CRenderer::CreateAPIIntance(ERenderAPIType::DirectX_11);
 	bool success = CRenderer::GetAPI()->Init(*this);
 	LYRE_ASSERT(success);
+
+
+	m_camera = make_shared<CCamera>(
+		glm::vec3{ 0.f, 0.f, 5.f },
+		glm::vec3{ 0.f, 0.f, -1.f },
+		glm::vec3{ 0.f, 1.f, 0.f }
+	);
+	m_cameraConstants = CRenderer::GetAPI()->CreateConstantBuffer({
+		EShaderDataType::Matrix
+	});
+
+	m_cameraConstants->UpdateConstant(0, glm::value_ptr(m_camera->GetViewProjection()));
 }
 
 void Lyre::CApplication::Run()
 {
-	float vertices[] = {
-		0.5f, -0.5f, 0.0f,			0.f, 1.f, 0.f, 1.f,
-		0.0f, 0.5f, 0.0f,			1.f, 0.f, 0.f, 1.f,
-		-0.5f, -0.5f, 0.0f,			0.f, 0.f, 1.f, 1.f
-	};
-
-	unsigned indices[] = { 0, 1, 2 };
-
 	string vsSrc = R"(
 		cbuffer CAMERA : register(b0)
 		{
@@ -90,22 +100,11 @@ void Lyre::CApplication::Run()
 		}
 	)";
 
-	shared_ptr<CCamera> camera = make_shared<CCamera>(
-		glm::vec3{ 0.f, 0.f, 5.f },
-		glm::vec3{ 0.f, 0.f, -1.f },
-		glm::vec3{ 0.f, 1.f, 0.f }
-	);
-
-	shared_ptr<CConstantBuffer> cameraConstants = CRenderer::GetAPI()->CreateConstantBuffer({
-		EShaderDataType::Matrix
-	});
-	cameraConstants->UpdateConstant(0, glm::value_ptr(camera->GetViewProjection()));
-
 	shared_ptr<CMesh> mesh = make_shared<CMesh>("../../data/garg.obj");
 	mesh->GetModel() = glm::scale(glm::mat4{ 1.f }, glm::vec3{ 2.f });
 
 	shared_ptr<CShader> shader = CRenderer::GetAPI()->CreateShader(vsSrc, psSrc);
-	shader->AddConstantBuffer(cameraConstants);
+	shader->AddConstantBuffer(m_cameraConstants);
 	mesh->SetShader(shader);
 
 	while (m_running)
@@ -115,6 +114,7 @@ void Lyre::CApplication::Run()
 		float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 		CRenderer::GetAPI()->Clear(clearColor);
 
+		m_cameraConstants->UpdateConstant(0, glm::value_ptr(m_camera->GetViewProjection()));
 		CRenderer::Submit(mesh);
 
 		CRenderer::Present();
@@ -124,5 +124,19 @@ void Lyre::CApplication::Run()
 bool Lyre::CApplication::OnWindowClosed(CWindowClosedEvent const& event)
 {
 	m_running = false;
+	return true;
+}
+
+bool Lyre::CApplication::OnMouseMove(CMouseMoveEvent const& event)
+{
+	m_camera->Pan(event.dx);
+	m_camera->Tilt(event.dy);
+	return true;
+}
+
+bool Lyre::CApplication::OnMovement(CMovementEvent const& event)
+{
+	m_camera->MoveAhead(event.ahead);
+	m_camera->MoveAside(event.aside);
 	return true;
 }
