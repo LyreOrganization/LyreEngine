@@ -18,51 +18,61 @@ Lyre::CMesh::CMesh(std::string const& filename)
 	std::vector<std::array<float,3>> normals;
 	std::vector<unsigned> indexData;
 
-	while (fin)
+	static unsigned const MaxLineSize = 100;
+	for (char buffer[MaxLineSize]; fin.getline(buffer, MaxLineSize);)
 	{
+		std::stringstream ss{ buffer };
 		SVertex vertex;
 		std::string s;
 
-		fin >> s;
+		ss >> s;
 		if (s == "v")
 		{
-			fin >> vertex.position[0] >> vertex.position[1] >> vertex.position[2];
+			ss >> vertex.position[0] >> vertex.position[1] >> vertex.position[2];
 			vertexData.push_back(vertex);
 		}
 		else if (s == "vn")
 		{
-			fin >> vertex.normal[0] >> vertex.normal[1] >> vertex.normal[2];
+			ss >> vertex.normal[0] >> vertex.normal[1] >> vertex.normal[2];
 			normals.push_back(vertex.normal);
 		}
 		else if (s == "f")
 		{
 			// Faces are stored in the following format:
-			// f a/b/c d/e/f g/h/i
-			unsigned a, d, g; // vertices
-			unsigned c, f, i; // normals
-			unsigned ignore_i; // integers to ignore
-			char ignore_c; // characters to ignore
-			fin >> a >> ignore_c >> ignore_i >> ignore_c >> c
-				>> d >> ignore_c >> ignore_i >> ignore_c >> f
-				>> g >> ignore_c >> ignore_i >> ignore_c >> i;
+			// f v0/vt0/vn0 v1/vt1/vn1 v2/vt2/vn2 ...
+			std::vector<unsigned> indices;
+			indices.reserve(4);
+			while (!ss.eof())
+			{
+				unsigned vertexIndex, textureIndex, normalIndex;
+				ss >> vertexIndex;
+				ss.seekg(1, std::ios_base::cur);
+				ss >> textureIndex;
+				ss.seekg(1, std::ios_base::cur);
+				ss >> normalIndex;
 
-			--a; --c;
-			--d; --f;
-			--g; --i;
+				--vertexIndex;
+				--textureIndex;
+				--normalIndex;
 
-			vertexData[a].normal[0] = normals[c][0];
-			vertexData[a].normal[1] = normals[c][1];
-			vertexData[a].normal[2] = normals[c][2];
+				vertexData[vertexIndex].normal[0] = normals[normalIndex][0];
+				vertexData[vertexIndex].normal[1] = normals[normalIndex][1];
+				vertexData[vertexIndex].normal[2] = normals[normalIndex][2];
 
-			vertexData[d].normal[0] = normals[f][0];
-			vertexData[d].normal[1] = normals[f][1];
-			vertexData[d].normal[2] = normals[f][2];
+				indices.push_back(vertexIndex);
+			}
 
-			vertexData[g].normal[0] = normals[i][0];
-			vertexData[g].normal[1] = normals[i][1];
-			vertexData[g].normal[2] = normals[i][2];
-
-			indexData.insert(indexData.end(), { a, d, g });
+			if (indices.size() == 3)
+			{
+				indexData.insert(indexData.end(), indices.begin(), indices.end());
+			}
+			else if (indices.size() == 4)
+			{
+				indexData.insert(indexData.end(), {
+					indices[0], indices[1], indices[2],
+					indices[0], indices[2], indices[3]
+				});
+			}
 		}
 	}
 

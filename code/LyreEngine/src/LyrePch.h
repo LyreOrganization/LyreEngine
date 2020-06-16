@@ -7,6 +7,7 @@
 #include <string>
 #include <functional>
 #include <fstream>
+#include <sstream>
 
 #ifdef LYRE_PLATFORM_WINDOWS
 #define GLM_FORCE_RIGHT_HANDED
