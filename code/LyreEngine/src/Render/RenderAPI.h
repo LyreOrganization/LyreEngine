@@ -34,7 +34,8 @@ namespace Lyre
 		virtual std::shared_ptr<CIndexBuffer> CreateIndexBuffer(unsigned* indices, unsigned size) = 0;
 		virtual std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<CInputLayout::SEntry> layout) = 0;
 		virtual std::shared_ptr<CConstantBuffer> CreateConstantBuffer(std::initializer_list<CConstantBuffer::SEntry> layout) = 0;
-		virtual std::shared_ptr<CShader> CreateShader(std::string const& vsSrc, std::string const& psSrc) = 0;
+		virtual std::shared_ptr<CShader> CreateShaderFromSources(std::string const& vsSrc, std::string const& psSrc) = 0;
+		virtual std::shared_ptr<CShader> CreateShaderFromFiles(std::string const& vsFile, std::string const& psFile) = 0;
 
 		ERenderAPIType GetApiType() const { return m_apiType; }
 

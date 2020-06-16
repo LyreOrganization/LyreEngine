@@ -9,6 +9,12 @@
 #include "Core/Application.h"
 #include "WindowsWnd.h"
 
+namespace
+{
+	std::string const ShadersDirectory = "../LyreEngine/src/Render/Shaders/";
+	std::string const ShadersExtention = ".fx";
+}
+
 namespace Lyre
 {
 
@@ -255,8 +261,30 @@ namespace Lyre
 		return std::make_shared<CConstantBufferDX11>(layout, &m_dxInterface);
 	}
 
-	std::shared_ptr<CShader> CDirectX11API::CreateShader(std::string const& vsSrc, std::string const& psSrc)
+	std::shared_ptr<CShader> CDirectX11API::CreateShaderFromSources(std::string const& vsSrc, std::string const& psSrc)
 	{
+		return std::make_shared<CShaderDX11>(vsSrc, psSrc, &m_dxInterface);
+	}
+
+	std::shared_ptr<CShader> CDirectX11API::CreateShaderFromFiles(std::string const& vsFile, std::string const& psFile)
+	{
+		std::ifstream vsStream(ShadersDirectory + vsFile + ShadersExtention);
+		std::ifstream psStream(ShadersDirectory + psFile + ShadersExtention);
+
+		if (!vsStream || !psStream)
+		{
+			return nullptr;
+		}
+
+		std::string vsSrc{
+			std::istreambuf_iterator<char>(vsStream),
+			std::istreambuf_iterator<char>()
+		};
+		std::string psSrc{
+			std::istreambuf_iterator<char>(psStream),
+			std::istreambuf_iterator<char>()
+		};
+
 		return std::make_shared<CShaderDX11>(vsSrc, psSrc, &m_dxInterface);
 	}
 

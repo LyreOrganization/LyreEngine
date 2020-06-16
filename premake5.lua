@@ -24,7 +24,8 @@ project "LyreEngine"
 
     files {
         "%{prj.location}/src/**.h",
-        "%{prj.location}/src/**.cpp"
+        "%{prj.location}/src/**.cpp",
+        "%{prj.location}/src/**.fx"
     }
 
 	includedirs {
