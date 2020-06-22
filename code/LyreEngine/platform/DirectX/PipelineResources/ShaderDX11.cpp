@@ -3,6 +3,7 @@
 #include "InputLayoutDX11.h"
 #include "VertexBufferDX11.h"
 #include "ConstantBufferDX11.h"
+#include "TextureDX11.h"
 #include "DirectX11API.h"
 
 #include <d3dcompiler.h>
@@ -84,6 +85,20 @@ namespace Lyre
 			&m_ps
 		);
 		LYRE_ASSERT(SUCCEEDED(hr), "Cannot create pixel shader.");
+
+		D3D11_SAMPLER_DESC samplerDesc;
+		{
+			ZeroStruct(samplerDesc);
+			samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+			samplerDesc.AddressU = samplerDesc.AddressV = samplerDesc.AddressW =
+				D3D11_TEXTURE_ADDRESS_CLAMP;
+			samplerDesc.MinLOD = 0.f;
+			samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		}
+
+		hr = interface->device->CreateSamplerState(&samplerDesc, &m_defaultSampler);
+
+		LYRE_ASSERT(SUCCEEDED(hr), "Cannot create default sampler state.");
 	}
 
 	bool CShaderDX11::BindInputLayout(CVertexBuffer* vertexBuffer)
@@ -110,6 +125,15 @@ namespace Lyre
 			buffers.push_back(constantBufferDx->m_buffer.p);
 		}
 		GetDxInterface()->context->VSSetConstantBuffers(0, buffers.size(), buffers.data());
+
+		std::vector<ID3D11ShaderResourceView*> textures;
+		for (auto const& texture : m_textures)
+		{
+			auto textureDx = static_cast<CTextureDX11*>(texture.get());
+			textures.push_back(textureDx->m_view.p);
+		}
+		GetDxInterface()->context->PSSetShaderResources(0, textures.size(), textures.data());
+		GetDxInterface()->context->PSSetSamplers(0, 1, &m_defaultSampler.p);
 
 		GetDxInterface()->context->VSSetShader(m_vs, nullptr, 0);
 		GetDxInterface()->context->PSSetShader(m_ps, nullptr, 0);

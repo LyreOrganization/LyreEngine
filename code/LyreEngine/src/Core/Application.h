@@ -7,6 +7,7 @@ namespace Lyre
 	class CWindow;
 	class CCamera;
 	class CConstantBuffer;
+	class CMesh;
 
 	class CWindowClosedEvent;
 	class CMouseMoveEvent;
@@ -38,6 +39,8 @@ namespace Lyre
 
 		std::shared_ptr<CCamera> m_camera;
 		std::shared_ptr<CConstantBuffer> m_cameraConstants;
+
+		std::shared_ptr<CMesh> m_mesh;
 	};
 
 }

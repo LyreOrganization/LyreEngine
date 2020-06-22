@@ -12,10 +12,12 @@ Lyre::CMesh::CMesh(std::string const& filename)
 	{
 		std::array<float, 3> position;
 		std::array<float, 3> normal;
+		std::array<float, 2> texcoord;
 	};
 
 	std::vector<SVertex> vertexData;
 	std::vector<std::array<float,3>> normals;
+	std::vector<std::array<float,2>> texcoords;
 	std::vector<unsigned> indexData;
 
 	static unsigned const MaxLineSize = 100;
@@ -35,6 +37,11 @@ Lyre::CMesh::CMesh(std::string const& filename)
 		{
 			ss >> vertex.normal[0] >> vertex.normal[1] >> vertex.normal[2];
 			normals.push_back(vertex.normal);
+		}
+		else if (s == "vt")
+		{
+			ss >> vertex.texcoord[0] >> vertex.texcoord[1];
+			texcoords.push_back(vertex.texcoord);
 		}
 		else if (s == "f")
 		{
@@ -59,6 +66,9 @@ Lyre::CMesh::CMesh(std::string const& filename)
 				vertexData[vertexIndex].normal[1] = normals[normalIndex][1];
 				vertexData[vertexIndex].normal[2] = normals[normalIndex][2];
 
+				vertexData[vertexIndex].texcoord[0] = texcoords[textureIndex][0];
+				vertexData[vertexIndex].texcoord[1] = texcoords[textureIndex][1];
+
 				indices.push_back(vertexIndex);
 			}
 
@@ -82,7 +92,8 @@ Lyre::CMesh::CMesh(std::string const& filename)
 
 	m_vertexBuffer->SetLayout(CRenderer::GetAPI()->CreateInputLayout({
 		{ EShaderDataType::Float3, "POSITION" },
-		{ EShaderDataType::Float3, "NORMAL" }
+		{ EShaderDataType::Float3, "NORMAL" },
+		{ EShaderDataType::Float2, "TEXCOORD" }
 	}));
 }
 

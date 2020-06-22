@@ -34,9 +34,13 @@ namespace Lyre
 		std::shared_ptr<CVertexBuffer> CreateVertexBuffer(float* vertices, unsigned size) override;
 		std::shared_ptr<CIndexBuffer> CreateIndexBuffer(unsigned* indices, unsigned size) override;
 		std::shared_ptr<CInputLayout> CreateInputLayout(std::initializer_list<CInputLayout::SEntry> layout) override;
+		
 		std::shared_ptr<CConstantBuffer> CreateConstantBuffer(std::initializer_list<CConstantBuffer::SEntry> layout) override;
+		
 		std::shared_ptr<CShader> CreateShaderFromSources(std::string const& vsSrc, std::string const& psSrc) override;
 		std::shared_ptr<CShader> CreateShaderFromFiles(std::string const& vsFile, std::string const& psFile) override;
+
+		std::shared_ptr<CTexture> CreateTextureFromFile(std::string const& filename) override;
 
 	private:
 		SDirectXInterface m_dxInterface;

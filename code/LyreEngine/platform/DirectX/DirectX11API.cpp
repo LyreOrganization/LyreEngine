@@ -5,6 +5,9 @@
 #include "PipelineResources/InputLayoutDX11.h"
 #include "PipelineResources/ConstantBufferDX11.h"
 #include "PipelineResources/ShaderDX11.h"
+#include "PipelineResources/TextureDX11.h"
+
+#include "Utils/WICTextureLoader.h"
 
 #include "Core/Application.h"
 #include "WindowsWnd.h"
@@ -13,6 +16,8 @@ namespace
 {
 	std::string const ShadersDirectory = "../LyreEngine/src/Render/Shaders/";
 	std::string const ShadersExtention = ".fx";
+
+	std::string const DataDirectory = "../../data/";
 }
 
 namespace Lyre
@@ -286,6 +291,31 @@ namespace Lyre
 		};
 
 		return std::make_shared<CShaderDX11>(vsSrc, psSrc, &m_dxInterface);
+	}
+
+	std::shared_ptr<CTexture> CDirectX11API::CreateTextureFromFile(std::string const& filename)
+	{
+		std::shared_ptr<CTextureDX11> texture = std::make_shared<CTextureDX11>(&m_dxInterface);
+		
+		std::string const filePath = DataDirectory + filename;
+		wchar_t wfilePath[100];
+		size_t length;
+		mbstowcs_s(&length, wfilePath, filePath.c_str(), filePath.size());
+		
+		HRESULT hr = CreateWICTextureFromFile(
+			m_dxInterface.device,
+			m_dxInterface.context,
+			wfilePath,
+			(ID3D11Resource**)&texture->m_texture,
+			&texture->m_view
+		);
+
+		if (FAILED(hr))
+		{
+			return nullptr;
+		}
+
+		return texture;
 	}
 
 }

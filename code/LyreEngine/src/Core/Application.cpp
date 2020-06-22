@@ -45,17 +45,20 @@ void Lyre::CApplication::Init()
 	});
 
 	m_cameraConstants->UpdateConstant(0, glm::value_ptr(m_camera->GetViewProjection()));
+
+	m_mesh = make_shared<CMesh>("../../data/sphere.obj");
+	m_mesh->GetModel() = glm::scale(glm::mat4{ 1.f }, glm::vec3{ 2.f });
+
+	shared_ptr<CTexture> albedo = CRenderer::GetAPI()->CreateTextureFromFile("Metal003_2K_Color.jpg");
+
+	shared_ptr<CShader> shader = CRenderer::GetAPI()->CreateShaderFromFiles("test_vertex_shader", "test_pixel_shader");
+	shader->AddConstantBuffer(m_cameraConstants);
+	shader->AddTexture(albedo);
+	m_mesh->SetShader(shader);
 }
 
 void Lyre::CApplication::Run()
 {
-	shared_ptr<CMesh> mesh = make_shared<CMesh>("../../data/garg.obj");
-	mesh->GetModel() = glm::scale(glm::mat4{ 1.f }, glm::vec3{ 2.f });
-
-	shared_ptr<CShader> shader = CRenderer::GetAPI()->CreateShaderFromFiles("test_vertex_shader", "test_pixel_shader");
-	shader->AddConstantBuffer(m_cameraConstants);
-	mesh->SetShader(shader);
-
 	while (m_running)
 	{
 		m_window->OnUpdate();
@@ -64,7 +67,7 @@ void Lyre::CApplication::Run()
 		CRenderer::GetAPI()->Clear(clearColor);
 
 		m_cameraConstants->UpdateConstant(0, glm::value_ptr(m_camera->GetViewProjection()));
-		CRenderer::Submit(mesh);
+		CRenderer::Submit(m_mesh);
 
 		CRenderer::Present();
 	}

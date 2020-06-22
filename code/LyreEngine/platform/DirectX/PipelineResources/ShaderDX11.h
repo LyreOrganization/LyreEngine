@@ -27,6 +27,8 @@ namespace Lyre
 
 		CComPtr<ID3D11VertexShader> m_vs;
 		CComPtr<ID3D11PixelShader> m_ps;
+
+		CComPtr<ID3D11SamplerState> m_defaultSampler;
 	};
 
 }
