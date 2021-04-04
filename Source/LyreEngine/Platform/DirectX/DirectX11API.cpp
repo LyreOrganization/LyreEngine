@@ -14,10 +14,10 @@
 
 namespace
 {
-	std::string const ShadersDirectory = "../LyreEngine/src/Render/Shaders/";
+	std::string const ShadersDirectory = "../Source/LyreEngine/Render/Shaders/";
 	std::string const ShadersExtention = ".fx";
 
-	std::string const DataDirectory = "../../data/";
+	std::string const DataDirectory = "../Data/";
 }
 
 namespace Lyre

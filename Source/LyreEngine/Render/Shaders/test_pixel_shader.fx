@@ -16,5 +16,6 @@ float4 main(in PS_Input input) : SV_Target
 
 	float diffuseCoef = max(0.f, dot(input.normal.xyz, dirTolight).x);
 
-	return lightColor * diffuseColor * diffuseCoef;
+	//return lightColor * diffuseColor * diffuseCoef;
+	return diffuseColor;
 }

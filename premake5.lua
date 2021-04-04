@@ -1,5 +1,5 @@
 workspace "LyreEngine"
-    architecture "x86_64"
+    architecture "x64"
     configurations { "Debug", "Release" }
 
     startproject "Launch"
@@ -7,29 +7,31 @@ workspace "LyreEngine"
 outputdir = "%{cfg.architecture}_%{cfg.system}_%{cfg.buildcfg}"
 
 dependencies = {}
-dependencies["glm"] = "external/glm";
+dependencies["glm"] = "External/glm";
 
 project "LyreEngine"
-    location "code/%{prj.name}"
+    sources = "Source/%{prj.name}"
+
+    location "Intermediate/"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
 
 	pchheader "LyrePch.h"
-	pchsource "code/%{prj.name}/src/LyrePch.cpp"
+	pchsource "Source/%{prj.name}/LyrePch.cpp"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin/objs/" .. outputdir .. "/%{prj.name}")
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
 
     files {
-        "%{prj.location}/src/**.h",
-        "%{prj.location}/src/**.cpp",
-        "%{prj.location}/src/**.fx"
+        "%{sources}/**.h",
+        "%{sources}/**.cpp",
+        "%{sources}/**.fx"
     }
 
 	includedirs {
-		"%{prj.location}/src",
+		"%{sources}",
 		dependencies["glm"]
 	}
 
@@ -38,13 +40,13 @@ project "LyreEngine"
         systemversion "latest"
         
         files {
-            "%{prj.location}/platform/win64/**",
-            "%{prj.location}/platform/DirectX/**"
+            "%{sources}/Platform/win64/**",
+            "%{sources}/Platform/DirectX/**"
         }
 
 		includedirs {
-			"%{prj.location}/platform/win64",
-			"%{prj.location}/platform/DirectX"
+			"%{sources}/Platform/win64",
+			"%{sources}/Platform/DirectX"
 		}
 
     filter "configurations:Debug"
@@ -56,22 +58,24 @@ project "LyreEngine"
         optimize "On"
 
 project "Launch"
-    location "code/%{prj.name}"
+    sources = "Source/%{prj.name}"
+
+    location "Intermediate/"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
     staticruntime "on"
 
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin/objs/" .. outputdir .. "/%{prj.name}")
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("Intermediate/" .. outputdir .. "/%{prj.name}")
     
     files {
-        "%{prj.location}/src/**.h",
-        "%{prj.location}/src/**.cpp"
+        "%{sources}/**.h",
+        "%{sources}/**.cpp"
     }
 
     includedirs {
-        "code/LyreEngine/src"
+        "Source/LyreEngine"
     }
 
 	links {
@@ -82,11 +86,11 @@ project "Launch"
         defines { "LYRE_PLATFORM_WINDOWS" }
 		systemversion "latest"
         files {
-            "%{prj.location}/entry/win64/**.h",
-            "%{prj.location}/entry/win64/**.cpp"
+            "%{sources}/Entry/win64/**.h",
+            "%{sources}/Entry/win64/**.cpp"
         }
 		includedirs {
-			"code/LyreEngine/platform/win64"
+			"Source/LyreEngine/Platform/win64"
 		}
 		links {
 			"d3d11"

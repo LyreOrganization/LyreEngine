@@ -46,7 +46,7 @@ void Lyre::CApplication::Init()
 
 	m_cameraConstants->UpdateConstant(0, glm::value_ptr(m_camera->GetViewProjection()));
 
-	m_mesh = make_shared<CMesh>("../../data/sphere.obj");
+	m_mesh = make_shared<CMesh>("../Data/blendUVSphere.obj");
 	m_mesh->GetModel() = glm::scale(glm::mat4{ 1.f }, glm::vec3{ 2.f });
 
 	shared_ptr<CTexture> albedo = CRenderer::GetAPI()->CreateTextureFromFile("Metal003_2K_Color.jpg");
